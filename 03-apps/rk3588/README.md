@@ -1,4 +1,4 @@
-# 02-apps/rk3588 · RK3588 Linux 用户态应用
+# 03-apps/rk3588 · RK3588 Linux 用户态应用
 
 在 ELF 2（RK3588）上运行的采集与边缘预分析应用。
 
@@ -13,7 +13,7 @@
 
 ## 当前状态
 
-仅目录占位，尚无代码。目标结构见 [系统架构概览](../../07-docs/architecture/overview.md)。
+仅目录占位，尚无代码。目标结构见 [系统架构概览](../../08-docs/architecture/overview.md)。
 
 ## 边界
 

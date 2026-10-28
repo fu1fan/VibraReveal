@@ -1,4 +1,4 @@
-# 04-protocol · 通信协议
+# 05-protocol · 通信协议
 
 定义 RK3588 与 MacBook 之间的数据格式与交互约定。
 

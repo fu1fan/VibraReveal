@@ -1,6 +1,6 @@
-# 02-apps · 平台应用
+# 03-apps · 平台应用
 
-本目录归档 VibraReveal 的两个端侧应用：RK3588 采集/预分析应用与 Mac 端分析/可视化应用。两端各自独立构建、独立发布，通过 [04-protocol](../04-protocol/README.md) 定义的协议对接。
+本目录归档 VibraReveal 的两个端侧应用：RK3588 采集/预分析应用与 Mac 端分析/可视化应用。两端各自独立构建、独立发布，通过 [05-protocol](../05-protocol/README.md) 定义的协议对接。
 
 ## 子目录
 

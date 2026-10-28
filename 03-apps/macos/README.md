@@ -1,4 +1,4 @@
-# 02-apps/macos · Mac 端应用
+# 03-apps/macos · Mac 端应用
 
 在 Apple Silicon MacBook 上运行的接收、分析与可视化应用。
 
@@ -11,7 +11,7 @@
 
 ## 当前状态
 
-仅目录占位，尚无代码。数据流与模块职责见 [系统架构概览](../../07-docs/architecture/overview.md)。
+仅目录占位，尚无代码。数据流与模块职责见 [系统架构概览](../../08-docs/architecture/overview.md)。
 
 ## 技术栈（规划）
 

@@ -1,0 +1,4 @@
+[submodule "02-platform/RK3588-OV9281"]
+	path = 02-platform/RK3588-OV9281
+	url = https://cnb.cool/fu1fan/RK3588-OV9281
+	branch = main

@@ -29,6 +29,9 @@ VibraReveal（振见）是一个软硬件协同研发项目：利用 **OV9281 �
 | **[RK3588-OV9281](https://cnb.cool/fu1fan/RK3588-OV9281)** | ELF2/RK3588 板级支持、Buildroot、Linux 内核及设备树、OV9281 驱动、基础系统服务、GPU/NPU 驱动与运行时 | `update.img`；未来可提供版本化应用 SDK |
 | **VibraReveal（本仓库）**                                  | RK3588 Linux 用户态应用、Vulkan Shader、Mac Metal 应用、算法、设备通信、原型机械/电子设计与实验 | ARM64 应用包、Mac 应用、协议与设计文件 |
 
+> [!NOTE]
+> `RK3588-OV9281` 以 Git 子模块形式挂载在 [02-platform/RK3588-OV9281](02-platform/RK3588-OV9281)，本仓库只跟踪其提交指针，不修改子模块内容。
+
 ## 3. 仓库目录
 
 ```text
@@ -36,18 +39,19 @@ VibraReveal/
 ├── 01-hardware/       # 采集与计算硬件
 │   ├── modules/       # 已采购模块建档（7inch_HDMI_LCD_C、elf2、ov9281）
 │   └── mechanical/    # 整机机械设计（待建）
-├── 02-apps/
+├── 02-platform/       # 平台环境；含 RK3588-OV9281 子模块
+├── 03-apps/
 │   ├── rk3588/        # RK3588 Linux 用户态应用
 │   └── macos/         # Swift/C++、Metal、交互可视化
-├── 03-algorithms/     # Python/PyTorch 参考实现及模型转换
-├── 04-protocol/       # RAW、IMU、ROI、控制消息与版本协议
-├── 05-tests/          # 跨模块集成测试、性能及硬件验收
-├── 06-datasets/       # 小型样本、数据索引与校验值
-├── 07-docs/           # 架构、设计、部署与实验文档
-└── 08-tools/          # 构建、部署和辅助工具
+├── 04-algorithms/     # Python/PyTorch 参考实现及模型转换
+├── 05-protocol/       # RAW、IMU、ROI、控制消息与版本协议
+├── 06-tests/          # 跨模块集成测试、性能及硬件验收
+├── 07-datasets/       # 小型样本、数据索引与校验值
+├── 08-docs/           # 架构、设计、部署与实验文档
+└── 09-tools/          # 构建、部署和辅助工具
 ```
 
-顶层目录按研发顺序编号；`02-apps/` 至 `08-tools/` 目前只有占位 `README.md`，`01-hardware/` 已归档实际器件资料。
+顶层目录按研发顺序编号；`03-apps/` 至 `09-tools/` 目前只有占位 `README.md`，`01-hardware/` 已归档实际器件资料，`02-platform/` 含 `RK3588-OV9281` 子模块。
 
 ## 4. 硬件与模块资料
 
@@ -59,17 +63,17 @@ VibraReveal/
 | [elf2](01-hardware/modules/elf2)             | ELF 2（RK3588）开发板      | 快速使用手册、软硬件教程、V1.2 原理图与 Altium 源文件、引脚复用表、结构图纸 |
 | [7inch_HDMI_LCD_C](01-hardware/modules/7inch_HDMI_LCD_C) | 7 寸 HDMI 显示模组 | 结构 STEP/PRT 模型                                                         |
 
-各模块 `README.md` 记录采购来源。资料命名与归档规则见 [资产归档约定](07-docs/design/asset-organization.md)。
+各模块 `README.md` 记录采购来源。
 
 ## 5. 当前进度与路线图
 
 - [x] 确定 OV9281 + RK3588 的高速灰度采集路线
-- [x] 维护独立的 [RK3588-OV9281](https://cnb.cool/fu1fan/RK3588-OV9281) 系统源码/构建仓库
+- [x] 维护独立的 [RK3588-OV9281](https://cnb.cool/fu1fan/RK3588-OV9281) 系统源码/构建仓库，并以子模块形式接入 `02-platform/`
 - [x] 完成现有 OV9281 驱动适配工作；新系统仓库中的最新修复仍待板级验收
 - [x] 调通 RK3588 的 Vulkan 运行环境
 - [x] 归档 ELF 2 开发板、OV9281 模组与 7 寸 HDMI 屏资料
 - [ ] 完成可在真实开发板上验收的系统版本并整理应用交叉编译 SDK
-- [ ] 在 `02-apps/rk3588/` 建立可独立构建、安装和回滚的应用骨架
+- [ ] 在 `03-apps/rk3588/` 建立可独立构建、安装和回滚的应用骨架
 - [ ] 完成 RK3588→MacBook 的高速 RAW 传输与持续丢帧测试
 - [ ] 设计帧编号、时钟域、曝光时间和 IMU 数据协议
 - [ ] 开发 Mac Metal 相位运动放大基线
@@ -82,7 +86,7 @@ VibraReveal/
 
 | 内容                            | 位置                                                                     |
 | ------------------------------- | ------------------------------------------------------------------------ |
-| 数据流、模块职责、目标目录结构  | [07-docs/architecture/overview.md](07-docs/architecture/overview.md)       |
+| 数据流、模块职责、目标目录结构  | [08-docs/architecture/overview.md](08-docs/architecture/overview.md)       |
 
 ## 7. 许可证
 
