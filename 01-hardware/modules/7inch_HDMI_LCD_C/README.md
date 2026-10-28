@@ -1,0 +1,1 @@
+https://docs.waveshare.net/7inch_HDMI_LCD_C
