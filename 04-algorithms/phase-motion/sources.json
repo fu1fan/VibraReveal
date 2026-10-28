@@ -1,0 +1,48 @@
+{
+  "import_date": "2026-10-28",
+  "description": "Local source snapshot; no upstream commit identity asserted.",
+  "files": [
+    {
+      "file": "phasemag.py",
+      "source_project": "ELF2",
+      "source_relative_path": "phasemag/phasemag.py",
+      "sha256": "9ff67cb9d6027285b60097d1853e6054562ad75699e10869794d125ebd692199",
+      "byte_identical": true
+    },
+    {
+      "file": "requirements.txt",
+      "source_project": "ELF2",
+      "source_relative_path": "phasemag/requirements.txt",
+      "sha256": "89ba5b0a79bf7a68d57fd9f1338765d80837b9882cb0c082a24201706fe2b5c4",
+      "byte_identical": true
+    },
+    {
+      "file": "prepare_raw60.py",
+      "source_project": "MotionAmplification",
+      "source_relative_path": "delivery/ZYNQ7100_Handoff_20261025/python/prepare_raw60.py",
+      "sha256": "dd67a051eea58d90983a236ee6652b6c73ab8e46eacaa6921446f523ed270010",
+      "byte_identical": true
+    },
+    {
+      "file": "algorithm/motion60_reference.py",
+      "source_project": "MotionAmplification",
+      "source_relative_path": "algorithm/motion60_reference.py",
+      "sha256": "39314f18db7c412ad4c404a3fd9a564cb643b8a9310fe3bd6d6da4e8013414ab",
+      "byte_identical": true
+    },
+    {
+      "file": "algorithm/motion60_clip.py",
+      "source_project": "MotionAmplification",
+      "source_relative_path": "algorithm/motion60_clip.py",
+      "sha256": "1783baa565e504b7b0dbbb3944c030dd05aa883c05efd4d5e9812742a13ee59c",
+      "byte_identical": true
+    },
+    {
+      "file": "algorithm/motion60_spectrum.py",
+      "source_project": "MotionAmplification",
+      "source_relative_path": "algorithm/motion60_spectrum.py",
+      "sha256": "09941485c30d36ecf3b22db71f073d28c486f3dce52f7da2e8594456dffc8303",
+      "byte_identical": true
+    }
+  ]
+}

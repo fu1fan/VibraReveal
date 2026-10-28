@@ -11,7 +11,7 @@ VibraReveal（振见）是一个软硬件协同研发项目：利用 **OV9281 �
 > **系统与应用分别维护。** 本仓库只管理应用、算法、通信协议、整机硬件设计和实验资料。RK3588 的 Linux 系统、内核、设备树、OV9281 驱动、rootfs 和系统镜像由独立仓库 [RK3588-OV9281](https://cnb.cool/fu1fan/RK3588-OV9281) 维护。
 
 > [!NOTE]
-> **Work in Progress：** 本仓库当前仅有目录骨架，尚无端到端可运行代码。驱动与 Vulkan 环境已有进展，但不代表高速传输、实时运动放大或多传感器同步已通过验收。
+> **Work in Progress：** 本仓库已有 Python 离线运动放大与频谱参考实现，尚无端到端实时应用。驱动与 Vulkan 环境已有进展，但不代表高速传输、实时运动放大或多传感器同步已通过验收。
 
 ## 1. 项目目标
 
@@ -51,7 +51,7 @@ VibraReveal/
 └── 09-tools/          # 构建、部署和辅助工具
 ```
 
-顶层目录按研发顺序编号；`03-apps/` 至 `09-tools/` 目前只有占位 `README.md`，`01-hardware/` 已归档实际器件资料，`02-platform/` 含 `RK3588-OV9281` 子模块。
+顶层目录按研发顺序编号；`04-algorithms/phase-motion/` 已整理 Python 算法、依赖与运行说明，其余应用和工具目录主要为规划占位；`01-hardware/` 已归档实际器件资料，`02-platform/` 含 `RK3588-OV9281` 子模块。
 
 ## 4. 硬件与模块资料
 
@@ -76,6 +76,7 @@ VibraReveal/
 - [ ] 在 `03-apps/rk3588/` 建立可独立构建、安装和回滚的应用骨架
 - [ ] 完成 RK3588→MacBook 的高速 RAW 传输与持续丢帧测试
 - [ ] 设计帧编号、时钟域、曝光时间和 IMU 数据协议
+- [x] 整理 [Python 相位运动放大、因果与频谱参考](04-algorithms/phase-motion/)及离线自检
 - [ ] 开发 Mac Metal 相位运动放大基线
 - [ ] 开发 Vulkan 局部运动特征、热点扫描和频谱预分析
 - [ ] 加入 ROI 跟踪、NPU 目标识别及可选深度估计
@@ -86,6 +87,7 @@ VibraReveal/
 
 | 内容                            | 位置                                                                     |
 | ------------------------------- | ------------------------------------------------------------------------ |
+| Python 算法安装、运行、数据格式 | [04-algorithms/phase-motion/README.md](04-algorithms/phase-motion/README.md) |
 | 数据流、模块职责、目标目录结构  | [08-docs/architecture/overview.md](08-docs/architecture/overview.md)       |
 
 ## 7. 许可证
