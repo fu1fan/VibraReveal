@@ -1,0 +1,25 @@
+# CNB is the source of truth; push branches and tags to the GitHub mirror.
+"**":
+  push:
+    - name: Sync to GitHub
+      stages:
+        - name: Sync current branch and tags
+          image: tencentcom/git-sync
+          settingsFrom:
+            - https://cnb.cool/fu1fan/secrets/-/blob/main/vibrareveal-github-sync.yml
+          settings:
+            target_url: git@github.com:fu1fan/VibraReveal.git
+            branch: ${CNB_BRANCH}
+            push_tags: true
+
+$:
+  tag_push:
+    - name: Sync tags to GitHub
+      stages:
+        - name: Sync tags
+          image: tencentcom/git-sync
+          settingsFrom:
+            - https://cnb.cool/fu1fan/secrets/-/blob/main/vibrareveal-github-sync.yml
+          settings:
+            target_url: git@github.com:fu1fan/VibraReveal.git
+            push_tags: true
