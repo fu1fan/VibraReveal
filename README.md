@@ -37,7 +37,7 @@ VibraReveal（振见）是一个软硬件协同研发项目：利用 **OV9281 �
 ```text
 VibraReveal/
 ├── 01-hardware/       # 采集与计算硬件
-│   ├── modules/       # 已采购模块建档（7inch_HDMI_LCD_C、elf2、ov9281）
+│   ├── modules/       # 已采购模块建档（7inch_HDMI_LCD_C、elf2、icm-42688-p、ov9281）
 │   └── mechanical/    # 整机机械设计（待建）
 ├── 02-platform/       # 平台环境；含 RK3588-OV9281 子模块
 ├── 03-apps/
@@ -62,6 +62,7 @@ VibraReveal/
 | [ov9281](01-hardware/modules/ov9281)         | 全局快门灰度相机           | 传感器数据手册、15P 摄像头模组结构图                                       |
 | [elf2](01-hardware/modules/elf2)             | ELF 2（RK3588）开发板      | 产品规格书、快速使用手册、软硬件教程、V1.3 原理图与 Altium 源文件、芯片手册、引脚复用表、结构图纸 |
 | [7inch_HDMI_LCD_C](01-hardware/modules/7inch_HDMI_LCD_C) | 7 寸 HDMI 显示模组 | 结构 STEP/PRT 模型                                                         |
+| [icm-42688-p](01-hardware/modules/icm-42688-p) | 六轴 IMU（相机自振参考与时基对齐） | 芯片数据手册、模块原理图、厂商说明、STM32 示例固件                         |
 
 各模块 `README.md` 记录采购来源。
 
