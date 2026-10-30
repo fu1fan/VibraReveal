@@ -29,9 +29,9 @@ $:
       docker:
         image: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/daily-env:latest
         volumes:
-          - /cache/elf2-sdk:read-write
-          - /cache/elf2-app-ccache:read-write
-          - /root/.cache/pip:read-write
+          - elf2-sdk-v1:/cache/elf2-sdk:copy-on-write
+          - /cache/elf2-app-ccache:copy-on-write
+          - /root/.cache/pip:copy-on-write
       stages:
         # 把 WebIDE / CodeBuddy / Remote-SSH 的个人状态软链到 ~/.cnb，交给文件漫游持久化。
         - name: Restore persistent IDE state
@@ -103,7 +103,7 @@ $:
       docker:
         image: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/daily-env:latest
         volumes:
-          - /cache/elf2-sdk:read-write
+          - elf2-sdk-v1:/cache/elf2-sdk:copy-on-write
       stages:
         - name: Environment report
           script: sh /usr/local/lib/dev-env-smoke-test.sh daily

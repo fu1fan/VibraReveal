@@ -47,7 +47,10 @@ RK3588 系统流水线在验证最终系统后导出 `/sdk`：工具链、开发
 
 首次使用由 `docker pull` 拉取固定 digest，创建不运行的容器，并用 `docker cp` 提取 `/sdk`。
 安装使用文件锁、临时目录和原子重命名；校验系统提交后才写完成标记。失败不发布部分缓存。
-缓存命中后无需访问 Docker 或网络，同一节点的新环境通过 `/cache/elf2-sdk` 数据卷复用。
+缓存命中后无需访问 Docker 或网络。同一节点的新环境通过 `elf2-sdk-v1:/cache/elf2-sdk`
+的 copy-on-write 数据卷复用：流水线成功或开发环境正常成功结束后合并缓存；失败、强杀
+或异常退出可能丢失本轮新增缓存，需要重新下载。不同会话写入隔离，同一会话安装仍有文件锁。
+此选择已在 CNB 实测可写；read-write 卷在当前 UID 映射下出现 65534 所有权与写入拒绝。
 不同 digest 并存，避免项目之间覆盖。冷节点首次编译仍需下载 SDK，只是不会阻塞打开 IDE。
 
 Docker 镜像层与提取缓存可能各占一份空间；本工具不自动删除 Docker 镜像，以免干扰其他使用者。
@@ -96,7 +99,7 @@ MODE=system IMAGE=vibrareveal-system:local bash 10-env/build-image.sh
 
 ## 持久化和启动速度
 
-日常挂载 `/cache/elf2-sdk`、`/cache/elf2-app-ccache`、`/root/.cache/pip`。
+日常挂载 `/cache/elf2-sdk`、`/cache/elf2-app-ccache`、`/root/.cache/pip`，均使用 copy-on-write。
 仍保留 Docker 服务供按需提取 SDK 和启动系统环境，其启动有少量开销。
 不在启动阶段执行 elf2-sdk use，避免把 SDK 下载重新放回启动关键路径。
 具体提速以 CNB 冷节点实测为准，不能保证跨节点镜像或文件缓存命中。
