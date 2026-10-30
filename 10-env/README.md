@@ -176,20 +176,31 @@ CNB 的文件漫游按用户维度保存 `~` 下的配置，环境销毁时写�
 
 | 目标 | 内容 |
 | --- | --- |
-| `~/.local/share/code-server/User/globalStorage/tencent-cloud.coding-copilot` | CodeBuddy 插件设置与状态 |
+| `~/.local/share/code-server/User/globalStorage/tencent-cloud.coding-copilot` | CodeBuddy 插件设置与状态（只挑这一个扩展目录，不整目录搬） |
 | `~/.local/share/code-server/User/History` | 本地文件历史 |
 | `~/.local/share/code-server/User/Machine/settings.json` | WebIDE 机器级设置 |
 | `~/.vscode-server/data/Machine/settings.json` | Remote-SSH 机器级设置 |
-| `~/.local/share/CodeBuddyExtension` | CodeBuddy 扩展运行时数据（登录态、对话历史） |
-| `~/.codebuddy/{settings.json,...,rules,skills,agents,commands,projects}` | CodeBuddy Code CLI 配置与历史 |
+| `~/.local/share/CodeBuddyExtension/Data` | CodeBuddy 扩展运行时数据（登录态、对话历史）；`Cache`、`Logs` 可重建，不搬 |
+| `~/.agents` | CodeBuddy 技能实体（`~/.codebuddy/skills` 以软链引用） |
+| `~/.codebuddy/*` | CodeBuddy Code CLI 的数据，按排除表筛选：排除 `logs`、`traces`、`debug`、`diagnostics`、`blobs`、`file-history`、`sessions`、`shell-snapshots`、`plugins` |
 
 `~/.local/share/code-server/User/settings.json`、`keybindings.json`、`snippets/` 由 CNB 原生漫游，
-脚本不介入。`~/.codebuddy` 中的日志、追踪、快照、blobs 等可重建内容**不**漫游，避免超出配额。
+脚本不介入。
+
+几个实现细节：
+
+- CodeBuddy Code 不同版本的目录结构不一致（例如出现了 `app/`、`local_storage/`、`expert-history.json`），
+  所以 CLI 部分按**排除表**遍历实际条目，而不是写死清单；新增目录默认会被保留，除非命中排除表。
+- `plugins/` 是 61 MB 量级的可重装内容，排除在外，避免挤占全账号共享的漫游配额。
+- 常见配置文件（`settings.json`、`mcp.json`、`history.jsonl` 等）即使当前还没生成也会先建软链，
+  保证之后由 CodeBuddy 创建的版本直接落进漫游目录；这类链在文件生成前是悬空的，属于预期状态。
+- 目录被搬进漫游目录后，内部的**相对**软链会因层级变化失效（例如 `skills/* -> ../../.agents/skills/*`），
+  `persist.sh` 会按原路径把它们改写成绝对路径。
 
 限制与注意事项：
 
 - 漫游只在环境**正常销毁**时发生，`kill 1` 关闭会丢失；同时多个环境时后销毁者覆盖先销毁者。
-- 漫游总量约 100 MB，单文件 100 MB。CodeBuddy 设置里有 `cleanupPeriodDays`（默认 30 天），
+- 漫游总量约 100 MB（整个账号共享），单文件 100 MB。CodeBuddy 设置里有 `cleanupPeriodDays`（默认 30 天），
   会话积累过大时可先清理 `~/.codebuddy/projects/*/tool-results` 再退出。
 - 想额外保留别的路径，可在仓库的「个人设置 → 云原生开发 → 漫游文件」里按绝对路径或 Glob 追加，
   不必改镜像。
