@@ -13,10 +13,10 @@
 
 两段原始采集数据以无损 7z 压缩包保存为 CNB 提交附件：
 
-- [下载 RK3588_RAW10_lossless.7z](https://cnb.cool/fu1fan/VibraReveal/-/commit-assets/download/120d2ff6f8b7e978b8a445dcf198c4acaba4ba5e/RK3588_RAW10_lossless.7z)（2,501,418,289 字节，约 2.50 GB）
-- [数据格式与原始文件校验值](https://cnb.cool/fu1fan/VibraReveal/-/commit-assets/download/120d2ff6f8b7e978b8a445dcf198c4acaba4ba5e/RAW_METADATA.json)
-- [附件 SHA-256 清单](https://cnb.cool/fu1fan/VibraReveal/-/commit-assets/download/120d2ff6f8b7e978b8a445dcf198c4acaba4ba5e/SHA256SUMS)
-- [解压校验脚本](https://cnb.cool/fu1fan/VibraReveal/-/commit-assets/download/120d2ff6f8b7e978b8a445dcf198c4acaba4ba5e/verify_raw_archive.py) · [数据说明](https://cnb.cool/fu1fan/VibraReveal/-/commit-assets/download/120d2ff6f8b7e978b8a445dcf198c4acaba4ba5e/RAW_README.md)
+- [下载 RK3588_RAW10_lossless.7z](https://cnb.cool/fu1fan/VibraReveal/-/commit-assets/download/b157b0c319424751ac2bcd041c9e655e931c2399/RK3588_RAW10_lossless.7z)（2,501,418,289 字节，约 2.50 GB）
+- [数据格式与原始文件校验值](https://cnb.cool/fu1fan/VibraReveal/-/commit-assets/download/b157b0c319424751ac2bcd041c9e655e931c2399/RAW_METADATA.json)
+- [附件 SHA-256 清单](https://cnb.cool/fu1fan/VibraReveal/-/commit-assets/download/b157b0c319424751ac2bcd041c9e655e931c2399/SHA256SUMS)
+- [解压校验脚本](https://cnb.cool/fu1fan/VibraReveal/-/commit-assets/download/b157b0c319424751ac2bcd041c9e655e931c2399/verify_raw_archive.py) · [数据说明](https://cnb.cool/fu1fan/VibraReveal/-/commit-assets/download/b157b0c319424751ac2bcd041c9e655e931c2399/RAW_README.md)
 
 压缩包包含 `e10hz.raw` 和 `exp220.raw`，各 1,810 帧、3,706,880,000 字节；每帧 1280 × 800，按行排列，以小端 `uint16` 保存，低 10 位有效。历史处理使用 120 fps 参数，采集帧率未通过时间戳实测；模拟 60 fps 时应隔帧抽取。
 
