@@ -32,14 +32,22 @@
 
 ```text
 ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env:latest
-${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env:<commit-short>
+${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env:<tag>
 ```
 
-- 触发：推送到任意分支，且改动涉及 `10-env/**`、`04-algorithms/phase-motion/requirements.txt`
-  或 ELF2 子模块指针时，`.cnb.yml` 中的 `Publish dev environment image` 任务会重建并推送；
-  同一时刻只允许一个发布任务（`lock`）。
-- 先推送本目录的改动，镜像才会存在；在此之前启动云原生开发会拉不到镜像。
-- `latest` 始终指向最近一次成功发布。需要复现旧环境时用 commit 标签固定。
+- **触发条件只有一种：推送 `dev-env-v*` 形式的 Tag**。普通分支提交不会重建镜像，
+  即使改动落在 `10-env/**` 也一样，避免为每次小改重跑一次含 2.7 GB 依赖下载的全量构建。
+
+  ```bash
+  git tag dev-env-v1.0.0
+  git push origin dev-env-v1.0.0
+  ```
+
+- 同一时刻只允许一个发布任务（`lock`）；该 Tag 也会按仓库约定同步到 GitHub。
+- 镜像标签为 Tag 名（`.../dev-env:dev-env-v1.0.0`）与 `latest`，`latest` 指向最近一次成功发布。
+  云原生开发引用 `latest`；要固定版本或复现旧环境，把 `$: vscode:` 的 `image` 换成具体 Tag。
+- 镜像发布成功之前，云原生开发会因为拉不到镜像而起不来（`docker.image` 没有 `build` 兜底），
+  所以顺序是：打 Tag → 等发布流水线成功 → 再启动/重建开发环境。
 
 本地构建（需要已初始化子模块）：
 

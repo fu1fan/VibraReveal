@@ -1,54 +1,9 @@
 # CNB is the source of truth; push branches and tags to the GitHub mirror.
 
-"**":
-  push:
-    # 开发环境镜像显式构建并发布到 CNB Docker 制品库，不走 CNB 的 Dockerfile 自动缓存。
-    # 镜像内容只依赖下列路径，其他提交不重复构建。
-    - name: Publish dev environment image
-      ifModify:
-        - "10-env/**"
-        - "04-algorithms/phase-motion/requirements.txt"
-        - "02-platform/RK3588-OV9281"
-      runner:
-        tags: cnb:arch:amd64
-        cpus: 8
-      git:
-        submodules: true
-      services:
-        - docker
-      lock:
-        key: dev-env-image-publish
-        wait: true
-        timeout: 7200
-        expires: 7200
-      stages:
-        - name: Build image
-          script: |
-            set -eu
-            IMAGE="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env"
-            IMAGE="$IMAGE:latest" bash 10-env/build-image.sh "$IMAGE:${CNB_COMMIT_SHORT}"
-        - name: Push image
-          script: |
-            set -eu
-            IMAGE="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env"
-            docker push "$IMAGE:${CNB_COMMIT_SHORT}"
-            docker push "$IMAGE:latest"
-    - name: Sync to GitHub
-      stages:
-        - name: Configure GitHub SSH on port 443
-          script: git config core.sshCommand 'ssh -o UserKnownHostsFile=/workspace/.cnb/github-known-hosts -o StrictHostKeyChecking=yes -o ConnectTimeout=30'
-        - name: Sync current branch and tags
-          image: tencentcom/git-sync
-          settingsFrom:
-            - https://cnb.cool/fu1fan/secrets/-/blob/main/vibrareveal-github-sync.yml
-          settings:
-            target_url: ssh://git@ssh.github.com:443/fu1fan/VibraReveal.git
-            branch: ${CNB_BRANCH}
-            push_tags: true
-
 $:
   tag_push:
-    - name: Sync tags to GitHub
+    - &sync_tags_to_github
+      name: Sync tags to GitHub
       stages:
         - name: Configure GitHub SSH on port 443
           script: git config core.sshCommand 'ssh -o UserKnownHostsFile=/workspace/.cnb/github-known-hosts -o StrictHostKeyChecking=yes -o ConnectTimeout=30'
@@ -104,3 +59,51 @@ $:
           script: |
             . /etc/profile.d/elf2.sh
             "${ELF2_CROSS_COMPILE}gcc" -dumpmachine
+
+"**":
+  push:
+    - name: Sync to GitHub
+      stages:
+        - name: Configure GitHub SSH on port 443
+          script: git config core.sshCommand 'ssh -o UserKnownHostsFile=/workspace/.cnb/github-known-hosts -o StrictHostKeyChecking=yes -o ConnectTimeout=30'
+        - name: Sync current branch and tags
+          image: tencentcom/git-sync
+          settingsFrom:
+            - https://cnb.cool/fu1fan/secrets/-/blob/main/vibrareveal-github-sync.yml
+          settings:
+            target_url: ssh://git@ssh.github.com:443/fu1fan/VibraReveal.git
+            branch: ${CNB_BRANCH}
+            push_tags: true
+
+# 开发环境镜像只在推送 dev-env-v* 形式的 Tag 时重建并发布，普通分支提交不触发，
+# 避免每次改动 10-env 都重跑一次全量构建（含 2.7 GB 固定依赖下载）。
+# 用法：git tag dev-env-v1.0.0 && git push origin dev-env-v1.0.0
+"dev-env-v*":
+  tag_push:
+    - name: Publish dev environment image
+      runner:
+        tags: cnb:arch:amd64
+        cpus: 8
+      git:
+        submodules: true
+      services:
+        - docker
+      lock:
+        key: dev-env-image-publish
+        wait: true
+        timeout: 7200
+        expires: 7200
+      stages:
+        - name: Build image
+          script: |
+            set -eu
+            IMAGE="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env"
+            IMAGE="$IMAGE:latest" bash 10-env/build-image.sh "$IMAGE:${CNB_BRANCH}"
+        - name: Push image
+          script: |
+            set -eu
+            IMAGE="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env"
+            docker push "$IMAGE:${CNB_BRANCH}"
+            docker push "$IMAGE:latest"
+    # 该 Tag 也按仓库约定同步到 GitHub；用 & 锚点复用上面的任务定义。
+    - <<: *sync_tags_to_github
