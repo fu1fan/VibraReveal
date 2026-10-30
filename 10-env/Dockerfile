@@ -42,7 +42,8 @@ RUN set -eux; \
 RUN set -eux; \
     curl --retry 5 --retry-all-errors -fsSL https://code-server.dev/install.sh -o /tmp/code-server-install.sh; \
     sh /usr/local/lib/dev-env-retry.sh sh /tmp/code-server-install.sh; \
-    rm /tmp/code-server-install.sh
+    rm /tmp/code-server-install.sh; \
+    rm -rf /root/.cache/code-server
 RUN set -eux; \
     for ext in \
         cnbcool.cnb-welcome \
@@ -54,7 +55,8 @@ RUN set -eux; \
         mathematic.vscode-pdf \
         tencent-cloud.coding-copilot \
     ; do sh /usr/local/lib/dev-env-retry.sh code-server --install-extension "$ext"; done
-RUN sh /usr/local/lib/dev-env-retry.sh npm install -g @tencent-ai/codebuddy-code
+RUN sh /usr/local/lib/dev-env-retry.sh npm install -g @tencent-ai/codebuddy-code \
+    && npm cache clean --force
 
 # (7) 远程接入与常用命令行工具。C/C++ 的 IntelliSense 用 clangd（微软 C/C++ 扩展
 # 不在 open-vsx 扩展源内，无法在 code-server 中安装）。

@@ -1,6 +1,9 @@
 import importlib.machinery
 import importlib.util
 import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 import tempfile
 import unittest
@@ -60,3 +63,27 @@ class Client(unittest.TestCase):
             spec['image'] = 'example.test/app-sdk:latest'
             lock.write_text(json.dumps(spec))
             with self.assertRaises(ValueError): sdk.load(lock, root / 'cache')
+
+    def test_two_processes_install_once(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            lock, spec = self.fixture(root)
+            self.populate(root / 'payload', spec['system_commit'])
+            fake = root / 'docker'
+            fake.write_text('#!' + sys.executable + '\n' + """import os, pathlib, shutil, sys, time
+root = pathlib.Path(os.environ['FIXTURE'])
+args = sys.argv[1:]
+if args[0] == 'pull':
+    with (root / 'pulls').open('a') as f: f.write('pull\\n')
+    time.sleep(.3)
+elif args[0] == 'create': print('container')
+elif args[0] == 'cp': shutil.copytree(root / 'payload', args[-1])
+""")
+            fake.chmod(0o755)
+            env = dict(os.environ, FIXTURE=str(root), PATH=str(root)+':'+os.environ['PATH'])
+            cmd = [sys.executable, loader.path, '--lock', str(lock), '--cache', str(root / 'cache'), 'use']
+            procs = [subprocess.Popen(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE) for _ in range(2)]
+            for proc in procs:
+                out, err = proc.communicate(timeout=10)
+                self.assertEqual(proc.returncode, 0, err.decode())
+            self.assertEqual((root / 'pulls').read_text().splitlines(), ['pull'])

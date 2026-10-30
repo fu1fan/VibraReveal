@@ -91,9 +91,19 @@ $:
 
   # 手动入口：用同一个镜像验证开发环境可用（云原生构建侧）。
   web_trigger_env_check:
-    - name: dev-env-selftest
+    - &env_check
+      name: dev-env-selftest
+      runner:
+        tags: cnb:arch:amd64
+        cpus: 8
+      git:
+        submodules: false
+      services:
+        - docker
       docker:
         image: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/daily-env:latest
+        volumes:
+          - /cache/elf2-sdk:read-write
       stages:
         - name: Environment report
           script: sh /usr/local/lib/dev-env-smoke-test.sh daily
@@ -101,9 +111,11 @@ $:
           script: |
             cd 04-algorithms/phase-motion
             python3 -c "import numpy, cv2, matplotlib; print('numpy', numpy.__version__, 'cv2', cv2.__version__, 'matplotlib', matplotlib.__version__)"
-        - name: Cross compiler
-          script: |
-            elf2-sdk run sh -c '"${ELF2_CROSS_COMPILE}gcc" -dumpmachine'
+        - name: Cross compiler and offline SDK cache
+          script: bash 10-env/check-sdk.sh
+
+  api_trigger_env_check:
+    - *env_check
 
 "**":
   push:
