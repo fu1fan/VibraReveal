@@ -1,7 +1,7 @@
-# VibraReveal 统一开发环境镜像
+# VibraReveal 完整系统构建环境镜像
 #
-# 同一个镜像同时用于「云原生开发」和「云原生构建」，由 .cnb.yml 显式构建并发布到
-# CNB Docker 制品库，不依赖 CNB 对 Dockerfile 的自动缓存。
+# 由独立发布入口构建，供 elf2-system 或系统构建使用；日常 IDE 使用 Dockerfile。
+# system.lock.json 固定实际使用的完整镜像 digest。
 #
 # 镜像内容：
 #   1. ELF2 系统构建主机依赖，与 02-platform/RK3588-OV9281/.ci/Dockerfile 一致
