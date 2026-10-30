@@ -113,6 +113,13 @@ $:
             python3 -c "import numpy, cv2, matplotlib; print('numpy', numpy.__version__, 'cv2', cv2.__version__, 'matplotlib', matplotlib.__version__)"
         - name: Cross compiler and offline SDK cache
           script: bash 10-env/check-sdk.sh
+        - name: Verify full system environment workspace access
+          script: |
+            set -eu
+            IMAGE=$(python3 -c 'import json; print(json.load(open("10-env/system.lock.json"))["image"])')
+            docker run --rm --platform linux/amd64 \
+              --mount type=bind,src=/workspace,dst=/workspace,readonly \
+              "$IMAGE" bash -c 'test -f /workspace/10-env/sdk.lock.json && command -v elf2-build && test -s /opt/elf2-deps/.manifest-sha256'
 
   api_trigger_env_check:
     - *env_check
