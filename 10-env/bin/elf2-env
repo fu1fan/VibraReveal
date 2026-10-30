@@ -1,0 +1,64 @@
+#!/bin/sh
+# 报告 ELF2 开发环境状态：固定依赖、交叉工具链、缓存目录和增量缓存键。
+set -u
+
+SDK=${ELF2_SDK_DIR:-/workspace/02-platform/RK3588-OV9281}
+DEPS=${ELF2_DEPENDENCY_ROOT:-/opt/elf2-deps}
+
+echo "== 主机工具 =="
+printf 'python3: %s\n' "$(python3 -V 2>&1)"
+printf 'gcc:     %s\n' "$(gcc -dumpfullversion 2>/dev/null || echo 缺失)"
+printf 'ccache:  %s\n' "$(ccache --version 2>/dev/null | head -1 || echo 缺失)"
+printf 'node:    %s\n' "$(node -v 2>/dev/null || echo 缺失)"
+printf 'code-server: %s\n' "$(code-server --version 2>/dev/null | head -1 || echo 缺失)"
+
+echo
+echo "== 固定依赖 =="
+if [ -f "$DEPS/.manifest-sha256" ]; then
+    echo "manifest sha256: $(cat "$DEPS/.manifest-sha256")"
+else
+    echo "缺少 $DEPS/.manifest-sha256（依赖未展开）"
+fi
+
+echo
+echo "== 交叉工具链 =="
+TOOLCHAIN=
+for gcc in "$DEPS"/prebuilts/gcc/linux-x86/aarch64/*/bin/aarch64-none-linux-gnu-gcc; do
+    [ -x "$gcc" ] || continue
+    TOOLCHAIN=${gcc%gcc}
+    break
+done
+if [ -n "$TOOLCHAIN" ]; then
+    printf 'CROSS_COMPILE: %s\n' "$TOOLCHAIN"
+    printf 'cc:            %s\n' "$("${TOOLCHAIN}gcc" --version | head -1)"
+    printf 'sysroot:       %s\n' "$("${TOOLCHAIN}gcc" -print-sysroot 2>/dev/null || echo 工具链默认)"
+else
+    echo "未找到 aarch64-none-linux-gnu 工具链"
+fi
+
+echo
+echo "== 增量缓存 =="
+for dir in "${ELF2_WORK_CACHE:-/cache/elf2-work}" "${ELF2_CCACHE_DIR:-/cache/elf2-ccache}" "${CCACHE_DIR:-/cache/elf2-app-ccache}"; do
+    if [ -d "$dir" ]; then
+        printf '%s：已挂载\n' "$dir"
+    else
+        printf '%s：不存在（未挂载数据卷时构建仍可用，但不跨环境保留）\n' "$dir"
+    fi
+done
+
+echo
+echo "== 增量缓存键 =="
+if [ -f "$SDK/.ci/build.py" ]; then
+    python3 - "$SDK" <<'PY'
+import pathlib
+import sys
+
+sdk = pathlib.Path(sys.argv[1])
+sys.path.insert(0, str(sdk / '.ci'))
+import build  # noqa: E402
+
+print(build.compatibility_key(build.SOURCE, sdk / 'docs/migration/dependencies.json'))
+PY
+else
+    echo "缺少 $SDK/.ci/build.py"
+fi

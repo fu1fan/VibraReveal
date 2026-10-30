@@ -1,0 +1,44 @@
+#!/bin/sh
+# ELF2 系统镜像增量构建。
+#
+# 固定依赖来自镜像的 /opt/elf2-deps；SDK 工作区和 ccache 落在 CNB 数据卷上，
+# 卷路径与 02-platform/RK3588-OV9281 的流水线一致，同一构建节点上可直接复用。
+#
+# 用法：
+#   elf2-build                          增量构建，成功后自动提交缓存标记
+#   ELF2_BUILD_MODE=clean elf2-build    干净构建（不复用对象文件、禁用 ccache）
+#   elf2-build --finish                 只提交缓存标记
+#   elf2-build --no-finish              只构建，不提交缓存标记
+#
+# 产物在 $ELF2_SDK_DIR/dist/ 下。没有提交缓存标记的工作区会在下次构建时被丢弃。
+set -eu
+
+SDK=${ELF2_SDK_DIR:-/workspace/02-platform/RK3588-OV9281}
+if [ ! -f "$SDK/.ci/build.py" ]; then
+    echo "找不到 ELF2 SDK：$SDK（02-platform/RK3588-OV9281 子模块是否已初始化？）" >&2
+    exit 1
+fi
+
+export ELF2_DEPENDENCY_ROOT=${ELF2_DEPENDENCY_ROOT:-/opt/elf2-deps}
+export ELF2_WORK_CACHE=${ELF2_WORK_CACHE:-/cache/elf2-work}
+export ELF2_CCACHE_DIR=${ELF2_CCACHE_DIR:-/cache/elf2-ccache}
+export ELF2_JOBS=${ELF2_JOBS:-$(nproc)}
+
+# 开发环境里的 CNB_COMMIT / CNB_IS_TAG 描述的是本仓库的提交，与 ELF2 子模块无关；
+# .ci/build.py 会用它们校验 SDK 源码，必须清掉。
+unset CNB_COMMIT CNB_IS_TAG
+
+cd "$SDK"
+
+case "${1:-}" in
+    --finish)
+        exec python3 .ci/build.py --finish
+        ;;
+    --no-finish)
+        shift
+        exec python3 .ci/build.py "$@"
+        ;;
+esac
+
+python3 .ci/build.py "$@"
+python3 .ci/build.py --finish

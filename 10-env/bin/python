@@ -1,0 +1,22 @@
+#!/bin/sh
+# `python` 选择器。
+#
+# ELF2 厂商 SDK 的 U-Boot 脚本通过 `python` 调用 Python 2（见
+# device/rockchip/common/scripts/check-loader.sh），而仓库里的参考算法和现代工具链
+# 需要 Python 3。两者共用同一个命令名，因此这里按调用上下文选择解释器：
+#   * ELF2_PYTHON=2 / ELF2_PYTHON=3：显式指定；
+#   * 处于 .ci/build.py 拉起厂商脚本的子进程里：.ci/build.py 会给子进程设置
+#     USER=elf2-ci，此时使用 Python 2；
+#   * 其余情况（交互式终端、code-server、脚本任务）使用 Python 3。
+#
+# 手工执行厂商 `./build.sh` 需要 Python 2 时：
+#   ELF2_PYTHON=2 ./build.sh all
+case "${ELF2_PYTHON:-}" in
+    2) exec /usr/bin/python2 "$@" ;;
+    3) exec /usr/bin/python3 "$@" ;;
+esac
+
+if [ "${USER:-}" = "elf2-ci" ]; then
+    exec /usr/bin/python2 "$@"
+fi
+exec /usr/bin/python3 "$@"

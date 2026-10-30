@@ -1,6 +1,38 @@
 # CNB is the source of truth; push branches and tags to the GitHub mirror.
+
 "**":
   push:
+    # 开发环境镜像显式构建并发布到 CNB Docker 制品库，不走 CNB 的 Dockerfile 自动缓存。
+    # 镜像内容只依赖下列路径，其他提交不重复构建。
+    - name: Publish dev environment image
+      ifModify:
+        - "10-env/**"
+        - "04-algorithms/phase-motion/requirements.txt"
+        - "02-platform/RK3588-OV9281"
+      runner:
+        tags: cnb:arch:amd64
+        cpus: 8
+      git:
+        submodules: true
+      services:
+        - docker
+      lock:
+        key: dev-env-image-publish
+        wait: true
+        timeout: 7200
+        expires: 7200
+      stages:
+        - name: Build image
+          script: |
+            set -eu
+            IMAGE="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env"
+            IMAGE="$IMAGE:latest" bash 10-env/build-image.sh "$IMAGE:${CNB_COMMIT_SHORT}"
+        - name: Push image
+          script: |
+            set -eu
+            IMAGE="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env"
+            docker push "$IMAGE:${CNB_COMMIT_SHORT}"
+            docker push "$IMAGE:latest"
     - name: Sync to GitHub
       stages:
         - name: Configure GitHub SSH on port 443
@@ -27,3 +59,48 @@ $:
           settings:
             target_url: ssh://git@ssh.github.com:443/fu1fan/VibraReveal.git
             push_tags: true
+
+  # 云原生开发：与云原生构建共用同一个已发布镜像。
+  vscode:
+    - name: VibraReveal dev environment
+      services:
+        - vscode
+        - docker
+      runner:
+        tags: cnb:arch:amd64
+        cpus: 8
+      docker:
+        image: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env:latest
+        volumes:
+          # 与 ELF2 系统流水线同名同路径，尽量复用同一份增量编译状态。
+          # 开发环境用 read-write：会话写入立即落盘，不依赖 copy-on-write 的
+          # 「流水线成功后才合并」语义，保证下一次登录仍能增量编译。
+          - elf2-system-v1:/cache/elf2-work:read-write
+          - elf2-system-v1:/cache/elf2-ccache:read-write
+          # 交叉编译 elf2 应用程序的 ccache。
+          - /cache/elf2-app-ccache:read-write
+          - /root/.cache/pip:read-write
+      stages:
+        # 把 WebIDE / CodeBuddy / Remote-SSH 的个人状态软链到 ~/.cnb，交给文件漫游持久化。
+        - name: Restore persistent IDE state
+          script: bash 10-env/persist.sh
+      endStages:
+        - name: Report persistent IDE state
+          script: bash 10-env/persist.sh --report
+
+  # 手动入口：用同一个镜像验证开发环境可用（云原生构建侧）。
+  web_trigger_env_check:
+    - name: dev-env-selftest
+      docker:
+        image: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env:latest
+      stages:
+        - name: Environment report
+          script: elf2-env
+        - name: Python dependencies
+          script: |
+            cd 04-algorithms/phase-motion
+            python3 -c "import numpy, cv2, matplotlib; print('numpy', numpy.__version__, 'cv2', cv2.__version__, 'matplotlib', matplotlib.__version__)"
+        - name: Cross compiler
+          script: |
+            . /etc/profile.d/elf2.sh
+            "${ELF2_CROSS_COMPILE}gcc" -dumpmachine
