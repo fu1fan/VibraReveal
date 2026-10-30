@@ -1,0 +1,19 @@
+{
+  "release": "V7.3-layout-refresh-2026-10-30",
+  "geometry_changed": false,
+  "geometry_file_count_verified": 374,
+  "build_script_sha256": "cd883fd5f57847a552e77c0c29fc4debdbdfd07d565a38bcf0feca9e98ee8b86",
+  "original_build_script_unchanged": false,
+  "BOM_rows": 61,
+  "assembly_pdf_pages": 15,
+  "BOM_pdf_pages": 33,
+  "privacy_scan": "No private message identifiers, Library links, account data or absolute work-session paths found in text/PDF/XLSX payloads. No original user photographs included.",
+  "pdf_rebuild": "Both portable scripts executed from clean release directory successfully; no CAD rebuild needed for documentation-only change.",
+  "repository_destination": "01-hardware/mechanical/v7.3/",
+  "caution": "Engineering prototype; no fabrication or electrical release.",
+  "independent_release_review": "Layout-only refresh: 374 previously checksummed files re-verified by content; 9 manufactured solids published to drawings/ (3 acrylic DXF+STEP, 6 print STL+STEP); BOM 61 rows and both PDFs unchanged.",
+  "previous_build_script_sha256": "66345e5e8efa0f95b8ad5711375fb646be19cfeec93358b60325f16073856c8c",
+  "build_script_note": "build.py edited 2026-10-30 for output-path handling only (src/ -> build/, publish to drawings/ and assembly/). No parametric value, shape or assembly constraint touched.",
+  "layout": "src/ (source) | build/ (regenerated, gitignored) | drawings/ + assembly/ (published) | docs/ review/ qa/",
+  "layout_verification": "All 374 files listed in the previous SHA256SUMS.txt were re-hashed after the move: 359 byte-identical, 15 differing files are the scripts whose path constants changed for the new layout. No DXF/STL/STEP/PDF/XLSX payload changed."
+}

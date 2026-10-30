@@ -38,7 +38,7 @@ VibraReveal（振见）是一个软硬件协同研发项目：利用 **OV9281 �
 VibraReveal/
 ├── 01-hardware/       # 采集与计算硬件
 │   ├── modules/       # 已采购模块建档（7inch_HDMI_LCD_C、elf2、icm-42688-p、ov9281）
-│   └── mechanical/    # 整机机械设计（待建）
+│   └── mechanical/    # 整机机械设计 V7.3：src 源 / drawings+assembly 交付 / build 产物
 ├── 02-platform/       # 平台环境；含 RK3588-OV9281 子模块
 ├── 03-apps/
 │   ├── rk3588/        # RK3588 Linux 用户态应用
