@@ -1,240 +1,136 @@
-# 10-env · 统一开发环境镜像
+# 日常开发、按需 SDK 与系统构建
 
-本目录提供一个镜像，同时供**云原生开发（WebIDE）**和**云原生构建**使用，内容包括：
+日常环境负责 IDE、Python 算法和应用开发；完整系统环境负责内核、rootfs 和固件构建。
+系统流水线发布的应用 SDK 按 digest 加载，不把几 GB 的厂商材料和 rootfs 放进日常镜像。
 
-| 能力 | 组成 | 位置 |
-| --- | --- | --- |
-| 运行仓库 Python 参考实现 | Python 3.10 + `numpy` / `opencv-python-headless` / `matplotlib` | 系统解释器 |
-| 构建 ELF2 开发系统 | ELF2 构建主机依赖（与子模块 `.ci/Dockerfile` 一致）+ 固定工具链/rootfs/厂商材料 | `/opt/elf2-deps` |
-| ELF2 交叉编译 | `aarch64-none-linux-gnu` 工具链、CMake 工具链文件、`elf2-sysroot` | `/opt/elf2-deps`、`/opt/elf2/cmake` |
-| WebIDE | code-server + CNB 官方示例插件 + CodeBuddy 插件与 CLI | `/root/.local/share/code-server` |
-| IDE 状态持久化 | `~/.cnb/<repo>/` 软链 + CNB 文件漫游 | `10-env/persist.sh` |
+## 快速开始
 
-目录：
+打开 CNB 云原生开发即可使用 Python、code-server、CodeBuddy、clangd、CMake。
+启动不拉取 RK3588 子模块，不下载应用 SDK，不执行系统构建。
 
-```text
-10-env/
-├── Dockerfile                        # 镜像定义
-├── build-image.sh                    # 组装最小上下文并构建镜像
-├── profile.d/elf2.sh                 # 交叉编译环境变量（登录 shell 自动加载）
-├── cmake/elf2-aarch64-toolchain.cmake # CMake 交叉编译工具链文件
-├── persist.sh                        # IDE/CodeBuddy 状态漫游软链
-└── bin/
-    ├── python                        # python 选择器（ELF2 构建用 2，日常用 3）
-    ├── elf2-build                    # ELF2 系统增量构建
-    ├── elf2-env                      # 环境自检报告
-    └── elf2-sysroot                  # 从 rootfs 基线抽取目标 sysroot
+第一次交叉编译：
+
+```sh
+elf2-sdk use                       # 按 10-env/sdk.lock.json 安装 SDK，可提前预热
+elf2-cmake -S my-app -B build/elf2  # 同样会自动安装 SDK；默认使用固定版本
+elf2-sdk run cmake --build build/elf2
+elf2-sdk run sh -c '"${ELF2_CROSS_COMPILE}gcc" --sysroot="$ELF2_SYSROOT" main.c -o app'
 ```
 
-## 1. 镜像发布
+`elf2-sdk use` 不修改父 shell，也不切换全局版本。`run` 为子进程设置工具链、sysroot、
+PATH 和隔离后的 pkg-config 搜索路径。需要交互式交叉编译 shell 时执行 `elf2-sdk run bash`。
+更换 SDK 后使用新的 CMake build 目录，避免旧编译器路径被 CMake 缓存。
 
-镜像**显式构建并推送**到 CNB Docker 制品库，不使用 CNB 对 Dockerfile 的自动缓存：
+默认锁文件为 `/workspace/10-env/sdk.lock.json`，其他项目可指定：
 
-```text
-${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env:latest
-${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env:<tag>
+```sh
+elf2-sdk --lock /path/to/sdk.lock.json run cmake ...
 ```
 
-- 普通分支提交不会重建镜像，即使改动落在 `10-env/**` 也一样，避免为每次小改重跑一次含
-  2.7 GB 依赖下载的全量构建。发布只有两个入口：
+锁文件必须同时记录产物镜像 digest 和系统提交：
 
-  1. 推送 `dev-env-v*` 形式的 Tag，镜像标签就是 Tag 名：
+```json
+{
+  "image": "docker.cnb.cool/fu1fan/rk3588-ov9281/app-sdk@sha256:<64位摘要>",
+  "system_commit": "<对应系统完整提交SHA>"
+}
+```
 
-     ```bash
-     git tag dev-env-v1.0.0
-     git push origin dev-env-v1.0.0
-     ```
+不能使用 latest 或其他可变标签。更新前确认开发板系统版本；编译通过不等于已经完成板端 ABI 验收。
 
-  2. 在仓库「代码 - 分支详情页」点「发布开发环境镜像」按钮，可自定镜像标签（默认 `dev-env-manual`）。
-     按钮定义在 `.cnb/web_trigger.yml`；同一分组下的「开发环境自检」按钮只做检查，不重建镜像。
-     按钮需要仓库写权限，且只在分支详情页显示。
+## SDK 的来源和缓存
 
-- 同一时刻只允许一个发布任务（`lock`）；走 Tag 入口时该 Tag 还会按仓库约定同步到 GitHub。
-- 镜像标签为 Tag 名（`.../dev-env:dev-env-v1.0.0`）与 `latest`，`latest` 指向最近一次成功发布。
-  云原生开发引用 `latest`；要固定版本或复现旧环境，把 `$: vscode:` 的 `image` 换成具体 Tag。
-- 镜像发布成功之前，云原生开发会因为拉不到镜像而起不来（`docker.image` 没有 `build` 兜底），
-  所以顺序是：打 Tag → 等发布流水线成功 → 再启动/重建开发环境。
+RK3588 系统流水线在验证最终系统后导出 `/sdk`：工具链、开发 sysroot、最终 rootfs 的
+库和头文件、系统身份与校验清单。导出后在另一个路径编译链接 C、C++、Vulkan 样例。
+固件 update.img、内核配置和 Module.symvers 仍通过系统仓库的原有附件发布流程获取。
+应用 SDK 不承诺包含全部第三方开发头文件，也不是完整的内核模块开发树。
 
-本地构建（需要已初始化子模块）：
+首次使用由 `docker pull` 拉取固定 digest，创建不运行的容器，并用 `docker cp` 提取 `/sdk`。
+安装使用文件锁、临时目录和原子重命名；校验系统提交后才写完成标记。失败不发布部分缓存。
+缓存命中后无需访问 Docker 或网络。同一节点的新环境通过 `elf2-sdk-v1:/cache/elf2-sdk`
+的 copy-on-write 数据卷复用：流水线成功或开发环境正常成功结束后合并缓存；失败、强杀
+或异常退出可能丢失本轮新增缓存，需要重新下载。不同会话写入隔离，同一会话安装仍有文件锁。
+此选择已在 CNB 实测可写；read-write 卷在当前 UID 映射下出现 65534 所有权与写入拒绝。
+不同 digest 并存，避免项目之间覆盖。冷节点首次编译仍需下载 SDK，只是不会阻塞打开 IDE。
 
-```bash
+Docker 镜像层与提取缓存可能各占一份空间；本工具不自动删除 Docker 镜像，以免干扰其他使用者。
+SDK 缓存也不自动清理。确认没有构建使用后，可手动删除不再需要的 digest 目录。
+
+## 完整系统构建
+
+```sh
+elf2-system
+# 首次会初始化锁定的 RK3588 子模块、拉取 system.lock.json 固定的完整镜像。
+# 在完整环境 shell 中：
+elf2-build
+# 产物回到 /workspace/02-platform/RK3588-OV9281/dist
+```
+
+`elf2-system` 使用 CNB Docker 服务并挂载工作区，适用于终端交互。完整环境镜像固定在
+`system.lock.json`；当前可继续使用上一轮已验证的完整 dev-env 镜像，不需等待重新打包。
+工具只按父仓库固定的子模块提交初始化，不自动追踪子模块 main。
+
+完整环境保留 Python 2/3 选择器、厂商材料、基础 rootfs、elf2-build 和 elf2-sysroot。
+elf2-build 对缓存与 SDK 产物目录加锁，忙时拒绝并发；不接受独立 --finish/--no-finish。
+构建只使用提交后的 SDK 源码，未提交修改会报错。构建结果并不代表开发板验收通过。
+
+嵌套系统容器的命名卷由 Docker 服务管理，其跨环境生命周期不作保证；正式系统发布和
+持续增量构建应使用 RK3588 仓库的系统流水线及其 CNB 缓存卷。
+`elf2-sysroot` 仍仅提取基础 rootfs，应用开发应优先使用本轮系统产出的版本化 SDK。
+
+## 镜像构建与发布
+
+- `Dockerfile`：日常镜像 `daily-env`，无需子模块；系统重依赖不在其中。
+- `Dockerfile.system`：完整系统环境；仅在需要更新系统构建环境时构建。
+- `build-image.sh`：组装最小上下文，避免传入整个 SDK 和硬件资料。
+
+```sh
+IMAGE=vibrareveal-daily:local bash 10-env/build-image.sh
 git submodule update --init 02-platform/RK3588-OV9281
-IMAGE=vibrareveal-dev-env:local bash 10-env/build-image.sh
+MODE=system IMAGE=vibrareveal-system:local bash 10-env/build-image.sh
 ```
 
-`build-image.sh` 只把 Dockerfile 需要的几个文件复制进临时上下文，避免把 2.4 GB 子模块
-和硬件资料送进 Docker。
+页面“发布开发环境镜像”和 `api_trigger_publish_env` 发布日常镜像；`dev-env-v*` Tag
+也发布日常镜像。`api_trigger_publish_system_env` 发布带构建编号的完整镜像，成功后按输出
+的 digest 更新 system.lock.json。两个发布入口使用同一发布锁。
 
-镜像约 6~8 GB，主要来自 `/opt/elf2-deps` 中按 SHA256 固定的依赖（压缩后 2.7 GB）。
+安装步骤保留有限重试，失败不会默默跳过扩展。镜像构建运行冒烟检查与脚本回归测试。
+系统固定依赖独立于日常镜像，日常重建不再下载这部分材料。
 
-网络安装采用有上限重试，重试耗尽仍失败；插件缺失不会发布。code-server、扩展与 CLI 分层安装。
+## 持久化和启动速度
 
-预装插件（open-vsx 源）：`cnbcool.cnb-welcome`、`redhat.vscode-yaml`、
-`dbaeumer.vscode-eslint`、`mhutchie.git-graph`（以上为 CNB 自定义开发环境官方示例中的全部插件）、
-`ms-python.python`、`llvm-vs-code-extensions.vscode-clangd`、`mathematic.vscode-pdf`（PDF 查看器）、
-`tencent-cloud.coding-copilot`（CodeBuddy）。同时安装 CodeBuddy Code CLI（`codebuddy` 命令）与
-`clangd` / `clang-format`。
-微软的 C/C++ 扩展不在 open-vsx 内，code-server 无法安装，因此 C/C++ 提示由 clangd 提供。
+日常挂载 `/cache/elf2-sdk`、`/cache/elf2-app-ccache`、`/root/.cache/pip`，均使用 copy-on-write。
+仍保留 Docker 服务供按需提取 SDK 和启动系统环境，其启动有少量开销。
+不在启动阶段执行 elf2-sdk use，避免把 SDK 下载重新放回启动关键路径。
+具体提速以 CNB 冷节点实测为准，不能保证跨节点镜像或文件缓存命中。
 
-## 2. 云原生开发
+`persist.sh`/`persist.py` 在 IDE 启动时关联 CodeBuddy、History、机器设置与 ~/.agents 到
+`~/.cnb/<repo>`。复制失败保留源数据；冲突时漫游数据优先，原数据保留在原目录旁
+的 `.pre-roam-*` 备份中；支持动态及隐藏条目恢复。备份不在脚本的漫游目录内。
+外部软链保留，迁移内部相对软链转换为绝对路径。迁移应在 IDE 写入前运行。
 
-`.cnb.yml` 的 `$: vscode:` 直接引用上面的镜像，并挂载五个数据卷：
+CNB 漫游依赖正常销毁环境，容量和多环境覆盖限制参见
+[文件漫游文档](https://docs.cnb.cool/zh/workspaces/file-keeper.md)。
+数据卷和服务配置依据 [CNB 语法手册](https://docs.cnb.cool/zh/build/grammar.md)。
 
-| 卷 / 路径 | 作用 |
-| --- | --- |
-| `vibrareveal-dev-v1:/cache/elf2-work` | ELF2 SDK 工作区（保留 `.o`、依赖文件和生成头文件） |
-| `vibrareveal-dev-v1:/cache/elf2-ccache` | ELF2 系统构建的 ccache |
-| `/cache/elf2-app-ccache` | 交叉编译 elf2 应用程序的 ccache |
-| `/cache/elf2-sysroot` | 已展开的目标 rootfs |
-| `/root/.cache/pip` | pip 下载缓存 |
+## 验证
 
-启动时执行 `10-env/persist.sh` 建立持久化软链；环境销毁前执行 `persist.sh --report`
-打印漫游目录占用。
-
-云原生构建复用同一镜像，在任意流水线里写：
-
-```yaml
-docker:
-  image: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env:latest
-stages:
-  - name: build
-    script: elf2-env
+```sh
+python3 -m unittest discover -s 10-env/tests -v
 ```
 
-仓库里现成的例子是 `.cnb.yml` 的 `web_trigger_env_check` 手动入口。
+Linux 回归覆盖持久化故障、构建互斥、sysroot 提取、网络重试、SDK 校验与失败安装恢复。
+真实 SDK 的编译链接在系统导出阶段验证，日常镜像发布后还应使用固定 SDK 做端到端自检。
 
-### 工作区并发与缓存隔离
+### 2026-10-31 发布验证记录
 
-开发卷组使用 `vibrareveal-dev-v1`，与 SDK 系统流水线隔离。`elf2-build` 同时锁住
-缓存根目录与当前 SDK 的 Git 元数据目录，锁覆盖构建、产物生成和成功标记；第二个终端
-会明确报忙，不会清理第一轮的工作区。不同缓存目录仍不能同时写同一 SDK 的 `dist`。
-不要绕过包装器直接运行 `.ci/build.py`，底层脚本本身没有此锁。
-
-缓存只在同一节点可复用；包版本、SDK 构建脚本或依赖清单改变都会影响兼容键。
-不再承诺跨仓库、跨镜像共享工作区缓存。
-
-## 3. 运行仓库 Python 代码
-
-```bash
-cd 04-algorithms/phase-motion
-python3 -X utf8 phasemag.py --selftest --outdir /tmp/selftest_out
-```
-
-依赖已预装在系统 Python 3 中，无需创建虚拟环境；需要隔离时仍可按 README 建 `.venv`。
-
-`python` 是一个选择器：ELF2 厂商 SDK 的 U-Boot 脚本通过 `python` 调 Python 2，
-`.ci/build.py` 拉起厂商脚本时会设置 `USER=elf2-ci`，此时 `python` 指向 Python 2；
-其余情况指向 Python 3。手工执行厂商构建脚本需要 Python 2 时用 `ELF2_PYTHON=2 ./build.sh ...`。
-
-## 4. ELF2 系统构建
-
-```bash
-cd 02-platform/RK3588-OV9281
-elf2-build                      # 增量构建，成功后自动提交缓存标记
-ELF2_BUILD_MODE=clean elf2-build # 干净构建
-elf2-env                        # 查看工具链、依赖、缓存目录与缓存键
-```
-
-- 固定依赖来自镜像 `/opt/elf2-deps`，不需要重新下载 2.7 GB 附件。
-- 工作区在 `/cache/elf2-work/<缓存键>/sdk`，源码按当前子模块 HEAD 同步，删除和切换提交都会正确处理。
-- ccache 在 `/cache/elf2-ccache`，上限 10 GB。
-- **构建成功后必须提交缓存标记**：没有标记的工作区会在下次构建开始时被判定为中断并整目录丢弃。
-  `elf2-build` 在锁内自动处理，不再接受独立的 `--finish` / `--no-finish`，避免把失败或其他轮次标记为成功。
-- 构建读取 SDK 的已提交 HEAD；存在未提交修改时直接拒绝，请先提交代码。
-- 产物在 `02-platform/RK3588-OV9281/dist/`。构建过程会校验 rootfs、模块和 `update.img`，
-  但**不代表已通过开发板验收**。
-- 需要至少 15 GiB 空闲空间存放工作区。
-
-开发环境的数据卷用 `read-write`：会话中的写入立即落盘，不依赖 `copy-on-write`
-「流水线成功后才合并」的语义，因此下次登录可以继续增量编译。共享开发卷的 `elf2-build` 使用文件锁互斥；
-系统流水线使用独立卷组。
-
-## 5. 交叉编译 elf2 程序
-
-登录 shell 会自动加载 `/etc/profile.d/elf2.sh`：
-
-| 变量 | 含义 |
-| --- | --- |
-| `ELF2_CROSS_COMPILE` | 工具链前缀，例如 `/opt/elf2-deps/prebuilts/gcc/linux-x86/aarch64/<ver>/bin/aarch64-none-linux-gnu-` |
-| `ELF2_SYSROOT` | 工具链 sysroot |
-| `ELF2_WORK_CACHE` / `ELF2_CCACHE_DIR` | 系统构建的工作区与 ccache |
-| `CCACHE_DIR` | 应用交叉编译的 ccache |
-
-Makefile 项目：
-
-```bash
-make CROSS_COMPILE="$ELF2_CROSS_COMPILE" ARCH=arm64
-```
-
-CMake 项目：
-
-```bash
-cmake -B build -DCMAKE_TOOLCHAIN_FILE=/opt/elf2/cmake/elf2-aarch64-toolchain.cmake
-cmake --build build
-```
-
-需要 elf2 上的额外库（例如 Vulkan/Mali 运行时）时，先展开目标 sysroot，再用它作 `--sysroot`：
-
-```bash
-elf2-sysroot                                     # 展开到 /cache/elf2-sysroot（一次性，约 1~2 GB）
-# 展开不会修改当前 shell，显式选择目标 sysroot
-ELF2_SYSROOT=/cache/elf2-sysroot cmake -B build -DCMAKE_TOOLCHAIN_FILE=/opt/elf2/cmake/elf2-aarch64-toolchain.cmake
-```
-
-展开过程使用文件锁和 rootfs SHA256 完成标记，失败不会标记成功。已有内容或基线变化时
-请指定新的空目录，脚本不会覆盖旧 sysroot。
-
-工具链 sysroot 只提供 libc 等基础库；业务库请以展开后的 rootfs 为准。
-
-## 6. IDE 与 CodeBuddy 状态持久化
-
-CNB 的文件漫游按用户维度保存 `~` 下的配置，环境销毁时写入、重建时恢复。镜像内的
-`persist.sh` 在启动时把下列路径软链到 `/root/.cnb/<repo>/`（该目录本身会被漫游）：
-
-| 目标 | 内容 |
-| --- | --- |
-| `~/.local/share/code-server/User/globalStorage/tencent-cloud.coding-copilot` | CodeBuddy 插件设置与状态（只挑这一个扩展目录，不整目录搬） |
-| `~/.local/share/code-server/User/History` | 本地文件历史 |
-| `~/.local/share/code-server/User/Machine/settings.json` | WebIDE 机器级设置 |
-| `~/.vscode-server/data/Machine/settings.json` | Remote-SSH 机器级设置 |
-| `~/.local/share/CodeBuddyExtension/Data` | CodeBuddy 扩展运行时数据（登录态、对话历史）；`Cache`、`Logs` 可重建，不搬 |
-| `~/.agents` | CodeBuddy 技能实体（`~/.codebuddy/skills` 以软链引用） |
-| `~/.codebuddy/*` | CodeBuddy Code CLI 的数据，按排除表筛选：排除 `logs`、`traces`、`debug`、`diagnostics`、`blobs`、`file-history`、`sessions`、`shell-snapshots`、`plugins` |
-
-`~/.local/share/code-server/User/settings.json`、`keybindings.json`、`snippets/` 由 CNB 原生漫游，
-脚本不介入。
-
-几个实现细节：
-
-- CodeBuddy Code 不同版本的目录结构不一致（例如出现了 `app/`、`local_storage/`、`expert-history.json`），
-  所以 CLI 部分按**排除表**合并当前目录与漫游目录的条目（包含隐藏条目），新环境也能恢复动态目录。
-- `plugins/` 是 61 MB 量级的可重装内容，排除在外，避免挤占全账号共享的漫游配额。
-- 常见配置文件（`settings.json`、`mcp.json`、`history.jsonl` 等）即使当前还没生成也会先建软链，
-  保证之后由 CodeBuddy 创建的版本直接落进漫游目录；这类链在文件生成前是悬空的，属于预期状态。
-- 复制失败立即中止并保留源路径；临时文件不会作为完整数据被重用。已恢复的漫游文件优先，
-  原数据保留在同目录的 `.pre-roam-*` 备份中，确认后可自行删除（备份不计入脚本的漫游目录）。
-- 现有外部软链保持原样；复制目录内的相对软链按原路径改为绝对路径。
-- 在 IDE 启动前执行迁移；文件锁避免迁移脚本并发，无法阻止已经运行的 IDE 写入。
-
-限制与注意事项：
-
-- 漫游只在环境**正常销毁**时发生，`kill 1` 关闭会丢失；同时多个环境时后销毁者覆盖先销毁者。
-- 漫游总量约 100 MB（整个账号共享），单文件 100 MB。CodeBuddy 设置里有 `cleanupPeriodDays`（默认 30 天），
-  会话积累过大时可先清理 `~/.codebuddy/projects/*/tool-results` 再退出。
-- 想额外保留别的路径，可在仓库的「个人设置 → 云原生开发 → 漫游文件」里按绝对路径或 Glob 追加，
-  不必改镜像。
-
-## 7. 已知限制
-
-- 镜像构建末尾会验证 Python 2/3、Python 依赖、全部扩展、CLI 和 AArch64 编译链接；
-  WebIDE 登录、漫游生命周期及开发板运行仍需实际环境验收。
-- 开发环境默认 8 核；系统构建可用 `runner.cpus` 或 `ELF2_JOBS` 调整。
-- 卷不跨节点，切换节点即冷启动；跨节点中间文件迁移未启用。
-- 镜像自带插件来自 open-vsx 扩展源；需要微软官方源独有的扩展时，按 CNB 文档下载 `.vsix` 后
-  `code-server --install-extension xxx.vsix` 安装。
-
-## 8. 回归验证
-
-在 Linux 上运行 `python3 -m unittest discover -s 10-env/tests -v`。
-API 自动化入口 `api_trigger_publish_env` 与页面按钮复用同一发布流水线。
-平台依据：[数据卷与锁](https://docs.cnb.cool/zh/build/grammar.html)、[文件漫游](https://docs.cnb.cool/zh/workspaces/file-keeper.html)。
+- 原完整镜像层大小 4,638,323,745 字节；日常镜像 `daily-sdk-20261031-final2`
+  为 848,640,822 字节，减少约 81.7%（CNB 制品库记录的镜像大小）。
+- 日常镜像构建 `cnb-4v8-1k66vcj3b` 成功，13 项回归与镜像冒烟检查通过。
+- 系统构建与 SDK 发布 `cnb-5sg-1k66uobrf` 成功，SDK 的 C/C++/Vulkan 搬迁编译验证通过。
+- 消费端自检 `cnb-ojf-1k66vgrvu` 的 CMake Vulkan 编译、Docker 不可达时的缓存复用、
+  完整系统容器工作区访问均通过。首次 SDK 拉取/提取及编译约 61 秒，该步骤不在 IDE 启动路径。
+- 最终日常镜像自检 `cnb-3cn-1k66vpjd3` 全部成功，其中冷拉取日志为 14.8 秒、Prepare 为 25.8 秒；
+  此为构建容器自检，不含完整 WebIDE 会话启动，不可直接当作 IDE 启动耗时。
+- 未启动额外 WebIDE 会话测量完整冷启动，以免并行会话的漫游回写影响正在使用的环境。
+  镜像体积下降不等于启动时间按相同比例下降；真实交互启动耗时待重建环境后确认。

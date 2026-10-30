@@ -15,11 +15,11 @@ $:
             target_url: ssh://git@ssh.github.com:443/fu1fan/VibraReveal.git
             push_tags: true
 
-  # 云原生开发：与云原生构建共用同一个已发布镜像。
+  # 日常开发：轻量镜像，SDK 在首次编译时按 digest 加载。
   vscode:
     - name: VibraReveal dev environment
       git:
-        submodules: true
+        submodules: false
       services:
         - vscode
         - docker
@@ -27,17 +27,11 @@ $:
         tags: cnb:arch:amd64
         cpus: 8
       docker:
-        image: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env:latest
+        image: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/daily-env:latest
         volumes:
-          # 与系统流水线隔离；终端构建由 elf2-build 的文件锁串行保护。
-          # 开发环境用 read-write：会话写入立即落盘，不依赖 copy-on-write 的
-          # 「流水线成功后才合并」语义，保证下一次登录仍能增量编译。
-          - vibrareveal-dev-v1:/cache/elf2-work:read-write
-          - vibrareveal-dev-v1:/cache/elf2-ccache:read-write
-          # 交叉编译 elf2 应用程序的 ccache。
-          - /cache/elf2-app-ccache:read-write
-          - /cache/elf2-sysroot:read-write
-          - /root/.cache/pip:read-write
+          - elf2-sdk-v1:/cache/elf2-sdk:copy-on-write
+          - /cache/elf2-app-ccache:copy-on-write
+          - /root/.cache/pip:copy-on-write
       stages:
         # 把 WebIDE / CodeBuddy / Remote-SSH 的个人状态软链到 ~/.cnb，交给文件漫游持久化。
         - name: Restore persistent IDE state
@@ -55,7 +49,7 @@ $:
         tags: cnb:arch:amd64
         cpus: 8
       git:
-        submodules: true
+        submodules: false
       services:
         - docker
       lock:
@@ -68,35 +62,67 @@ $:
           script: |
             set -eu
             IMAGE_TAG="${image_tag:-dev-env-manual}"
-            IMAGE="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env"
+            IMAGE="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/daily-env"
             IMAGE="$IMAGE:latest" bash 10-env/build-image.sh "$IMAGE:$IMAGE_TAG"
         - name: Push image
           script: |
             set -eu
             IMAGE_TAG="${image_tag:-dev-env-manual}"
-            IMAGE="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env"
+            IMAGE="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/daily-env"
             docker push "$IMAGE:$IMAGE_TAG"
             docker push "$IMAGE:latest"
 
   api_trigger_publish_env:
     - *publish_env
 
+  api_trigger_publish_system_env:
+    - <<: *publish_env
+      name: Publish full system environment
+      git:
+        submodules: true
+      stages:
+        - name: Build and publish system environment
+          script: |
+            set -eu
+            IMAGE="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/system-env:build-${CNB_BUILD_ID}"
+            MODE=system IMAGE="$IMAGE" bash 10-env/build-image.sh
+            docker push "$IMAGE"
+            docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE"
+
   # 手动入口：用同一个镜像验证开发环境可用（云原生构建侧）。
   web_trigger_env_check:
-    - name: dev-env-selftest
+    - &env_check
+      name: dev-env-selftest
+      runner:
+        tags: cnb:arch:amd64
+        cpus: 8
+      git:
+        submodules: false
+      services:
+        - docker
       docker:
-        image: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env:latest
+        image: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/daily-env:latest
+        volumes:
+          - elf2-sdk-v1:/cache/elf2-sdk:copy-on-write
       stages:
         - name: Environment report
-          script: elf2-env
+          script: sh /usr/local/lib/dev-env-smoke-test.sh daily
         - name: Python dependencies
           script: |
             cd 04-algorithms/phase-motion
             python3 -c "import numpy, cv2, matplotlib; print('numpy', numpy.__version__, 'cv2', cv2.__version__, 'matplotlib', matplotlib.__version__)"
-        - name: Cross compiler
+        - name: Cross compiler and offline SDK cache
+          script: bash 10-env/check-sdk.sh
+        - name: Verify full system environment workspace access
           script: |
-            . /etc/profile.d/elf2.sh
-            "${ELF2_CROSS_COMPILE}gcc" -dumpmachine
+            set -eu
+            IMAGE=$(python3 -c 'import json; print(json.load(open("10-env/system.lock.json"))["image"])')
+            docker run --rm --platform linux/amd64 \
+              --mount type=bind,src=/workspace,dst=/workspace,readonly \
+              "$IMAGE" bash -c 'test -f /workspace/10-env/sdk.lock.json && command -v elf2-build && test -s /opt/elf2-deps/.manifest-sha256'
+
+  api_trigger_env_check:
+    - *env_check
 
 "**":
   push:
@@ -114,7 +140,7 @@ $:
             push_tags: true
 
 # 开发环境镜像只在推送 dev-env-v* 形式的 Tag 时重建并发布，普通分支提交不触发，
-# 避免每次改动 10-env 都重跑一次全量构建（含 2.7 GB 固定依赖下载）。
+# 日常镜像不包含系统固定依赖；完整环境通过独立 API 入口发布。
 # 用法：git tag dev-env-v1.0.0 && git push origin dev-env-v1.0.0
 "dev-env-v*":
   tag_push:
@@ -123,7 +149,7 @@ $:
         tags: cnb:arch:amd64
         cpus: 8
       git:
-        submodules: true
+        submodules: false
       services:
         - docker
       lock:
@@ -135,12 +161,12 @@ $:
         - name: Build image
           script: |
             set -eu
-            IMAGE="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env"
+            IMAGE="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/daily-env"
             IMAGE="$IMAGE:latest" bash 10-env/build-image.sh "$IMAGE:${CNB_BRANCH}"
         - name: Push image
           script: |
             set -eu
-            IMAGE="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env"
+            IMAGE="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/daily-env"
             docker push "$IMAGE:${CNB_BRANCH}"
             docker push "$IMAGE:latest"
     # 该 Tag 也按仓库约定同步到 GitHub；用 & 锚点复用上面的任务定义。
