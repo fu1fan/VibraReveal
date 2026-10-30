@@ -11,7 +11,7 @@ VibraReveal（振见）是一个软硬件协同研发项目：利用 **OV9281 �
 > **系统与应用分别维护。** 本仓库只管理应用、算法、通信协议、整机硬件设计和实验资料。RK3588 的 Linux 系统、内核、设备树、OV9281 驱动、rootfs 和系统镜像由独立仓库 [RK3588-OV9281](https://cnb.cool/fu1fan/RK3588-OV9281) 维护。
 
 > [!NOTE]
-> **Work in Progress：** 本仓库已有 Python 离线运动放大与频谱参考实现，尚无端到端实时应用。驱动与 Vulkan 环境已有进展，但不代表高速传输、实时运动放大或多传感器同步已通过验收。
+> **Work in Progress：** 本仓库已有 Python 离线运动放大与频谱参考实现，已有 [macOS Metal 放大后端](03-apps/macos/)（实时自适应/离线全分辨率），尚无端到端相机应用。驱动与 Vulkan 环境已有进展，但不代表高速传输、实时运动放大或多传感器同步已通过验收。
 
 ## 1. 项目目标
 
@@ -52,7 +52,7 @@ VibraReveal/
 └── 10-env/            # 统一开发环境镜像：Python、ELF2 构建/交叉编译、code-server
 ```
 
-顶层目录按研发顺序编号；`04-algorithms/phase-motion/` 已整理 Python 算法、依赖与运行说明，其余应用和工具目录主要为规划占位；`01-hardware/` 已归档实际器件资料，`02-platform/` 含 `RK3588-OV9281` 子模块。
+顶层目录按研发顺序编号；`04-algorithms/phase-motion/` 已整理 Python 算法、依赖与运行说明，`03-apps/macos/` 已实现无界面 Metal 放大后端，其余应用和工具目录主要为规划占位；`01-hardware/` 已归档实际器件资料，`02-platform/` 含 `RK3588-OV9281` 子模块。
 
 `10-env/` 提供云原生开发与云原生构建共用的开发环境镜像（Python、ELF2 系统构建与交叉编译、code-server），镜像只在推送 `dev-env-v*` Tag 时重建发布，用法见 [10-env/README.md](10-env/README.md)。
 
@@ -81,7 +81,7 @@ VibraReveal/
 - [ ] 完成 RK3588→MacBook 的高速 RAW 传输与持续丢帧测试
 - [ ] 设计帧编号、时钟域、曝光时间和 IMU 数据协议
 - [x] 整理 [Python 相位运动放大、因果与频谱参考](04-algorithms/phase-motion/)及离线自检
-- [ ] 开发 Mac Metal 相位运动放大基线
+- [x] 开发 [Mac Metal 相位运动放大后端基线](03-apps/macos/)（实时自适应与离线逐帧处理；待真实链路验收）
 - [ ] 开发 Vulkan 局部运动特征、热点扫描和频谱预分析
 - [ ] 加入 ROI 跟踪、NPU 目标识别及可选深度估计
 - [ ] 集成 IMU、自振检测与视觉辅助补偿
