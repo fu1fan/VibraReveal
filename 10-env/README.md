@@ -67,6 +67,8 @@ IMAGE=vibrareveal-dev-env:local bash 10-env/build-image.sh
 
 镜像约 6~8 GB，主要来自 `/opt/elf2-deps` 中按 SHA256 固定的依赖（压缩后 2.7 GB）。
 
+网络安装采用有上限重试，重试耗尽仍失败；插件缺失不会发布。code-server、扩展与 CLI 分层安装。
+
 预装插件（open-vsx 源）：`cnbcool.cnb-welcome`、`redhat.vscode-yaml`、
 `dbaeumer.vscode-eslint`、`mhutchie.git-graph`（以上为 CNB 自定义开发环境官方示例中的全部插件）、
 `ms-python.python`、`llvm-vs-code-extensions.vscode-clangd`、`mathematic.vscode-pdf`（PDF 查看器）、
@@ -76,13 +78,14 @@ IMAGE=vibrareveal-dev-env:local bash 10-env/build-image.sh
 
 ## 2. 云原生开发
 
-`.cnb.yml` 的 `$: vscode:` 直接引用上面的镜像，并挂载四个数据卷：
+`.cnb.yml` 的 `$: vscode:` 直接引用上面的镜像，并挂载五个数据卷：
 
 | 卷 / 路径 | 作用 |
 | --- | --- |
-| `elf2-system-v1:/cache/elf2-work` | ELF2 SDK 工作区（保留 `.o`、依赖文件和生成头文件） |
-| `elf2-system-v1:/cache/elf2-ccache` | ELF2 系统构建的 ccache |
+| `vibrareveal-dev-v1:/cache/elf2-work` | ELF2 SDK 工作区（保留 `.o`、依赖文件和生成头文件） |
+| `vibrareveal-dev-v1:/cache/elf2-ccache` | ELF2 系统构建的 ccache |
 | `/cache/elf2-app-ccache` | 交叉编译 elf2 应用程序的 ccache |
+| `/cache/elf2-sysroot` | 已展开的目标 rootfs |
 | `/root/.cache/pip` | pip 下载缓存 |
 
 启动时执行 `10-env/persist.sh` 建立持久化软链；环境销毁前执行 `persist.sh --report`
@@ -100,17 +103,15 @@ stages:
 
 仓库里现成的例子是 `.cnb.yml` 的 `web_trigger_env_check` 手动入口。
 
-### 与流水线共享增量缓存
+### 工作区并发与缓存隔离
 
-ELF2 系统流水线在子模块仓库 `fu1fan/RK3588-OV9281` 中运行，使用同样的卷组名和路径
-（`elf2-system-v1:/cache/elf2-work`、`elf2-system-v1:/cache/elf2-ccache`）。能否真正共享取决于：
+开发卷组使用 `vibrareveal-dev-v1`，与 SDK 系统流水线隔离。`elf2-build` 同时锁住
+缓存根目录与当前 SDK 的 Git 元数据目录，锁覆盖构建、产物生成和成功标记；第二个终端
+会明确报忙，不会清理第一轮的工作区。不同缓存目录仍不能同时写同一 SDK 的 `dist`。
+不要绕过包装器直接运行 `.ci/build.py`，底层脚本本身没有此锁。
 
-- CNB 数据卷只在**同一构建节点**内有效，跨节点不复用；
-- 卷是否在同一仓库命名空间下（流水线运行在子模块仓库）。
-
-镜像中 `/etc/elf2-ci-packages.txt` 刻意在与流水线镜像相同的软件集合下生成，使
-`.ci/build.py` 计算出的工作区兼容键一致，因此**只要调度到同一节点**，缓存键就能对上。
-这是尽力而为，不保证命中；不命中时只是冷编译一次。
+缓存只在同一节点可复用；包版本、SDK 构建脚本或依赖清单改变都会影响兼容键。
+不再承诺跨仓库、跨镜像共享工作区缓存。
 
 ## 3. 运行仓库 Python 代码
 
@@ -131,7 +132,6 @@ python3 -X utf8 phasemag.py --selftest --outdir /tmp/selftest_out
 cd 02-platform/RK3588-OV9281
 elf2-build                      # 增量构建，成功后自动提交缓存标记
 ELF2_BUILD_MODE=clean elf2-build # 干净构建
-elf2-build --finish             # 只补提交缓存标记
 elf2-env                        # 查看工具链、依赖、缓存目录与缓存键
 ```
 
@@ -139,14 +139,15 @@ elf2-env                        # 查看工具链、依赖、缓存目录与缓�
 - 工作区在 `/cache/elf2-work/<缓存键>/sdk`，源码按当前子模块 HEAD 同步，删除和切换提交都会正确处理。
 - ccache 在 `/cache/elf2-ccache`，上限 10 GB。
 - **构建成功后必须提交缓存标记**：没有标记的工作区会在下次构建开始时被判定为中断并整目录丢弃。
-  `elf2-build` 已自动处理；只有直接调用 `python3 .ci/build.py` 时才需要手动 `--finish`。
+  `elf2-build` 在锁内自动处理，不再接受独立的 `--finish` / `--no-finish`，避免把失败或其他轮次标记为成功。
+- 构建读取 SDK 的已提交 HEAD；存在未提交修改时直接拒绝，请先提交代码。
 - 产物在 `02-platform/RK3588-OV9281/dist/`。构建过程会校验 rootfs、模块和 `update.img`，
   但**不代表已通过开发板验收**。
 - 需要至少 15 GiB 空闲空间存放工作区。
 
 开发环境的数据卷用 `read-write`：会话中的写入立即落盘，不依赖 `copy-on-write`
-「流水线成功后才合并」的语义，因此下次登录可以继续增量编译。代价是若同一节点上
-同时运行流水线并写同一卷组，需要自行错开（流水线本身有 `lock`，开发环境不会自动排队）。
+「流水线成功后才合并」的语义，因此下次登录可以继续增量编译。共享开发卷的 `elf2-build` 使用文件锁互斥；
+系统流水线使用独立卷组。
 
 ## 5. 交叉编译 elf2 程序
 
@@ -176,10 +177,12 @@ cmake --build build
 
 ```bash
 elf2-sysroot                                     # 展开到 /cache/elf2-sysroot（一次性，约 1~2 GB）
-cmake -B build -DCMAKE_TOOLCHAIN_FILE=/opt/elf2/cmake/elf2-aarch64-toolchain.cmake
-# 展开后 shell 里重新加载 profile 或直接指定
+# 展开不会修改当前 shell，显式选择目标 sysroot
 ELF2_SYSROOT=/cache/elf2-sysroot cmake -B build -DCMAKE_TOOLCHAIN_FILE=/opt/elf2/cmake/elf2-aarch64-toolchain.cmake
 ```
+
+展开过程使用文件锁和 rootfs SHA256 完成标记，失败不会标记成功。已有内容或基线变化时
+请指定新的空目录，脚本不会覆盖旧 sysroot。
 
 工具链 sysroot 只提供 libc 等基础库；业务库请以展开后的 rootfs 为准。
 
@@ -204,12 +207,14 @@ CNB 的文件漫游按用户维度保存 `~` 下的配置，环境销毁时写�
 几个实现细节：
 
 - CodeBuddy Code 不同版本的目录结构不一致（例如出现了 `app/`、`local_storage/`、`expert-history.json`），
-  所以 CLI 部分按**排除表**遍历实际条目，而不是写死清单；新增目录默认会被保留，除非命中排除表。
+  所以 CLI 部分按**排除表**合并当前目录与漫游目录的条目（包含隐藏条目），新环境也能恢复动态目录。
 - `plugins/` 是 61 MB 量级的可重装内容，排除在外，避免挤占全账号共享的漫游配额。
 - 常见配置文件（`settings.json`、`mcp.json`、`history.jsonl` 等）即使当前还没生成也会先建软链，
   保证之后由 CodeBuddy 创建的版本直接落进漫游目录；这类链在文件生成前是悬空的，属于预期状态。
-- 目录被搬进漫游目录后，内部的**相对**软链会因层级变化失效（例如 `skills/* -> ../../.agents/skills/*`），
-  `persist.sh` 会按原路径把它们改写成绝对路径。
+- 复制失败立即中止并保留源路径；临时文件不会作为完整数据被重用。已恢复的漫游文件优先，
+  原数据保留在同目录的 `.pre-roam-*` 备份中，确认后可自行删除（备份不计入脚本的漫游目录）。
+- 现有外部软链保持原样；复制目录内的相对软链按原路径改为绝对路径。
+- 在 IDE 启动前执行迁移；文件锁避免迁移脚本并发，无法阻止已经运行的 IDE 写入。
 
 限制与注意事项：
 
@@ -221,8 +226,15 @@ CNB 的文件漫游按用户维度保存 `~` 下的配置，环境销毁时写�
 
 ## 7. 已知限制
 
-- 镜像由 `dev-env-v*` Tag 触发构建，未在流水线中做运行时验收；`web_trigger_env_check` 手动入口负责依赖与工具链自检。
+- 镜像构建末尾会验证 Python 2/3、Python 依赖、全部扩展、CLI 和 AArch64 编译链接；
+  WebIDE 登录、漫游生命周期及开发板运行仍需实际环境验收。
 - 开发环境默认 8 核；系统构建可用 `runner.cpus` 或 `ELF2_JOBS` 调整。
 - 卷不跨节点，切换节点即冷启动；跨节点中间文件迁移未启用。
 - 镜像自带插件来自 open-vsx 扩展源；需要微软官方源独有的扩展时，按 CNB 文档下载 `.vsix` 后
   `code-server --install-extension xxx.vsix` 安装。
+
+## 8. 回归验证
+
+在 Linux 上运行 `python3 -m unittest discover -s 10-env/tests -v`。
+API 自动化入口 `api_trigger_publish_env` 与页面按钮复用同一发布流水线。
+平台依据：[数据卷与锁](https://docs.cnb.cool/zh/build/grammar.html)、[文件漫游](https://docs.cnb.cool/zh/workspaces/file-keeper.html)。

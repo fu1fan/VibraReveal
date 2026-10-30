@@ -18,6 +18,8 @@ $:
   # 云原生开发：与云原生构建共用同一个已发布镜像。
   vscode:
     - name: VibraReveal dev environment
+      git:
+        submodules: true
       services:
         - vscode
         - docker
@@ -27,13 +29,14 @@ $:
       docker:
         image: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env:latest
         volumes:
-          # 与 ELF2 系统流水线同名同路径，尽量复用同一份增量编译状态。
+          # 与系统流水线隔离；终端构建由 elf2-build 的文件锁串行保护。
           # 开发环境用 read-write：会话写入立即落盘，不依赖 copy-on-write 的
           # 「流水线成功后才合并」语义，保证下一次登录仍能增量编译。
-          - elf2-system-v1:/cache/elf2-work:read-write
-          - elf2-system-v1:/cache/elf2-ccache:read-write
+          - vibrareveal-dev-v1:/cache/elf2-work:read-write
+          - vibrareveal-dev-v1:/cache/elf2-ccache:read-write
           # 交叉编译 elf2 应用程序的 ccache。
           - /cache/elf2-app-ccache:read-write
+          - /cache/elf2-sysroot:read-write
           - /root/.cache/pip:read-write
       stages:
         # 把 WebIDE / CodeBuddy / Remote-SSH 的个人状态软链到 ~/.cnb，交给文件漫游持久化。
@@ -46,7 +49,8 @@ $:
   # 手动入口：页面按钮触发，重建并发布镜像（与 dev-env-v* Tag 触发等价，标签可自定）。
   # 按钮定义见 .cnb/web_trigger.yml。
   web_trigger_publish_env:
-    - name: Publish dev environment image (manual)
+    - &publish_env
+      name: Publish dev environment image (manual)
       runner:
         tags: cnb:arch:amd64
         cpus: 8
@@ -73,6 +77,9 @@ $:
             IMAGE="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env"
             docker push "$IMAGE:$IMAGE_TAG"
             docker push "$IMAGE:latest"
+
+  api_trigger_publish_env:
+    - *publish_env
 
   # 手动入口：用同一个镜像验证开发环境可用（云原生构建侧）。
   web_trigger_env_check:

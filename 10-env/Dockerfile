@@ -65,15 +65,21 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/* /tmp/phase-motion-requirements.txt /root/.cache/pip
 
 # (5) Node.js：code-server 扩展安装与 CodeBuddy Code CLI 需要。
+COPY 10-env/retry.sh /usr/local/lib/dev-env-retry.sh
 RUN set -eux; \
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -; \
+    curl --retry 5 --retry-all-errors -fsSL https://deb.nodesource.com/setup_20.x -o /tmp/nodesource.sh; \
+    bash /tmp/nodesource.sh; \
+    rm /tmp/nodesource.sh; \
     apt-get install -y --no-install-recommends nodejs; \
     rm -rf /var/lib/apt/lists/* /root/.npm
 
 # (6) code-server、CNB 官方示例中的全部插件，以及 CodeBuddy。
 # 装好 code-server 后，CNB 才会以单容器模式启动开发环境。
 RUN set -eux; \
-    curl -fsSL https://code-server.dev/install.sh | sh; \
+    curl --retry 5 --retry-all-errors -fsSL https://code-server.dev/install.sh -o /tmp/code-server-install.sh; \
+    sh /usr/local/lib/dev-env-retry.sh sh /tmp/code-server-install.sh; \
+    rm /tmp/code-server-install.sh
+RUN set -eux; \
     for ext in \
         cnbcool.cnb-welcome \
         redhat.vscode-yaml \
@@ -83,8 +89,8 @@ RUN set -eux; \
         llvm-vs-code-extensions.vscode-clangd \
         mathematic.vscode-pdf \
         tencent-cloud.coding-copilot \
-    ; do code-server --install-extension "$ext"; done; \
-    npm install -g @tencent-ai/codebuddy-code
+    ; do sh /usr/local/lib/dev-env-retry.sh code-server --install-extension "$ext"; done
+RUN sh /usr/local/lib/dev-env-retry.sh npm install -g @tencent-ai/codebuddy-code
 
 # (7) 远程接入与常用命令行工具。C/C++ 的 IntelliSense 用 clangd（微软 C/C++ 扩展
 # 不在 open-vsx 扩展源内，无法在 code-server 中安装）。
@@ -102,5 +108,12 @@ COPY 10-env/bin/ /usr/local/bin/
 RUN set -eux; \
     chmod 0755 /usr/local/bin/python /usr/local/bin/elf2-build /usr/local/bin/elf2-env /usr/local/bin/elf2-sysroot; \
     printf '\n[ -f /etc/profile.d/elf2.sh ] && . /etc/profile.d/elf2.sh\n' >> /etc/bash.bashrc
+
+COPY 10-env/smoke-test.sh /usr/local/lib/dev-env-smoke-test.sh
+RUN sh /usr/local/lib/dev-env-smoke-test.sh
+
+COPY 10-env/ /tmp/dev-env-check/
+RUN python3 -m unittest discover -s /tmp/dev-env-check/tests -v \
+    && rm -rf /tmp/dev-env-check
 
 WORKDIR /workspace
