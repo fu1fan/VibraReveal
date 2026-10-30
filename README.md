@@ -49,7 +49,7 @@ VibraReveal/
 ├── 07-datasets/       # 小型样本、数据索引与校验值
 ├── 08-docs/           # 架构、设计、部署与实验文档
 ├── 09-tools/          # 构建、部署和辅助工具
-└── 10-env/            # 统一开发环境镜像：Python、ELF2 构建/交叉编译、code-server
+└── 10-env/            # 日常开发与按需系统 SDK镜像：Python、ELF2 构建/交叉编译、code-server
 ```
 
 顶层目录按研发顺序编号；`04-algorithms/phase-motion/` 已整理 Python 算法、依赖与运行说明，其余应用和工具目录主要为规划占位；`01-hardware/` 已归档实际器件资料，`02-platform/` 含 `RK3588-OV9281` 子模块。
@@ -104,3 +104,6 @@ VibraReveal/
 ---
 
 **VibraReveal · 振见** — *让不可见的振动，被看见。*
+
+日常环境与完整系统构建环境已分离：使用 `elf2-cmake` 按需加载固定版本应用 SDK，
+使用 `elf2-system` 进入完整系统环境。详见 [环境与 SDK 指南](10-env/README.md)。

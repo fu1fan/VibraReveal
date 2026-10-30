@@ -1,17 +1,4 @@
-# VibraReveal 统一开发环境镜像
-#
-# 同一个镜像同时用于「云原生开发」和「云原生构建」，由 .cnb.yml 显式构建并发布到
-# CNB Docker 制品库，不依赖 CNB 对 Dockerfile 的自动缓存。
-#
-# 镜像内容：
-#   1. ELF2 系统构建主机依赖，与 02-platform/RK3588-OV9281/.ci/Dockerfile 一致
-#   2. ELF2 固定依赖（AArch64 工具链、基础 rootfs、厂商二进制材料，SHA256 校验，约 2.7 GB）
-#   3. Python 3 与 04-algorithms/phase-motion 的依赖
-#   4. code-server + CNB 官方示例插件 + CodeBuddy 插件/CLI
-#   5. 交叉编译环境变量、CMake 工具链文件和 elf2-* 快捷命令
-#
-# 构建请使用 `bash 10-env/build-image.sh`：它只把需要的少数文件组装成构建上下文，
-# 直接 `docker build .` 会把 2.4 GB 子模块和硬件资料一起送进 Docker。
+# Daily IDE image: no system rootfs, vendor materials or preloaded SDK.
 FROM ubuntu:22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -25,35 +12,12 @@ ENV LANG=C.UTF-8 \
     ELF2_CCACHE_DIR=/cache/elf2-ccache \
     CCACHE_DIR=/cache/elf2-app-ccache
 
-# (1) ELF2 构建主机依赖。
-# 包清单与 .ci/Dockerfile 保持一致，且 /etc/elf2-ci-packages.txt 必须在安装任何开发环境
-# 额外软件之前生成：.ci/build.py 用这个文件的内容参与计算工作区缓存键，只有键一致，
-# 云原生开发和流水线编译才可能命中同一份 /cache/elf2-work 增量缓存。
-RUN set -eux; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends \
-        bash bc bison bsdextrautils build-essential ca-certificates ccache cmake cpio curl \
-        device-tree-compiler dpkg-dev e2fsprogs expect fakeroot file flex git glslang-tools \
-        jq kmod libgmp-dev libmpc-dev libncurses-dev libssl-dev lz4 lzop pkg-config python2 \
-        python3 rsync swig u-boot-tools unzip wget xz-utils zip; \
-    dpkg-query -W > /etc/elf2-ci-packages.txt; \
-    rm -rf /var/lib/apt/lists/*
-
-# (2) `python` 选择器：厂商 U-Boot 脚本用 `python` 调 Python 2，日常开发需要 Python 3，
-# 而 .ci/build.py 给厂商子进程的 PATH 是写死的，无法从外部插队。这里用选择器取代
-# 流水线镜像里的 `python -> python2` 软链，规则见 10-env/bin/python 与 10-env/README.md。
-COPY 10-env/bin/python /usr/local/bin/python
-RUN chmod 0755 /usr/local/bin/python
-
-# (3) ELF2 固定依赖：按依赖清单下载、校验 SHA256 并展开到 /opt/elf2-deps。
-# 让开发环境开箱即有交叉工具链和预编译 rootfs，不必每次重新下载 2.7 GB。
-COPY 02-platform/RK3588-OV9281/.ci/fetch_deps.py /usr/local/lib/elf2-fetch-deps.py
-COPY 02-platform/RK3588-OV9281/docs/migration/dependencies.json /opt/elf2-dependencies.json
-RUN python3 /usr/local/lib/elf2-fetch-deps.py \
-        --manifest /opt/elf2-dependencies.json \
-        --destination /opt/elf2-deps \
-        --downloads /tmp/elf2-downloads \
-    && rm -rf /tmp/elf2-downloads
+# Daily development tools. SDK payloads are loaded on demand by elf2-sdk.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash build-essential ca-certificates ccache cmake curl git jq pkg-config \
+    python3 rsync unzip xz-utils file e2fsprogs \
+    && ln -s /usr/bin/python3 /usr/local/bin/python \
+    && rm -rf /var/lib/apt/lists/*
 
 # (4) Python 3 参考实现依赖，直接以 04-algorithms/phase-motion/requirements.txt 为准。
 COPY 04-algorithms/phase-motion/requirements.txt /tmp/phase-motion-requirements.txt
@@ -104,13 +68,15 @@ RUN set -eux; \
 # (8) 环境变量、CMake 工具链与快捷命令。
 COPY 10-env/profile.d/elf2.sh /etc/profile.d/elf2.sh
 COPY 10-env/cmake/ /opt/elf2/cmake/
-COPY 10-env/bin/ /usr/local/bin/
+COPY 10-env/bin/elf2-sdk /usr/local/bin/elf2-sdk
+COPY 10-env/bin/elf2-system /usr/local/bin/elf2-system
+COPY 10-env/bin/elf2-cmake /usr/local/bin/elf2-cmake
 RUN set -eux; \
-    chmod 0755 /usr/local/bin/python /usr/local/bin/elf2-build /usr/local/bin/elf2-env /usr/local/bin/elf2-sysroot; \
+    chmod 0755 /usr/local/bin/elf2-sdk /usr/local/bin/elf2-system /usr/local/bin/elf2-cmake; \
     printf '\n[ -f /etc/profile.d/elf2.sh ] && . /etc/profile.d/elf2.sh\n' >> /etc/bash.bashrc
 
 COPY 10-env/smoke-test.sh /usr/local/lib/dev-env-smoke-test.sh
-RUN sh /usr/local/lib/dev-env-smoke-test.sh
+RUN sh /usr/local/lib/dev-env-smoke-test.sh daily
 
 COPY 10-env/ /tmp/dev-env-check/
 RUN python3 -m unittest discover -s /tmp/dev-env-check/tests -v \

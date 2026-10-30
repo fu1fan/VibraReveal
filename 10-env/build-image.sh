@@ -13,13 +13,12 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(dirname "$HERE")
 SDK=$ROOT/02-platform/RK3588-OV9281
 
-for f in "$SDK/.ci/fetch_deps.py" "$SDK/docs/migration/dependencies.json" \
-         "$ROOT/04-algorithms/phase-motion/requirements.txt"; do
-    if [ ! -f "$f" ]; then
-        echo "缺少 $f：请先初始化子模块（git submodule update --init）" >&2
-        exit 1
-    fi
-done
+MODE=${MODE:-daily}
+case "$MODE" in daily) DOCKERFILE=Dockerfile ;; system) DOCKERFILE=Dockerfile.system ;; *) exit 2 ;; esac
+if [ "$MODE" = system ] && [ ! -f "$SDK/.ci/fetch_deps.py" ]; then
+    echo 'Initialize the pinned RK3588 submodule before building the system environment' >&2
+    exit 1
+fi
 
 CONTEXT=$(mktemp -d)
 trap 'rm -rf "$CONTEXT"' EXIT
@@ -31,8 +30,10 @@ mkdir -p "$CONTEXT/10-env" \
          "$CONTEXT/02-platform/RK3588-OV9281/docs/migration" \
          "$CONTEXT/04-algorithms/phase-motion"
 cp -a "$HERE/." "$CONTEXT/10-env/"
+if [ "$MODE" = system ]; then
 cp -a "$SDK/.ci/fetch_deps.py" "$CONTEXT/02-platform/RK3588-OV9281/.ci/"
 cp -a "$SDK/docs/migration/dependencies.json" "$CONTEXT/02-platform/RK3588-OV9281/docs/migration/"
+fi
 cp -a "$ROOT/04-algorithms/phase-motion/requirements.txt" "$CONTEXT/04-algorithms/phase-motion/"
 
 IMAGE=${IMAGE:-vibrareveal-dev-env:local}
@@ -43,4 +44,4 @@ done
 
 echo "构建上下文：$CONTEXT"
 echo "镜像标签：${tags[*]}"
-docker build --platform linux/amd64 "${tags[@]}" -f "$CONTEXT/10-env/Dockerfile" "$CONTEXT"
+docker build --platform linux/amd64 "${tags[@]}" -f "$CONTEXT/10-env/$DOCKERFILE" "$CONTEXT"

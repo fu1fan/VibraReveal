@@ -1,0 +1,16 @@
+#!/bin/sh
+# Start a full system build shell only when requested.
+set -eu
+ROOT=${ELF2_PROJECT_ROOT:-/workspace}
+cd "$ROOT"
+git submodule update --init 02-platform/RK3588-OV9281
+IMAGE=$(python3 -c 'import json; print(json.load(open("10-env/system.lock.json"))["image"])')
+case "$IMAGE" in *@sha256:*) ;; *) echo 'System image must be digest pinned' >&2; exit 1 ;; esac
+# CNB workspace is shared with the Docker service; other paths are not assumed shared.
+# Named volumes belong to the Docker daemon and preserve build state across sessions
+# only as long as that daemon/storage survives.
+exec docker run --rm -it --platform linux/amd64 \
+    -v "$ROOT:/workspace" \
+    -v elf2-system-work:/cache/elf2-work \
+    -v elf2-system-ccache:/cache/elf2-ccache \
+    -w /workspace "$IMAGE" bash "$@"

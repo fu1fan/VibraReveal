@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+"""Load a pinned artifact image once, then execute builds against the local SDK."""
+import argparse
+import fcntl
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import tempfile
+
+
+def run(*args, **kwargs):
+    return subprocess.run(list(map(str, args)), check=True, **kwargs)
+
+
+def load(lock, cache):
+    spec = json.loads(lock.read_text())
+    image = spec['image']
+    if not re.fullmatch(r'[a-z0-9./:_-]+@sha256:[0-9a-f]{64}', image):
+        raise ValueError('SDK image must be pinned by sha256 digest')
+    key = image.rsplit(':', 1)[1]
+    cache.mkdir(parents=True, exist_ok=True)
+    destination = cache / key
+    with (cache / (key + '.lock')).open('a') as guard:
+        fcntl.flock(guard, fcntl.LOCK_EX)
+        if not (destination / '.complete').is_file():
+            run('docker', 'pull', '--platform', 'linux/amd64', image)
+            container = subprocess.check_output(['docker', 'create', '--platform', 'linux/amd64', image], text=True).strip()
+            try:
+                with tempfile.TemporaryDirectory(prefix='.install-', dir=cache) as tmp:
+                    staged = Path(tmp) / 'sdk'
+                    run('docker', 'cp', container + ':/sdk', staged)
+                    validate(staged, spec)
+                    (staged / '.complete').write_text(image + '\n')
+                    if destination.exists():
+                        raise RuntimeError('Incomplete SDK cache exists; inspect before removing: ' + str(destination))
+                    staged.rename(destination)
+            finally:
+                run('docker', 'rm', container, stdout=subprocess.DEVNULL)
+        validate(destination, spec)
+    return destination
+
+
+def validate(sdk, spec):
+    metadata = json.loads((sdk / 'manifest.json').read_text())
+    if metadata['schema'] != 1 or metadata['system_commit'] != spec['system_commit']:
+        raise RuntimeError('SDK identity does not match lock file')
+    if not (sdk / 'toolchain/bin/aarch64-none-linux-gnu-gcc').is_file() or not (sdk / 'sysroot/usr/include').is_dir():
+        raise RuntimeError('SDK is incomplete')
+
+
+def environment(sdk):
+    env = os.environ.copy()
+    env.update(ELF2_CROSS_COMPILE=str(sdk / 'toolchain/bin/aarch64-none-linux-gnu-'),
+               ELF2_SYSROOT=str(sdk / 'sysroot'),
+               PKG_CONFIG_SYSROOT_DIR=str(sdk / 'sysroot'),
+               PKG_CONFIG_LIBDIR=':'.join(str(sdk / p) for p in ('sysroot/usr/lib/pkgconfig', 'sysroot/usr/share/pkgconfig', 'sysroot/lib/pkgconfig')),
+               PKG_CONFIG_PATH='')
+    env['PATH'] = str(sdk / 'toolchain/bin') + ':' + env['PATH']
+    return env
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument('--lock', type=Path, default=Path(os.environ.get('ELF2_SDK_LOCK', '/workspace/10-env/sdk.lock.json')))
+    p.add_argument('--cache', type=Path, default=Path(os.environ.get('ELF2_SDK_CACHE', '/cache/elf2-sdk')))
+    p.add_argument('action', choices=['use', 'run'])
+    p.add_argument('command', nargs=argparse.REMAINDER)
+    a = p.parse_args()
+    sdk = load(a.lock, a.cache)
+    if a.action == 'use':
+        print(sdk)
+        print('Run builds with: elf2-sdk run <command>')
+    else:
+        command = a.command[1:] if a.command[:1] == ['--'] else a.command
+        if not command:
+            p.error('run requires a command')
+        os.execvpe(command[0], command, environment(sdk))
+
+
+if __name__ == '__main__':
+    main()
