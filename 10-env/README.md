@@ -35,13 +35,19 @@ ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env:latest
 ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env:<tag>
 ```
 
-- **触发条件只有一种：推送 `dev-env-v*` 形式的 Tag**。普通分支提交不会重建镜像，
-  即使改动落在 `10-env/**` 也一样，避免为每次小改重跑一次含 2.7 GB 依赖下载的全量构建。
+- 普通分支提交不会重建镜像，即使改动落在 `10-env/**` 也一样，避免为每次小改重跑一次含
+  2.7 GB 依赖下载的全量构建。发布只有两个入口：
 
-  ```bash
-  git tag dev-env-v1.0.0
-  git push origin dev-env-v1.0.0
-  ```
+  1. 推送 `dev-env-v*` 形式的 Tag，镜像标签就是 Tag 名：
+
+     ```bash
+     git tag dev-env-v1.0.0
+     git push origin dev-env-v1.0.0
+     ```
+
+  2. 在仓库「代码 - 分支详情页」点「发布开发环境镜像」按钮，可自定镜像标签（默认 `dev-env-manual`）。
+     按钮定义在 `.cnb/web_trigger.yml`；同一分组下的「开发环境自检」按钮只做检查，不重建镜像。
+     按钮需要仓库写权限，且只在分支详情页显示。
 
 - 同一时刻只允许一个发布任务（`lock`）；该 Tag 也会按仓库约定同步到 GitHub。
 - 镜像标签为 Tag 名（`.../dev-env:dev-env-v1.0.0`）与 `latest`，`latest` 指向最近一次成功发布。

@@ -1,0 +1,23 @@
+# 仓库页面「代码 - 分支详情页」上的自定义按钮。
+# 每个按钮的 event 必须与 .cnb.yml 中对应的 web_trigger_* 事件键完全一致。
+# 本文件不支持 include / imports。
+
+branch:
+  - buttons:
+      # 手动发布开发环境镜像：与推送 dev-env-v* Tag 等价，区别是可以自定镜像标签。
+      - name: 发布开发环境镜像
+        description: 构建并推送 dev-env 镜像，标签为 ${image_tag} 与 latest
+        event: web_trigger_publish_env
+        groupName: 开发环境
+        inputs:
+          image_tag:
+            name: 镜像标签
+            type: input
+            required: true
+            default: dev-env-manual
+
+      # 用已发布镜像做环境自检，不产生新镜像。
+      - name: 开发环境自检
+        description: 用已发布镜像检查固定依赖、Python 依赖与交叉工具链
+        event: web_trigger_env_check
+        groupName: 开发环境
