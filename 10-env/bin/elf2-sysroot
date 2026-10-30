@@ -1,35 +1,42 @@
 #!/bin/sh
-# 把固定的 ELF2 基础 rootfs 展开成目标 sysroot，供需要目标系统库的交叉编译使用。
-#
-# 工具链自带的 sysroot 已能满足纯 C/C++ 程序；需要 elf2 上的额外库（例如 Vulkan/Mali
-# 运行时）时，先执行本命令，再用 --sysroot=$ELF2_SYSROOT_DIR 指向展开后的目录。
-#
-#   elf2-sysroot                 展开到 /cache/elf2-sysroot（数据卷上，跨环境保留）
-#   elf2-sysroot /some/dir       展开到指定目录
-#
-# rootfs 基线约 1~2 GB，只在新节点上执行一次。
+# Extract a versioned rootfs under an exclusive lock; mark only complete results.
 set -eu
-
 DEST=${1:-${ELF2_SYSROOT_DIR:-/cache/elf2-sysroot}}
 ROOTFS=${ELF2_ROOTFS_IMAGE:-/opt/elf2-deps/prebuilts/elfboard/buildroot/rootfs.ext4}
-
-if [ ! -f "$ROOTFS" ]; then
-    echo "缺少 rootfs 基线：$ROOTFS" >&2
-    exit 1
-fi
-if [ -f "$DEST/.complete" ]; then
+[ -f "$ROOTFS" ] || { echo "缺少 rootfs：$ROOTFS" >&2; exit 1; }
+mkdir -p "$DEST"
+DEST=$(realpath "$DEST")
+exec 9>"$DEST/.extract.lock"
+flock 9
+fingerprint=$(sha256sum "$ROOTFS")
+fingerprint=${fingerprint%% *}
+if [ -f "$DEST/.complete" ] && [ "$(cat "$DEST/.complete")" = "$fingerprint" ]; then
     echo "目标 sysroot 已展开：$DEST"
     exit 0
 fi
-
-mkdir -p "$DEST"
-echo "从 $ROOTFS 展开到 $DEST（只读操作，不改动镜像文件）"
-debugfs -R "rdump / $DEST" "$ROOTFS" >/dev/null
-
-if [ ! -d "$DEST/usr" ] || [ ! -d "$DEST/lib" ]; then
-    echo "展开结果不完整：未找到 $DEST/usr 或 $DEST/lib" >&2
+# Do not overwrite a previously exposed sysroot or merge an interrupted extraction.
+if find "$DEST" -mindepth 1 -maxdepth 1 ! -name .extract.lock | grep -q .; then
+    echo "目标目录非空或 rootfs 版本已变化，请指定新的空目录：$DEST" >&2
     exit 1
 fi
-
-touch "$DEST/.complete"
+STAGING=$(mktemp -d "$DEST/.extract-XXXXXX")
+trap 'rm -rf "$STAGING"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+# debugfs may return 0 even when rdump fails. Treat any diagnostic beyond its
+# version banner as a failure; never mark a partial extraction complete.
+mkdir "$STAGING/root"
+LC_ALL=C debugfs -R "rdump / $STAGING/root" "$ROOTFS" >"$STAGING/stdout" 2>"$STAGING/stderr"
+if grep -v '^debugfs [0-9]' "$STAGING/stderr" | grep -q .; then
+    cat "$STAGING/stderr" >&2
+    exit 1
+fi
+[ -d "$STAGING/root/usr" ] && [ -d "$STAGING/root/lib" ]
+# Keep the extraction in its version directory and expose entries via symlinks.
+mv "$STAGING/root" "$DEST/$fingerprint"
+for entry in "$DEST/$fingerprint"/* "$DEST/$fingerprint"/.[!.]* "$DEST/$fingerprint"/..?*; do
+    [ -e "$entry" ] || [ -L "$entry" ] || continue
+    ln -s "$fingerprint/${entry##*/}" "$DEST/${entry##*/}"
+done
+printf '%s\n' "$fingerprint" > "$DEST/.complete"
 echo "完成：--sysroot=$DEST"

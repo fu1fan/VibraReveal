@@ -7,8 +7,6 @@
 # 用法：
 #   elf2-build                          增量构建，成功后自动提交缓存标记
 #   ELF2_BUILD_MODE=clean elf2-build    干净构建（不复用对象文件、禁用 ccache）
-#   elf2-build --finish                 只提交缓存标记
-#   elf2-build --no-finish              只构建，不提交缓存标记
 #
 # 产物在 $ELF2_SDK_DIR/dist/ 下。没有提交缓存标记的工作区会在下次构建时被丢弃。
 set -eu
@@ -19,26 +17,38 @@ if [ ! -f "$SDK/.ci/build.py" ]; then
     exit 1
 fi
 
-export ELF2_DEPENDENCY_ROOT=${ELF2_DEPENDENCY_ROOT:-/opt/elf2-deps}
-export ELF2_WORK_CACHE=${ELF2_WORK_CACHE:-/cache/elf2-work}
-export ELF2_CCACHE_DIR=${ELF2_CCACHE_DIR:-/cache/elf2-ccache}
-export ELF2_JOBS=${ELF2_JOBS:-$(nproc)}
+export ELF2_DEPENDENCY_ROOT="${ELF2_DEPENDENCY_ROOT:-/opt/elf2-deps}"
+export ELF2_WORK_CACHE="${ELF2_WORK_CACHE:-/cache/elf2-work}"
+export ELF2_CCACHE_DIR="${ELF2_CCACHE_DIR:-/cache/elf2-ccache}"
+export ELF2_JOBS="${ELF2_JOBS:-$(nproc)}"
 
 # 开发环境里的 CNB_COMMIT / CNB_IS_TAG 描述的是本仓库的提交，与 ELF2 子模块无关；
 # .ci/build.py 会用它们校验 SDK 源码，必须清掉。
 unset CNB_COMMIT CNB_IS_TAG
 
+# Keep the lock outside the compatibility-key directory that build.py may remove.
+# FD 9 is inherited by build.py; both build.py calls run under this lock.
+mkdir -p "$ELF2_WORK_CACHE"
+exec 9>"$ELF2_WORK_CACHE/.elf2-build.lock"
+if ! flock -n 9; then
+    echo "ELF2 工作区正在构建，请等待当前构建完成后重试：$ELF2_WORK_CACHE" >&2
+    exit 1
+fi
 cd "$SDK"
 
-case "${1:-}" in
-    --finish)
-        exec python3 .ci/build.py --finish
-        ;;
-    --no-finish)
-        shift
-        exec python3 .ci/build.py "$@"
-        ;;
-esac
-
-python3 .ci/build.py "$@"
+# Manual finish could certify a failed/interleaved build; keep it private to this run.
+if [ "$#" -ne 0 ]; then
+    echo "用法：elf2-build（构建和完成标记必须在同一锁内执行）" >&2
+    exit 2
+fi
+exec 8>"$(git rev-parse --git-path elf2-build.lock)"
+if ! flock -n 8; then
+    echo "该 SDK 的产物目录正在使用，请等待当前构建完成" >&2
+    exit 1
+fi
+if [ -n "$(git status --porcelain --untracked-files=normal)" ]; then
+    echo "SDK 有未提交修改；构建只读取 HEAD，请先提交修改后再构建" >&2
+    exit 1
+fi
+python3 .ci/build.py
 python3 .ci/build.py --finish
