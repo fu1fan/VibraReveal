@@ -1,0 +1,15 @@
+{
+  "release": "V7.3-document-refresh-2026-10-30",
+  "geometry_changed": false,
+  "geometry_file_count_verified": 303,
+  "build_script_sha256": "66345e5e8efa0f95b8ad5711375fb646be19cfeec93358b60325f16073856c8c",
+  "original_build_script_unchanged": true,
+  "BOM_rows": 61,
+  "assembly_pdf_pages": 15,
+  "BOM_pdf_pages": 33,
+  "privacy_scan": "No private message identifiers, Library links, account data or absolute work-session paths found in text/PDF/XLSX payloads. No original user photographs included.",
+  "pdf_rebuild": "Both portable scripts executed from clean release directory successfully; no CAD rebuild needed for documentation-only change.",
+  "repository_destination": "01-hardware/mechanical/v7.3/",
+  "caution": "Engineering prototype; no fabrication or electrical release.",
+  "independent_release_review": "303 geometry files independently byte-checked; 61 BOM rows identical; 3 acrylic DXF / 9 manufactured STEP / 6 print STL / 1 film template complete. Last privacy-only source manifest edit incorporated in refreshed checksums."
+}

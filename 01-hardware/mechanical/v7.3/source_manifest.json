@@ -1,0 +1,103 @@
+{
+  "source_commits": {
+    "IMU": "8f0f1d1f4a158f74409caea71d98b44045550059",
+    "ELF2_V1p3": "941abaa5bc94ce23e837220aa9ddb95cbf6a38e4",
+    "official_cover_refreshed": "db9cbe1ae50f492f3ba8029652ccdb0caf0464d8"
+  },
+  "files": [
+    {
+      "name": "01-hardware__modules__elf2__04-硬件资料__ELF 2 & ELF 2_Lite V1.3_硬件资料__03-DXF文件__ELF 2 & ELF 2_Lite V1.3.DXF",
+      "bytes": 4717768,
+      "sha256": "c0889a5c171c6d99606dda47dc9a8de3cb6bd90470b4166a85ecb0003855ce35"
+    },
+    {
+      "name": "7inch_HDMI_LCD_C__mechanical__1118.stp",
+      "bytes": 300510,
+      "sha256": "861c3663ad0096900b2c5226e9edc593e3dd318a3b2fcaab1cf10191eca974e4"
+    },
+    {
+      "name": "ELF 2&ELF 2_Lite亚克力 V1.1.STEP",
+      "bytes": 134957,
+      "sha256": "164c687bb7ab50c384ecdecc1868c6b6d3c9744956bf69eacb45dccfd4b53ff6"
+    },
+    {
+      "name": "elf2__04-硬件资料__ELF 2 V1.2_硬件资料__03-DXF文件__ELF 2 V1.2.DXF",
+      "bytes": 4730351,
+      "sha256": "dd18785a55914d1457c5f8132b888120d989d4db611f9e21521f030c3aff670f"
+    },
+    {
+      "name": "elf2__05-结构资料__00-亚克力2D图纸__ELF 2 & ELF 2_Lite亚克力加工图纸 V1.1.dxf",
+      "bytes": 507719,
+      "sha256": "60b1d0995d309e6f971cb049f93c3b306535e3385c0f164fefb9c9f2851beae7"
+    },
+    {
+      "name": "elf2__05-结构资料__00-亚克力2D图纸__ELF 2 & ELF 2_Lite亚克力加工图纸 V1.1.pdf",
+      "bytes": 72762,
+      "sha256": "7ed6ddb3096da8cb365506c27df377833beb27490b34ec3c574abfb8824139fb"
+    },
+    {
+      "name": "elf2__05-结构资料__01-亚克力3D图纸__ELF 2&ELF 2_Lite亚克力 V1.1.STEP",
+      "bytes": 134957,
+      "sha256": "164c687bb7ab50c384ecdecc1868c6b6d3c9744956bf69eacb45dccfd4b53ff6"
+    },
+    {
+      "name": "ov9281__mechanical__OV9281-15P摄像头 仁恒2024年9月11日.pdf",
+      "bytes": 235402,
+      "sha256": "66a83c8aa8760ec2e209d1f2f443f2b026503db8e36f28e9b2a3e40406825d1a"
+    }
+  ],
+  "design_revision": "V7.3",
+  "source_reuse_note": "V7 reuses prior board/LCD/camera/cover/IMU references and VL49 specification. Latest user photograph replaces V6 receiver mounting concept; SmallRig source is generic cross-section ONLY, not the pictured product mounting interface.",
+  "additional_sources_V6": [
+    {
+      "name": "SmallRig Standard Configurations, PDF page7 (printed04)",
+      "url": "https://static.smallrig.com/mall/img/public/1721978727225_.pdf",
+      "local_research_file": "research_coldshoe/SmallRig_standard_configurations.pdf",
+      "sha256": "73d622610a65326bf1547aa55e38965dbe866bd2bef0cf677dce3adbe28f3098",
+      "verified": "female18.80+0.10/0,mouth13±0.05,channel2.50+0/-0.10,lip1.30+0.05/0;male18.50+0/-0.10,thickness1.90+0/-0.20",
+      "limit": "generic interface only, receiver SKU outer profile and mounting pattern not confirmed; excluded from core archive for size"
+    },
+    {
+      "name": "Ulanzi VL49 RGB 2287 official page",
+      "url": "https://www.ulanzi.jp/en/products/ulanzi-vl49-rechargeable-mini-rgb-light-2287",
+      "verified": "66×80×30 mm,101g",
+      "limit": "foot/locking-wheel exact dimensions and body partition not verified; model total80 includes reference foot"
+    }
+  ],
+  "additional_sources_V7": [
+    {
+      "name": "User supplied purchased cold-shoe specification photo",
+      "shown": "1/4 screw label, approximately5mm exposed thread, removable locating pins, detent;9/18 labels do not establish fullouter/mountpattern",
+      "unverified": "Historical old shoe only. Superseded for replaceability by user confirmation of NEW replaceable-screw shoe in V7.2; new outer/head/pitch remain unmeasured."
+    },
+    {
+      "name": "User annotated redesign images",
+      "interpretation": "rear-support concern, lowerforwardcamera, widercamerafootrows,IMUimageleft(world+X),thinnersections"
+    }
+  ],
+  "V7_1_scope": "Long gussets plus camera/IMU/lamp/shoe group -Y14.54, moved base holes and two open U reliefs. Current modeled fan-to-frame minimum15.0049mm. Prior29.4mm side view superseded; no new measured hardware facts.",
+  "additional_sources_V7_2": [
+    {
+      "type": "user_confirmation",
+      "text": "已经改用了可以换用长螺丝的冷靴",
+      "verified": "new shoe permits screw replacement",
+      "unverified": "actual thread pitch, head and recess dimensions, external dimensions, exact screw overall length"
+    },
+    {
+      "type": "user_layout_instruction",
+      "verified": "relay moved under development board; modeled center55,60; same four short posts"
+    }
+  ],
+  "additional_sources_V7_3": [
+    {
+      "type": "user_requirement",
+      "verified": "IMU rear solder/pins must be free, no support contact; preserve two M2 mounting supports",
+      "assumed_not_measured": "8 pin/solder envelopes: tail radius0.32, length3; solder radius1,height1.3, pitch2.54 at X36.5/Z63.11+i*2.54. Other rear joints remain unmeasured."
+    },
+    {
+      "type": "user_dimension",
+      "verified": "sideview reference points2 PCBfront to4 webrear horizontal distance56mm; camera assembly+Y0.24 fromV7.2",
+      "not_measured_clearance": "minimum fan/frame clearance15.2411mm is derived simplified model result"
+    }
+  ]
+}

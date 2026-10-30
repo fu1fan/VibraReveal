@@ -1,0 +1,2766 @@
+{
+  "parts": [
+    {
+      "name": "A01_H_board_adapter",
+      "path": "stl/A01_H_board_adapter.stl",
+      "material": "acrylic",
+      "explode": [
+        0,
+        -12,
+        0
+      ],
+      "manufactured": true,
+      "volume_mm3": 84590.3204312266
+    },
+    {
+      "name": "A02_base",
+      "path": "stl/A02_base.stl",
+      "material": "acrylic",
+      "explode": [
+        0,
+        0.0,
+        0
+      ],
+      "manufactured": true,
+      "volume_mm3": 131367.63194471074
+    },
+    {
+      "name": "REF_LCD_exact_STEP",
+      "path": "stl/REF_LCD_exact_STEP.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        -48,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 132005.09459748075
+    },
+    {
+      "name": "REF_LCD_screen_surface",
+      "path": "stl/REF_LCD_screen_surface.stl",
+      "material": "screen",
+      "explode": [
+        0,
+        -48,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 1315.7999999999984
+    },
+    {
+      "name": "LCD_insulating_washer_0_front",
+      "path": "stl/LCD_insulating_washer_0_front.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 9.860673941454948
+    },
+    {
+      "name": "LCD_insulating_washer_0_rear",
+      "path": "stl/LCD_insulating_washer_0_rear.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 9.860673941454948
+    },
+    {
+      "name": "LCD_direct_brass_M3_AF5_L30_0",
+      "path": "stl/LCD_direct_brass_M3_AF5_L30_0.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 423.0887623308446
+    },
+    {
+      "name": "LCD_front_M3_head_shank_0",
+      "path": "stl/LCD_front_M3_head_shank_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 127.70574136842508
+    },
+    {
+      "name": "LCD_adapter_steel_washer_0",
+      "path": "stl/LCD_adapter_steel_washer_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 11.808461386680635
+    },
+    {
+      "name": "LCD_adapter_M3_head_shank_0",
+      "path": "stl/LCD_adapter_M3_head_shank_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 127.70574136842504
+    },
+    {
+      "name": "LCD_insulating_washer_1_front",
+      "path": "stl/LCD_insulating_washer_1_front.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 9.86067394145495
+    },
+    {
+      "name": "LCD_insulating_washer_1_rear",
+      "path": "stl/LCD_insulating_washer_1_rear.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 9.86067394145495
+    },
+    {
+      "name": "LCD_direct_brass_M3_AF5_L30_1",
+      "path": "stl/LCD_direct_brass_M3_AF5_L30_1.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 423.0887623308446
+    },
+    {
+      "name": "LCD_front_M3_head_shank_1",
+      "path": "stl/LCD_front_M3_head_shank_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 127.70574136842517
+    },
+    {
+      "name": "LCD_adapter_steel_washer_1",
+      "path": "stl/LCD_adapter_steel_washer_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 11.80846138668064
+    },
+    {
+      "name": "LCD_adapter_M3_head_shank_1",
+      "path": "stl/LCD_adapter_M3_head_shank_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 127.70574136842514
+    },
+    {
+      "name": "LCD_insulating_washer_2_front",
+      "path": "stl/LCD_insulating_washer_2_front.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 9.860673941454948
+    },
+    {
+      "name": "LCD_insulating_washer_2_rear",
+      "path": "stl/LCD_insulating_washer_2_rear.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 9.860673941454948
+    },
+    {
+      "name": "LCD_direct_brass_M3_AF5_L30_2",
+      "path": "stl/LCD_direct_brass_M3_AF5_L30_2.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 423.0887623308446
+    },
+    {
+      "name": "LCD_front_M3_head_shank_2",
+      "path": "stl/LCD_front_M3_head_shank_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 127.70574136842508
+    },
+    {
+      "name": "LCD_adapter_steel_washer_2",
+      "path": "stl/LCD_adapter_steel_washer_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 11.808461386680635
+    },
+    {
+      "name": "LCD_adapter_M3_head_shank_2",
+      "path": "stl/LCD_adapter_M3_head_shank_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 127.70574136842504
+    },
+    {
+      "name": "LCD_insulating_washer_3_front",
+      "path": "stl/LCD_insulating_washer_3_front.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 9.86067394145495
+    },
+    {
+      "name": "LCD_insulating_washer_3_rear",
+      "path": "stl/LCD_insulating_washer_3_rear.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 9.86067394145495
+    },
+    {
+      "name": "LCD_direct_brass_M3_AF5_L30_3",
+      "path": "stl/LCD_direct_brass_M3_AF5_L30_3.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 423.0887623308446
+    },
+    {
+      "name": "LCD_front_M3_head_shank_3",
+      "path": "stl/LCD_front_M3_head_shank_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 127.70574136842517
+    },
+    {
+      "name": "LCD_adapter_steel_washer_3",
+      "path": "stl/LCD_adapter_steel_washer_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 11.80846138668064
+    },
+    {
+      "name": "LCD_adapter_M3_head_shank_3",
+      "path": "stl/LCD_adapter_M3_head_shank_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 127.70574136842514
+    },
+    {
+      "name": "REF_ELF2_PCB_envelope",
+      "path": "stl/REF_ELF2_PCB_envelope.stl",
+      "material": "pcb",
+      "explode": [
+        0,
+        0,
+        25
+      ],
+      "manufactured": false,
+      "volume_mm3": 14322.792218945364
+    },
+    {
+      "name": "board_nylon_spacer_0",
+      "path": "stl/board_nylon_spacer_0.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 242.78228026941903
+    },
+    {
+      "name": "board_nylon_spacer_1",
+      "path": "stl/board_nylon_spacer_1.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 242.78228026941912
+    },
+    {
+      "name": "board_nylon_spacer_2",
+      "path": "stl/board_nylon_spacer_2.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 242.78228026941915
+    },
+    {
+      "name": "board_nylon_spacer_3",
+      "path": "stl/board_nylon_spacer_3.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 242.78228026941923
+    },
+    {
+      "name": "board_nylon_spacer_4",
+      "path": "stl/board_nylon_spacer_4.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 242.78228026941903
+    },
+    {
+      "name": "board_nylon_spacer_5",
+      "path": "stl/board_nylon_spacer_5.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 242.7822802694193
+    },
+    {
+      "name": "board_carrier_M3x10_0",
+      "path": "stl/board_carrier_M3x10_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 127.70574136842504
+    },
+    {
+      "name": "board_carrier_M3x10_1",
+      "path": "stl/board_carrier_M3x10_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 127.70574136842507
+    },
+    {
+      "name": "board_carrier_M3x10_2",
+      "path": "stl/board_carrier_M3x10_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 127.70574136842507
+    },
+    {
+      "name": "board_carrier_M3x10_3",
+      "path": "stl/board_carrier_M3x10_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 127.70574136842507
+    },
+    {
+      "name": "board_front_M3x8_4",
+      "path": "stl/board_front_M3x8_4.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 113.56857442727102
+    },
+    {
+      "name": "board_carrier_M3x10_4",
+      "path": "stl/board_carrier_M3x10_4.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 127.70574136842504
+    },
+    {
+      "name": "board_front_M3x8_5",
+      "path": "stl/board_front_M3x8_5.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 113.56857442727102
+    },
+    {
+      "name": "board_carrier_M3x10_5",
+      "path": "stl/board_carrier_M3x10_5.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 127.70574136842507
+    },
+    {
+      "name": "REF_sink_keepout40x36_APPROX_height12_MEASURED",
+      "path": "stl/REF_sink_keepout40x36_APPROX_height12_MEASURED.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 17280.0
+    },
+    {
+      "name": "REF_2510_fan_frame_holes_APPROX",
+      "path": "stl/REF_2510_fan_frame_holes_APPROX.stl",
+      "material": "print",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 2735.18613916374
+    },
+    {
+      "name": "REF_2510_fan_rotor_simplified",
+      "path": "stl/REF_2510_fan_rotor_simplified.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 1946.2794807519488
+    },
+    {
+      "name": "fan_cover_M2p5x16_0",
+      "path": "stl/fan_cover_M2p5x16_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 111.77786661472483
+    },
+    {
+      "name": "fan_cover_M2p5_nut_0",
+      "path": "stl/fan_cover_M2p5_nut_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 33.48379314679767
+    },
+    {
+      "name": "fan_cover_M2p5x16_1",
+      "path": "stl/fan_cover_M2p5x16_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 111.77786661472483
+    },
+    {
+      "name": "fan_cover_M2p5_nut_1",
+      "path": "stl/fan_cover_M2p5_nut_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 33.48379314679768
+    },
+    {
+      "name": "fan_cover_M2p5x16_2",
+      "path": "stl/fan_cover_M2p5x16_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 111.77786661472484
+    },
+    {
+      "name": "fan_cover_M2p5_nut_2",
+      "path": "stl/fan_cover_M2p5_nut_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 33.48379314679767
+    },
+    {
+      "name": "fan_cover_M2p5x16_3",
+      "path": "stl/fan_cover_M2p5x16_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 111.77786661472484
+    },
+    {
+      "name": "fan_cover_M2p5_nut_3",
+      "path": "stl/fan_cover_M2p5_nut_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 33.48379314679768
+    },
+    {
+      "name": "REF_rear_M2_source_footprint_height5p4",
+      "path": "stl/REF_rear_M2_source_footprint_height5p4.stl",
+      "material": "placeholder",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 15149.854980000002
+    },
+    {
+      "name": "REF_USB_A_stack_source_height16p4",
+      "path": "stl/REF_USB_A_stack_source_height16p4.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 4897.722239999999
+    },
+    {
+      "name": "REF_USB3_source_height_APPROX",
+      "path": "stl/REF_USB3_source_height_APPROX.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 2170.08
+    },
+    {
+      "name": "REF_RJ45_source_height13p5_PROVISIONAL",
+      "path": "stl/REF_RJ45_source_height13p5_PROVISIONAL.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 5202.461249999998
+    },
+    {
+      "name": "REF_CSI_source_footprint_height5p4_NOMINAL",
+      "path": "stl/REF_CSI_source_footprint_height5p4_NOMINAL.stl",
+      "material": "print",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 584.7660000000004
+    },
+    {
+      "name": "REF_GPIO_2x20_source_height9_APPROX",
+      "path": "stl/REF_GPIO_2x20_source_height9_APPROX.stl",
+      "material": "print",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 2322.576000000005
+    },
+    {
+      "name": "REF_GPIO_2x10_source_height9_APPROX",
+      "path": "stl/REF_GPIO_2x10_source_height9_APPROX.stl",
+      "material": "print",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 1142.9999999999998
+    },
+    {
+      "name": "P01_rear_two_level_brace_0",
+      "path": "stl/P01_rear_two_level_brace_0.stl",
+      "material": "print",
+      "explode": [
+        0,
+        -15,
+        -10
+      ],
+      "manufactured": true,
+      "volume_mm3": 8178.901388496114
+    },
+    {
+      "name": "P01_rear_two_level_brace_1",
+      "path": "stl/P01_rear_two_level_brace_1.stl",
+      "material": "print",
+      "explode": [
+        0,
+        -15,
+        -10
+      ],
+      "manufactured": true,
+      "volume_mm3": 8178.901388700918
+    },
+    {
+      "name": "P02_low_front_camera_frame",
+      "path": "stl/P02_low_front_camera_frame.stl",
+      "material": "print",
+      "explode": [
+        0,
+        35,
+        0
+      ],
+      "manufactured": true,
+      "volume_mm3": 52419.683852196744
+    },
+    {
+      "name": "REF_OV9281_PCB",
+      "path": "stl/REF_OV9281_PCB.stl",
+      "material": "pcb",
+      "explode": [
+        0,
+        55,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 933.40955978002
+    },
+    {
+      "name": "REF_OV9281_lens_PROVISIONAL",
+      "path": "stl/REF_OV9281_lens_PROVISIONAL.stl",
+      "material": "lens",
+      "explode": [
+        0,
+        55,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 7539.822368615502
+    },
+    {
+      "name": "camera_stock_M2_AF4_L8_0",
+      "path": "stl/camera_stock_M2_AF4_L8_0.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 83.14240447974615
+    },
+    {
+      "name": "camera_insulating_washer_0_rear",
+      "path": "stl/camera_insulating_washer_0_rear.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 3.7699111843077517
+    },
+    {
+      "name": "camera_insulating_washer_0_front",
+      "path": "stl/camera_insulating_washer_0_front.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 3.7699111843077517
+    },
+    {
+      "name": "camera_front_M2x6_0",
+      "path": "stl/camera_front_M2x6_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 36.99539508867337
+    },
+    {
+      "name": "camera_rear_M2x8_0",
+      "path": "stl/camera_rear_M2x8_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 43.278580395852956
+    },
+    {
+      "name": "camera_stock_M2_AF4_L8_1",
+      "path": "stl/camera_stock_M2_AF4_L8_1.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 83.14240447974615
+    },
+    {
+      "name": "camera_insulating_washer_1_rear",
+      "path": "stl/camera_insulating_washer_1_rear.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 3.76991118430775
+    },
+    {
+      "name": "camera_insulating_washer_1_front",
+      "path": "stl/camera_insulating_washer_1_front.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 3.76991118430775
+    },
+    {
+      "name": "camera_front_M2x6_1",
+      "path": "stl/camera_front_M2x6_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 36.99539508867336
+    },
+    {
+      "name": "camera_rear_M2x8_1",
+      "path": "stl/camera_rear_M2x8_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 43.278580395852956
+    },
+    {
+      "name": "camera_stock_M2_AF4_L8_2",
+      "path": "stl/camera_stock_M2_AF4_L8_2.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 83.14240447974615
+    },
+    {
+      "name": "camera_insulating_washer_2_rear",
+      "path": "stl/camera_insulating_washer_2_rear.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 3.7699111843077517
+    },
+    {
+      "name": "camera_insulating_washer_2_front",
+      "path": "stl/camera_insulating_washer_2_front.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 3.7699111843077517
+    },
+    {
+      "name": "camera_front_M2x6_2",
+      "path": "stl/camera_front_M2x6_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 36.99539508867336
+    },
+    {
+      "name": "camera_rear_M2x8_2",
+      "path": "stl/camera_rear_M2x8_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 43.278580395852956
+    },
+    {
+      "name": "camera_stock_M2_AF4_L8_3",
+      "path": "stl/camera_stock_M2_AF4_L8_3.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 83.14240447974615
+    },
+    {
+      "name": "camera_insulating_washer_3_rear",
+      "path": "stl/camera_insulating_washer_3_rear.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 3.769911184307751
+    },
+    {
+      "name": "camera_insulating_washer_3_front",
+      "path": "stl/camera_insulating_washer_3_front.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 3.769911184307751
+    },
+    {
+      "name": "camera_front_M2x6_3",
+      "path": "stl/camera_front_M2x6_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 36.99539508867336
+    },
+    {
+      "name": "camera_rear_M2x8_3",
+      "path": "stl/camera_rear_M2x8_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 43.278580395852956
+    },
+    {
+      "name": "REF_camera_rear_screw_LIMIT6_APPROX_0",
+      "path": "stl/REF_camera_rear_screw_LIMIT6_APPROX_0.stl",
+      "material": "placeholder",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 99.71415082493999
+    },
+    {
+      "name": "REF_camera_rear_screw_LIMIT6_APPROX_1",
+      "path": "stl/REF_camera_rear_screw_LIMIT6_APPROX_1.stl",
+      "material": "placeholder",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 99.71415082494002
+    },
+    {
+      "name": "REF_camera_rear_FPC_LIMIT6_APPROX",
+      "path": "stl/REF_camera_rear_FPC_LIMIT6_APPROX.stl",
+      "material": "placeholder",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 528.0
+    },
+    {
+      "name": "REF_pictured_purchased_shoe_outer28_APPROX",
+      "path": "stl/REF_pictured_purchased_shoe_outer28_APPROX.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 3416.9044413875035
+    },
+    {
+      "name": "REF_shoe_quarter20_REPLACEABLE_exposed9_REFERENCE",
+      "path": "stl/REF_shoe_quarter20_REPLACEABLE_exposed9_REFERENCE.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 473.77180711542576
+    },
+    {
+      "name": "shoe_metal_quarter20_HEXnut",
+      "path": "stl/shoe_metal_quarter20_HEXnut.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 412.6857490617793
+    },
+    {
+      "name": "REF_lamp_male_foot18p5x1p9_REFERENCE",
+      "path": "stl/REF_lamp_male_foot18p5x1p9_REFERENCE.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 632.7000000000019
+    },
+    {
+      "name": "REF_lamp_foot_neck12_PROVISIONAL",
+      "path": "stl/REF_lamp_foot_neck12_PROVISIONAL.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 187.2000000000016
+    },
+    {
+      "name": "REF_lamp_lockwheel_D24_H4_PROVISIONAL",
+      "path": "stl/REF_lamp_lockwheel_D24_H4_PROVISIONAL.stl",
+      "material": "print",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 1809.557368467721
+    },
+    {
+      "name": "REF_VL49_RGB_total66x80x30_body72p8_ASSUMED_101g",
+      "path": "stl/REF_VL49_RGB_total66x80x30_body72p8_ASSUMED_101g.stl",
+      "material": "print",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 143399.99999999997
+    },
+    {
+      "name": "REF_VL49_emitting_face_APPROX",
+      "path": "stl/REF_VL49_emitting_face_APPROX.stl",
+      "material": "screen",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 743.9999999999859
+    },
+    {
+      "name": "relay_hex_M2_AF4_L6_0",
+      "path": "stl/relay_hex_M2_AF4_L6_0.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 62.35680335980974
+    },
+    {
+      "name": "relay_bottom_M2x8_0",
+      "path": "stl/relay_bottom_M2x8_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 43.27858039585295
+    },
+    {
+      "name": "relay_PCB_insulator_0",
+      "path": "stl/relay_PCB_insulator_0.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 4.3825217517577615
+    },
+    {
+      "name": "relay_top_M2x5_0",
+      "path": "stl/relay_top_M2x5_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 33.85380243508358
+    },
+    {
+      "name": "relay_hex_M2_AF4_L6_1",
+      "path": "stl/relay_hex_M2_AF4_L6_1.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 62.356803359809746
+    },
+    {
+      "name": "relay_bottom_M2x8_1",
+      "path": "stl/relay_bottom_M2x8_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 43.278580395852934
+    },
+    {
+      "name": "relay_PCB_insulator_1",
+      "path": "stl/relay_PCB_insulator_1.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 4.382521751757756
+    },
+    {
+      "name": "relay_top_M2x5_1",
+      "path": "stl/relay_top_M2x5_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 33.85380243508357
+    },
+    {
+      "name": "relay_hex_M2_AF4_L6_2",
+      "path": "stl/relay_hex_M2_AF4_L6_2.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 62.356803359809575
+    },
+    {
+      "name": "relay_bottom_M2x8_2",
+      "path": "stl/relay_bottom_M2x8_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 43.27858039585308
+    },
+    {
+      "name": "relay_PCB_insulator_2",
+      "path": "stl/relay_PCB_insulator_2.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 4.3825217517577775
+    },
+    {
+      "name": "relay_top_M2x5_2",
+      "path": "stl/relay_top_M2x5_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 33.853802435083665
+    },
+    {
+      "name": "relay_hex_M2_AF4_L6_3",
+      "path": "stl/relay_hex_M2_AF4_L6_3.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 62.35680335980956
+    },
+    {
+      "name": "relay_bottom_M2x8_3",
+      "path": "stl/relay_bottom_M2x8_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 43.278580395853076
+    },
+    {
+      "name": "relay_PCB_insulator_3",
+      "path": "stl/relay_PCB_insulator_3.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 4.382521751757774
+    },
+    {
+      "name": "relay_top_M2x5_3",
+      "path": "stl/relay_top_M2x5_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 33.853802435083665
+    },
+    {
+      "name": "REF_relay_PCB_21p3_holes17p3_Y_ASSUMED",
+      "path": "stl/REF_relay_PCB_21p3_holes17p3_Y_ASSUMED.stl",
+      "material": "pcb",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 701.5755064906012
+    },
+    {
+      "name": "REF_relay_HFD4_body10x6p5_height5p65",
+      "path": "stl/REF_relay_HFD4_body10x6p5_height5p65.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 367.2499999999999
+    },
+    {
+      "name": "REF_relay_terminal_APPROX_totalheight15",
+      "path": "stl/REF_relay_terminal_APPROX_totalheight15.stl",
+      "material": "placeholder",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 1206.0
+    },
+    {
+      "name": "REF_relay_control_header_APPROX",
+      "path": "stl/REF_relay_control_header_APPROX.stl",
+      "material": "print",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 79.99999999999999
+    },
+    {
+      "name": "REF_IMU_PCB_direct_main_web_D2p2_t1p6_ASSUMED",
+      "path": "stl/REF_IMU_PCB_direct_main_web_D2p2_t1p6_ASSUMED.stl",
+      "material": "pcb",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 467.8357532453024
+    },
+    {
+      "name": "IMU_back_insulating_pad_t0p3",
+      "path": "stl/IMU_back_insulating_pad_t0p3.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 60.71920373349576
+    },
+    {
+      "name": "IMU_front_M2x10_0",
+      "path": "stl/IMU_front_M2x10_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 49.561765703032535
+    },
+    {
+      "name": "IMU_rear_M2_nut_0",
+      "path": "stl/IMU_rear_M2_nut_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 17.143702091160407
+    },
+    {
+      "name": "IMU_front_M2x10_1",
+      "path": "stl/IMU_front_M2x10_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 49.561765703032535
+    },
+    {
+      "name": "IMU_rear_M2_nut_1",
+      "path": "stl/IMU_rear_M2_nut_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 17.143702091160375
+    },
+    {
+      "name": "REF_IMU_chip_position_APPROX_axes_PENDING",
+      "path": "stl/REF_IMU_chip_position_APPROX_axes_PENDING.stl",
+      "material": "print",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 6.8250000000000615
+    },
+    {
+      "name": "REF_IMU_LDO_envelope_APPROX",
+      "path": "stl/REF_IMU_LDO_envelope_APPROX.stl",
+      "material": "placeholder",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 18.0
+    },
+    {
+      "name": "REF_IMU_header_plastic_APPROX",
+      "path": "stl/REF_IMU_header_plastic_APPROX.stl",
+      "material": "print",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 124.99999999999997
+    },
+    {
+      "name": "REF_IMU_header_pin_height8_ASSUMED_0",
+      "path": "stl/REF_IMU_header_pin_height8_ASSUMED_0.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 1.7693449825017722
+    },
+    {
+      "name": "REF_IMU_header_pin_height8_ASSUMED_1",
+      "path": "stl/REF_IMU_header_pin_height8_ASSUMED_1.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 1.7693449825017717
+    },
+    {
+      "name": "REF_IMU_header_pin_height8_ASSUMED_2",
+      "path": "stl/REF_IMU_header_pin_height8_ASSUMED_2.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 1.7693449825017717
+    },
+    {
+      "name": "REF_IMU_header_pin_height8_ASSUMED_3",
+      "path": "stl/REF_IMU_header_pin_height8_ASSUMED_3.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 1.7693449825017717
+    },
+    {
+      "name": "REF_IMU_header_pin_height8_ASSUMED_4",
+      "path": "stl/REF_IMU_header_pin_height8_ASSUMED_4.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 1.7693449825017717
+    },
+    {
+      "name": "REF_IMU_header_pin_height8_ASSUMED_5",
+      "path": "stl/REF_IMU_header_pin_height8_ASSUMED_5.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 1.7693449825017717
+    },
+    {
+      "name": "REF_IMU_header_pin_height8_ASSUMED_6",
+      "path": "stl/REF_IMU_header_pin_height8_ASSUMED_6.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 1.7693449825017717
+    },
+    {
+      "name": "REF_IMU_header_pin_height8_ASSUMED_7",
+      "path": "stl/REF_IMU_header_pin_height8_ASSUMED_7.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 1.7693449825017717
+    },
+    {
+      "name": "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_0",
+      "path": "stl/REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 4.63095889880365
+    },
+    {
+      "name": "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_1",
+      "path": "stl/REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 4.630958898803648
+    },
+    {
+      "name": "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_2",
+      "path": "stl/REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 4.630958898803648
+    },
+    {
+      "name": "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_3",
+      "path": "stl/REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 4.630958898803648
+    },
+    {
+      "name": "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_4",
+      "path": "stl/REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_4.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 4.630958898803648
+    },
+    {
+      "name": "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_5",
+      "path": "stl/REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_5.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 4.630958898803649
+    },
+    {
+      "name": "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_6",
+      "path": "stl/REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_6.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 4.630958898803648
+    },
+    {
+      "name": "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_7",
+      "path": "stl/REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_7.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 4.630958898803648
+    },
+    {
+      "name": "A03_ELF2_transparent_cover",
+      "path": "stl/A03_ELF2_transparent_cover.stl",
+      "material": "acrylic",
+      "explode": [
+        0,
+        22,
+        0
+      ],
+      "manufactured": true,
+      "volume_mm3": 18431.100059727116
+    },
+    {
+      "name": "cover_board_insulator_0",
+      "path": "stl/cover_board_insulator_0.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 19.721347882909928
+    },
+    {
+      "name": "cover_M3_AF5_L15_male6_0",
+      "path": "stl/cover_M3_AF5_L15_male6_0.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 321.8849691411298
+    },
+    {
+      "name": "cover_removable_washer_0",
+      "path": "stl/cover_removable_washer_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 11.808461386680648
+    },
+    {
+      "name": "cover_removable_M3x8_0",
+      "path": "stl/cover_removable_M3x8_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 113.56857442727106
+    },
+    {
+      "name": "cover_board_insulator_1",
+      "path": "stl/cover_board_insulator_1.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 19.721347882909946
+    },
+    {
+      "name": "cover_M3_AF5_L15_male6_1",
+      "path": "stl/cover_M3_AF5_L15_male6_1.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 321.8849691411298
+    },
+    {
+      "name": "cover_removable_washer_1",
+      "path": "stl/cover_removable_washer_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 11.808461386680648
+    },
+    {
+      "name": "cover_removable_M3x8_1",
+      "path": "stl/cover_removable_M3x8_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 113.56857442727106
+    },
+    {
+      "name": "cover_board_insulator_2",
+      "path": "stl/cover_board_insulator_2.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 19.72134788290994
+    },
+    {
+      "name": "cover_M3_AF5_L15_male6_2",
+      "path": "stl/cover_M3_AF5_L15_male6_2.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 321.8849691411298
+    },
+    {
+      "name": "cover_removable_washer_2",
+      "path": "stl/cover_removable_washer_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 11.808461386680639
+    },
+    {
+      "name": "cover_removable_M3x8_2",
+      "path": "stl/cover_removable_M3x8_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 113.56857442727109
+    },
+    {
+      "name": "cover_board_insulator_3",
+      "path": "stl/cover_board_insulator_3.stl",
+      "material": "nylon",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 19.72134788290995
+    },
+    {
+      "name": "cover_M3_AF5_L15_male6_3",
+      "path": "stl/cover_M3_AF5_L15_male6_3.stl",
+      "material": "brass",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 321.8849691411298
+    },
+    {
+      "name": "cover_removable_washer_3",
+      "path": "stl/cover_removable_washer_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 11.808461386680637
+    },
+    {
+      "name": "cover_removable_M3x8_3",
+      "path": "stl/cover_removable_M3x8_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 113.56857442727107
+    },
+    {
+      "name": "REF_FPC_ROUTE_APPROX_not_bend_validated",
+      "path": "stl/REF_FPC_ROUTE_APPROX_not_bend_validated.stl",
+      "material": "cable",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 813.516022652899
+    },
+    {
+      "name": "P03_tripod_puck_lower",
+      "path": "stl/P03_tripod_puck_lower.stl",
+      "material": "print",
+      "explode": [
+        0,
+        0,
+        -45
+      ],
+      "manufactured": true,
+      "volume_mm3": 6957.168546030075
+    },
+    {
+      "name": "P05_tripod_puck_upper",
+      "path": "stl/P05_tripod_puck_upper.stl",
+      "material": "print",
+      "explode": [
+        0,
+        0,
+        -30
+      ],
+      "manufactured": true,
+      "volume_mm3": 27869.205253834036
+    },
+    {
+      "name": "P04_nut_keeper",
+      "path": "stl/P04_nut_keeper.stl",
+      "material": "print",
+      "explode": [
+        0,
+        0,
+        -20
+      ],
+      "manufactured": true,
+      "volume_mm3": 281.54471569913073
+    },
+    {
+      "name": "REF_metal_1_4_20_nut",
+      "path": "stl/REF_metal_1_4_20_nut.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 460.90428755586083
+    },
+    {
+      "name": "REF_steel_load_washer",
+      "path": "stl/REF_steel_load_washer.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 277.8424542834813
+    },
+    {
+      "name": "camera_base_top_washer_0",
+      "path": "stl/camera_base_top_washer_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.72955423345497
+    },
+    {
+      "name": "camera_base_bottom_washer_0",
+      "path": "stl/camera_base_bottom_washer_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.729554233454955
+    },
+    {
+      "name": "camera_base_M4x18_0",
+      "path": "stl/camera_base_M4x18_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 380.1327110843648
+    },
+    {
+      "name": "camera_base_M4_nut_0",
+      "path": "stl/camera_base_M4_nut_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 95.58039734758833
+    },
+    {
+      "name": "camera_base_top_washer_1",
+      "path": "stl/camera_base_top_washer_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.72955423345497
+    },
+    {
+      "name": "camera_base_bottom_washer_1",
+      "path": "stl/camera_base_bottom_washer_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.729554233454955
+    },
+    {
+      "name": "camera_base_M4x18_1",
+      "path": "stl/camera_base_M4x18_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 380.1327110843649
+    },
+    {
+      "name": "camera_base_M4_nut_1",
+      "path": "stl/camera_base_M4_nut_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 95.58039734758835
+    },
+    {
+      "name": "camera_base_top_washer_2",
+      "path": "stl/camera_base_top_washer_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.72955423345497
+    },
+    {
+      "name": "camera_base_bottom_washer_2",
+      "path": "stl/camera_base_bottom_washer_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.729554233454955
+    },
+    {
+      "name": "camera_base_M4x18_2",
+      "path": "stl/camera_base_M4x18_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 380.1327110843648
+    },
+    {
+      "name": "camera_base_M4_nut_2",
+      "path": "stl/camera_base_M4_nut_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 95.58039734758833
+    },
+    {
+      "name": "camera_base_top_washer_3",
+      "path": "stl/camera_base_top_washer_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.72955423345497
+    },
+    {
+      "name": "camera_base_bottom_washer_3",
+      "path": "stl/camera_base_bottom_washer_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.729554233454955
+    },
+    {
+      "name": "camera_base_M4x18_3",
+      "path": "stl/camera_base_M4x18_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 380.1327110843649
+    },
+    {
+      "name": "camera_base_M4_nut_3",
+      "path": "stl/camera_base_M4_nut_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 95.58039734758833
+    },
+    {
+      "name": "angle_base_top_washer_0",
+      "path": "stl/angle_base_top_washer_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.72955423345497
+    },
+    {
+      "name": "angle_base_bottom_washer_0",
+      "path": "stl/angle_base_bottom_washer_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.729554233454955
+    },
+    {
+      "name": "angle_base_M4x18_0",
+      "path": "stl/angle_base_M4x18_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 380.13271108436504
+    },
+    {
+      "name": "angle_base_M4_nut_0",
+      "path": "stl/angle_base_M4_nut_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 95.58039734758833
+    },
+    {
+      "name": "angle_base_top_washer_1",
+      "path": "stl/angle_base_top_washer_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.729554233454955
+    },
+    {
+      "name": "angle_base_bottom_washer_1",
+      "path": "stl/angle_base_bottom_washer_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.72955423345495
+    },
+    {
+      "name": "angle_base_M4x18_1",
+      "path": "stl/angle_base_M4x18_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 380.13271108436504
+    },
+    {
+      "name": "angle_base_M4_nut_1",
+      "path": "stl/angle_base_M4_nut_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 95.58039734758836
+    },
+    {
+      "name": "angle_base_top_washer_2",
+      "path": "stl/angle_base_top_washer_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.72955423345497
+    },
+    {
+      "name": "angle_base_bottom_washer_2",
+      "path": "stl/angle_base_bottom_washer_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.72955423345496
+    },
+    {
+      "name": "angle_base_M4x18_2",
+      "path": "stl/angle_base_M4x18_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 380.13271108436504
+    },
+    {
+      "name": "angle_base_M4_nut_2",
+      "path": "stl/angle_base_M4_nut_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 95.58039734758835
+    },
+    {
+      "name": "angle_base_top_washer_3",
+      "path": "stl/angle_base_top_washer_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.72955423345497
+    },
+    {
+      "name": "angle_base_bottom_washer_3",
+      "path": "stl/angle_base_bottom_washer_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.729554233454955
+    },
+    {
+      "name": "angle_base_M4x18_3",
+      "path": "stl/angle_base_M4x18_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 380.13271108436504
+    },
+    {
+      "name": "angle_base_M4_nut_3",
+      "path": "stl/angle_base_M4_nut_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 95.58039734758836
+    },
+    {
+      "name": "tripod_base_two1mm_washers_0",
+      "path": "stl/tripod_base_two1mm_washers_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 96.82388558363746
+    },
+    {
+      "name": "tripod_base_M4x20_0",
+      "path": "stl/tripod_base_M4x20_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 405.26545231308324
+    },
+    {
+      "name": "tripod_base_recessed_M4_nut_0",
+      "path": "stl/tripod_base_recessed_M4_nut_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 95.58039734758822
+    },
+    {
+      "name": "tripod_base_two1mm_washers_1",
+      "path": "stl/tripod_base_two1mm_washers_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 96.82388558363742
+    },
+    {
+      "name": "tripod_base_M4x20_1",
+      "path": "stl/tripod_base_M4x20_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 405.26545231308313
+    },
+    {
+      "name": "tripod_base_recessed_M4_nut_1",
+      "path": "stl/tripod_base_recessed_M4_nut_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 95.58039734758829
+    },
+    {
+      "name": "tripod_base_two1mm_washers_2",
+      "path": "stl/tripod_base_two1mm_washers_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 96.82388558363746
+    },
+    {
+      "name": "tripod_base_M4x20_2",
+      "path": "stl/tripod_base_M4x20_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 405.26545231308324
+    },
+    {
+      "name": "tripod_base_recessed_M4_nut_2",
+      "path": "stl/tripod_base_recessed_M4_nut_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 95.5803973475882
+    },
+    {
+      "name": "tripod_base_two1mm_washers_3",
+      "path": "stl/tripod_base_two1mm_washers_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 96.82388558363742
+    },
+    {
+      "name": "tripod_base_M4x20_3",
+      "path": "stl/tripod_base_M4x20_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 405.26545231308313
+    },
+    {
+      "name": "tripod_base_recessed_M4_nut_3",
+      "path": "stl/tripod_base_recessed_M4_nut_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 95.58039734758827
+    },
+    {
+      "name": "brace_vertical_washer_0_0",
+      "path": "stl/brace_vertical_washer_0_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.72955423345498
+    },
+    {
+      "name": "brace_vertical_washer_0_1",
+      "path": "stl/brace_vertical_washer_0_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.72955423345492
+    },
+    {
+      "name": "brace_vertical_M4x16_0",
+      "path": "stl/brace_vertical_M4x16_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 354.9999698556466
+    },
+    {
+      "name": "brace_vertical_M4_nut_0",
+      "path": "stl/brace_vertical_M4_nut_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 95.58039734758839
+    },
+    {
+      "name": "brace_vertical_washer_1_0",
+      "path": "stl/brace_vertical_washer_1_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.72955423345495
+    },
+    {
+      "name": "brace_vertical_washer_1_1",
+      "path": "stl/brace_vertical_washer_1_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.72955423345489
+    },
+    {
+      "name": "brace_vertical_M4x16_1",
+      "path": "stl/brace_vertical_M4x16_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 354.9999698556465
+    },
+    {
+      "name": "brace_vertical_M4_nut_1",
+      "path": "stl/brace_vertical_M4_nut_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 95.58039734758847
+    },
+    {
+      "name": "brace_vertical_washer_2_0",
+      "path": "stl/brace_vertical_washer_2_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.72955423345498
+    },
+    {
+      "name": "brace_vertical_washer_2_1",
+      "path": "stl/brace_vertical_washer_2_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.72955423345492
+    },
+    {
+      "name": "brace_vertical_M4x16_2",
+      "path": "stl/brace_vertical_M4x16_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 354.9999698556466
+    },
+    {
+      "name": "brace_vertical_M4_nut_2",
+      "path": "stl/brace_vertical_M4_nut_2.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 95.58039734758842
+    },
+    {
+      "name": "brace_vertical_washer_3_0",
+      "path": "stl/brace_vertical_washer_3_0.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.72955423345496
+    },
+    {
+      "name": "brace_vertical_washer_3_1",
+      "path": "stl/brace_vertical_washer_3_1.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 38.729554233454905
+    },
+    {
+      "name": "brace_vertical_M4x16_3",
+      "path": "stl/brace_vertical_M4x16_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 354.9999698556465
+    },
+    {
+      "name": "brace_vertical_M4_nut_3",
+      "path": "stl/brace_vertical_M4_nut_3.stl",
+      "material": "metal",
+      "explode": [
+        0,
+        0,
+        0
+      ],
+      "manufactured": false,
+      "volume_mm3": 95.58039734758849
+    }
+  ],
+  "forward": [
+    0,
+    1,
+    0
+  ],
+  "parameters": {
+    "width": 170,
+    "height": 130,
+    "base_depth": 130,
+    "acrylic": 6,
+    "lcd_z": 72,
+    "carrier_front_y": 35.1,
+    "board_z": 72,
+    "camera_z": 72,
+    "lens_length_PROVISIONAL": 24,
+    "lens_diameter_PROVISIONAL": 20,
+    "sink_height_MEASURED": 12,
+    "fan_size": [
+      25,
+      25,
+      10
+    ],
+    "camera_rear_clearance_PROVISIONAL": 8,
+    "relay_body_PROVISIONAL": 21.3,
+    "relay_hole_pitch_X": 17.3,
+    "relay_hole_pitch_Y_ASSUMED": 17.3,
+    "relay_total_height_USER": 15,
+    "module_standoff": 6,
+    "IMU_board": [
+      15,
+      20
+    ],
+    "IMU_hole_pitch": 15.3,
+    "IMU_hole_diameter_ASSUMED": 2.2,
+    "IMU_PCB_thickness_ASSUMED": 1.6,
+    "cover_thickness": 3,
+    "cover_back_y": 70.7,
+    "LCD_column_length": 30,
+    "LCD_column_AF": 5,
+    "LCD_insulator_thickness": 0.5,
+    "shoe_exposed_thread_REQUIRED_candidate": 9,
+    "shoe_original_photo_exposure_APPROX": 5,
+    "top_deck_thickness": 4,
+    "top_nut_AF": 11.1,
+    "top_nut_thickness": 5.5,
+    "shoe_outer_reference": 28,
+    "IMU_rear_tail_length_ASSUMED": 3,
+    "IMU_solder_radius_ASSUMED": 1,
+    "IMU_solder_height_ASSUMED": 1.3,
+    "IMU_relief_XZ": [
+      33,
+      45,
+      60.5,
+      83.5
+    ],
+    "IMU_relief_root_radius": 1.5,
+    "relay_center": [
+      55,
+      60
+    ],
+    "camera_group_shift_Y": -14.3
+  }
+}

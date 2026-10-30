@@ -1,0 +1,7 @@
+{
+  "parts": 225,
+  "all_pairs": 25200,
+  "bbox_filtered_boolean_tests": 477,
+  "positive_volume_intersections": [],
+  "scope": "All modeled solids including primary M4fasteners. Approximate components/FFC remain notverified physicalgeometry."
+}

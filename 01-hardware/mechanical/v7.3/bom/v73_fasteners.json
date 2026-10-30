@@ -1,0 +1,791 @@
+{
+  "version": "V7.3",
+  "scope": "Read-only independent enumeration from final build.py geometry definitions + final225part render_manifest; BOM text consulted after CAD counting. No CAD regeneration/edit.",
+  "source_directory": "VibraReveal_V7.3",
+  "source_build_sha256": "66345e5e8efa0f95b8ad5711375fb646be19cfeec93358b60325f16073856c8c",
+  "manifest_part_count": 225,
+  "rows": [
+    {
+      "id": "S01",
+      "category": "螺钉",
+      "specification": "M3×10",
+      "quantity_physical": 14,
+      "cad_entity_count": 14,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "nominal_under_head_length": 10,
+        "modeled_head_diameter": 5.5,
+        "modeled_head_height": 2.4
+      },
+      "cad_names": [
+        "LCD_adapter_M3_head_shank_0",
+        "LCD_adapter_M3_head_shank_1",
+        "LCD_adapter_M3_head_shank_2",
+        "LCD_adapter_M3_head_shank_3",
+        "LCD_front_M3_head_shank_0",
+        "LCD_front_M3_head_shank_1",
+        "LCD_front_M3_head_shank_2",
+        "LCD_front_M3_head_shank_3",
+        "board_carrier_M3x10_0",
+        "board_carrier_M3x10_1",
+        "board_carrier_M3x10_2",
+        "board_carrier_M3x10_3",
+        "board_carrier_M3x10_4",
+        "board_carrier_M3x10_5"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "LCD前4+后4；板载H转接板侧6。不是沉头孔设计，勿自行替换为沉头。",
+      "application": "LCD前4/后4+ELF2转接板侧6"
+    },
+    {
+      "id": "S02",
+      "category": "螺钉",
+      "specification": "M3×8",
+      "quantity_physical": 6,
+      "cad_entity_count": 6,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "nominal_under_head_length": 8,
+        "modeled_head_diameter": 5.5,
+        "modeled_head_height": 2.4
+      },
+      "cad_names": [
+        "board_front_M3x8_4",
+        "board_front_M3x8_5",
+        "cover_removable_M3x8_0",
+        "cover_removable_M3x8_1",
+        "cover_removable_M3x8_2",
+        "cover_removable_M3x8_3"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "板上未接盖柱的两孔2；透明盖4。",
+      "application": "ELF2未接盖柱孔2+透明盖4"
+    },
+    {
+      "id": "S03",
+      "category": "螺钉",
+      "specification": "M2.5×16",
+      "quantity_physical": 4,
+      "cad_entity_count": 4,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "nominal_under_head_length": 16,
+        "modeled_head_diameter": 4.6,
+        "modeled_head_height": 2
+      },
+      "cad_names": [
+        "fan_cover_M2p5x16_0",
+        "fan_cover_M2p5x16_1",
+        "fan_cover_M2p5x16_2",
+        "fan_cover_M2p5x16_3"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "风扇安装孔距20及Ø2.8暂定，必须核对2510实物。",
+      "application": "风扇→透明盖4"
+    },
+    {
+      "id": "S04",
+      "category": "螺钉",
+      "specification": "M2×6",
+      "quantity_physical": 4,
+      "cad_entity_count": 4,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "nominal_under_head_length": 6,
+        "modeled_head_diameter": 3.8,
+        "modeled_head_height": 1.6
+      },
+      "cad_names": [
+        "camera_front_M2x6_0",
+        "camera_front_M2x6_1",
+        "camera_front_M2x6_2",
+        "camera_front_M2x6_3"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "相机PCB正面4。",
+      "application": "相机PCB→铜柱正面4"
+    },
+    {
+      "id": "S05",
+      "category": "螺钉",
+      "specification": "M2×8",
+      "quantity_physical": 8,
+      "cad_entity_count": 8,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "nominal_under_head_length": 8,
+        "modeled_head_diameter": 3.8,
+        "modeled_head_height": 1.6
+      },
+      "cad_names": [
+        "camera_rear_M2x8_0",
+        "camera_rear_M2x8_1",
+        "camera_rear_M2x8_2",
+        "camera_rear_M2x8_3",
+        "relay_bottom_M2x8_0",
+        "relay_bottom_M2x8_1",
+        "relay_bottom_M2x8_2",
+        "relay_bottom_M2x8_3"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "相机支架背面4，继电器底板下面4。",
+      "application": "相机支架→铜柱背面4+继电器底部4"
+    },
+    {
+      "id": "S06",
+      "category": "螺钉",
+      "specification": "M2×5",
+      "quantity_physical": 4,
+      "cad_entity_count": 4,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "nominal_under_head_length": 5,
+        "modeled_head_diameter": 3.8,
+        "modeled_head_height": 1.6
+      },
+      "cad_names": [
+        "relay_top_M2x5_0",
+        "relay_top_M2x5_1",
+        "relay_top_M2x5_2",
+        "relay_top_M2x5_3"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "继电器PCB上面4。",
+      "application": "继电器PCB→短柱顶部4"
+    },
+    {
+      "id": "S07",
+      "category": "螺钉",
+      "specification": "M2×10",
+      "quantity_physical": 2,
+      "cad_entity_count": 2,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "nominal_under_head_length": 10,
+        "modeled_head_diameter": 3.8,
+        "modeled_head_height": 1.6
+      },
+      "cad_names": [
+        "IMU_front_M2x10_0",
+        "IMU_front_M2x10_1"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "IMU2；PCB厚/孔径等部分仍是假设。",
+      "application": "IMU→主腹板2"
+    },
+    {
+      "id": "S08",
+      "category": "螺钉",
+      "specification": "M4×18",
+      "quantity_physical": 8,
+      "cad_entity_count": 8,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "nominal_under_head_length": 18,
+        "modeled_head_diameter": 7,
+        "modeled_head_height": 4
+      },
+      "cad_names": [
+        "angle_base_M4x18_0",
+        "angle_base_M4x18_1",
+        "angle_base_M4x18_2",
+        "angle_base_M4x18_3",
+        "camera_base_M4x18_0",
+        "camera_base_M4x18_1",
+        "camera_base_M4x18_2",
+        "camera_base_M4x18_3"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "相机底脚4，后撑底脚4。",
+      "application": "相机底脚4+后撑底脚4"
+    },
+    {
+      "id": "S09",
+      "category": "螺钉",
+      "specification": "M4×20",
+      "quantity_physical": 4,
+      "cad_entity_count": 4,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "nominal_under_head_length": 20,
+        "modeled_head_diameter": 7,
+        "modeled_head_height": 4
+      },
+      "cad_names": [
+        "tripod_base_M4x20_0",
+        "tripod_base_M4x20_1",
+        "tripod_base_M4x20_2",
+        "tripod_base_M4x20_3"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "三脚架夹层座4。",
+      "application": "三脚架夹层座4"
+    },
+    {
+      "id": "S10",
+      "category": "螺钉",
+      "specification": "M4×16",
+      "quantity_physical": 4,
+      "cad_entity_count": 4,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "nominal_under_head_length": 16,
+        "modeled_head_diameter": 7,
+        "modeled_head_height": 4
+      },
+      "cad_names": [
+        "brace_vertical_M4x16_0",
+        "brace_vertical_M4x16_1",
+        "brace_vertical_M4x16_2",
+        "brace_vertical_M4x16_3"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "后撑立面双高度4。",
+      "application": "后撑立面双高度4"
+    },
+    {
+      "id": "S11",
+      "category": "螺钉",
+      "specification": "冷靴替换螺钉，意图1/4-20，座面下目标露牙9mm",
+      "quantity_physical": 1,
+      "cad_entity_count": 1,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "exposed_below_shoe_target": 9,
+        "purchase_under_head_length": null,
+        "modeled_under_head_length_REFERENCE_ONLY": 10,
+        "modeled_head_diameter_REFERENCE_ONLY": 10,
+        "modeled_head_height_REFERENCE_ONLY": 2
+      },
+      "cad_names": [
+        "REF_shoe_quarter20_REPLACEABLE_exposed9_REFERENCE"
+      ],
+      "purchase_status": "冷靴配套是否带合适长螺钉未知；按实际冷靴另配或复用",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "可更换性由用户确认；9mm不是采购总长。模型头下10mm包含假设座内1mm，不可据此直接采购1/4×10。实际总长=目标露牙+实际头下到鞋底厚度；新冷靴头部/外廓/牙距未实测。",
+      "application": "成品冷靴→顶部六角螺母1"
+    },
+    {
+      "id": "N01",
+      "category": "螺母",
+      "specification": "M2.5 六角",
+      "quantity_physical": 4,
+      "cad_entity_count": 4,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "across_flats": 5,
+        "thickness": 2
+      },
+      "cad_names": [
+        "fan_cover_M2p5_nut_0",
+        "fan_cover_M2p5_nut_1",
+        "fan_cover_M2p5_nut_2",
+        "fan_cover_M2p5_nut_3"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "",
+      "application": "风扇固定4"
+    },
+    {
+      "id": "N02",
+      "category": "螺母",
+      "specification": "M2 六角",
+      "quantity_physical": 2,
+      "cad_entity_count": 2,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "across_flats": 4,
+        "thickness": 1.6
+      },
+      "cad_names": [
+        "IMU_rear_M2_nut_0",
+        "IMU_rear_M2_nut_1"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "",
+      "application": "IMU背面2"
+    },
+    {
+      "id": "N03",
+      "category": "螺母",
+      "specification": "M4 六角",
+      "quantity_physical": 16,
+      "cad_entity_count": 16,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "across_flats": 7,
+        "thickness": 3.2
+      },
+      "cad_names": [
+        "angle_base_M4_nut_0",
+        "angle_base_M4_nut_1",
+        "angle_base_M4_nut_2",
+        "angle_base_M4_nut_3",
+        "brace_vertical_M4_nut_0",
+        "brace_vertical_M4_nut_1",
+        "brace_vertical_M4_nut_2",
+        "brace_vertical_M4_nut_3",
+        "camera_base_M4_nut_0",
+        "camera_base_M4_nut_1",
+        "camera_base_M4_nut_2",
+        "camera_base_M4_nut_3",
+        "tripod_base_recessed_M4_nut_0",
+        "tripod_base_recessed_M4_nut_1",
+        "tripod_base_recessed_M4_nut_2",
+        "tripod_base_recessed_M4_nut_3"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "相机脚4+后撑底4+三脚架夹层4+后撑立面4。",
+      "application": "相机脚4+后撑底4+三脚架夹层4+后撑立面4"
+    },
+    {
+      "id": "N04",
+      "category": "螺母",
+      "specification": "1/4-20 金属普通六角",
+      "quantity_physical": 2,
+      "cad_entity_count": 2,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "modeled_across_flats": 11.1,
+        "modeled_thickness": 5.5
+      },
+      "cad_names": [
+        "REF_metal_1_4_20_nut",
+        "shoe_metal_quarter20_HEXnut"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "顶部冷靴1+底部三脚架1。厚度/对边为名义参考，实际普通六角范围并非固定5.5；不得用打印螺纹承载。底部孔Ø5.4/顶部Ø6.35是简化螺纹视觉表示，不是钻孔加工要求。",
+      "application": "顶部冷靴1+底部三脚架1"
+    },
+    {
+      "id": "P01",
+      "category": "螺柱",
+      "specification": "M3 双内牙六角铜柱 AF5×30",
+      "quantity_physical": 4,
+      "cad_entity_count": 4,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "across_flats": 5,
+        "body_length": 30
+      },
+      "cad_names": [
+        "LCD_direct_brass_M3_AF5_L30_0",
+        "LCD_direct_brass_M3_AF5_L30_1",
+        "LCD_direct_brass_M3_AF5_L30_2",
+        "LCD_direct_brass_M3_AF5_L30_3"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "LCD4；模型两端同一光孔Ø3.1，真实牙深/螺纹须核对。",
+      "application": "LCD→H转接板4"
+    },
+    {
+      "id": "P02",
+      "category": "绝缘柱",
+      "specification": "长12绝缘支柱：需实现两端M3锁紧，双内牙型式待采购确认",
+      "quantity_physical": 6,
+      "cad_entity_count": 6,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "modeled_outer_diameter": 6,
+        "body_length": 12,
+        "modeled_smooth_bore": 3.2
+      },
+      "cad_names": [
+        "board_nylon_spacer_0",
+        "board_nylon_spacer_1",
+        "board_nylon_spacer_2",
+        "board_nylon_spacer_3",
+        "board_nylon_spacer_4",
+        "board_nylon_spacer_5"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "关键：CAD仅画Ø3.2光孔，未构建螺纹；短螺钉连接要求采购M3内牙绝缘柱，普通通孔隔套不具备此锁紧功能。圆柱Ø6仅模型包络，六角替代需重新核对。",
+      "application": "ELF2→H转接板6",
+      "threaded_type_verified": false,
+      "purchase_hold_reason": "旧BOM仅写绝缘柱；实际CAD只有Ø3.2光孔，不能证明双内牙。须先确认能接收现有两端短螺钉的真实支柱型式。普通通孔隔套不能替代。"
+    },
+    {
+      "id": "P03",
+      "category": "螺柱",
+      "specification": "M3 公母六角铜柱 AF5，柱身15+外牙6",
+      "quantity_physical": 4,
+      "cad_entity_count": 4,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "across_flats": 5,
+        "body_length": 15,
+        "exposed_male_thread": 6,
+        "modeled_female_hole_depth": 6
+      },
+      "cad_names": [
+        "cover_M3_AF5_L15_male6_0",
+        "cover_M3_AF5_L15_male6_1",
+        "cover_M3_AF5_L15_male6_2",
+        "cover_M3_AF5_L15_male6_3"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "模型male圆柱原始生成长8，其中2mm嵌在柱体内部；对外有效杆长6，不能误计8。",
+      "application": "ELF2前→透明盖4"
+    },
+    {
+      "id": "P04",
+      "category": "螺柱",
+      "specification": "M2 双内牙六角铜柱 AF4×8",
+      "quantity_physical": 4,
+      "cad_entity_count": 4,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "across_flats": 4,
+        "body_length": 8
+      },
+      "cad_names": [
+        "camera_stock_M2_AF4_L8_0",
+        "camera_stock_M2_AF4_L8_1",
+        "camera_stock_M2_AF4_L8_2",
+        "camera_stock_M2_AF4_L8_3"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "相机4。",
+      "application": "相机PCB后方8mm间隔4"
+    },
+    {
+      "id": "P05",
+      "category": "螺柱",
+      "specification": "M2 双内牙六角铜柱 AF4×6",
+      "quantity_physical": 4,
+      "cad_entity_count": 4,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "across_flats": 4,
+        "body_length": 6
+      },
+      "cad_names": [
+        "relay_hex_M2_AF4_L6_0",
+        "relay_hex_M2_AF4_L6_1",
+        "relay_hex_M2_AF4_L6_2",
+        "relay_hex_M2_AF4_L6_3"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "继电器4。",
+      "application": "继电器PCB下方6mm间隔4"
+    },
+    {
+      "id": "W01",
+      "category": "金属垫片",
+      "specification": "Ø6.4/孔Ø3.3/厚0.5",
+      "quantity_physical": 8,
+      "cad_entity_count": 8,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "outer_diameter": 6.4,
+        "inner_diameter": 3.3,
+        "thickness": 0.5
+      },
+      "cad_names": [
+        "LCD_adapter_steel_washer_0",
+        "LCD_adapter_steel_washer_1",
+        "LCD_adapter_steel_washer_2",
+        "LCD_adapter_steel_washer_3",
+        "cover_removable_washer_0",
+        "cover_removable_washer_1",
+        "cover_removable_washer_2",
+        "cover_removable_washer_3"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "LCD后4+透明盖4。",
+      "application": "LCD后4+透明盖4"
+    },
+    {
+      "id": "W02",
+      "category": "金属垫片",
+      "specification": "Ø9/孔Ø4.4/厚0.8",
+      "quantity_physical": 24,
+      "cad_entity_count": 24,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "outer_diameter": 9,
+        "inner_diameter": 4.4,
+        "thickness": 0.8
+      },
+      "cad_names": [
+        "angle_base_bottom_washer_0",
+        "angle_base_bottom_washer_1",
+        "angle_base_bottom_washer_2",
+        "angle_base_bottom_washer_3",
+        "angle_base_top_washer_0",
+        "angle_base_top_washer_1",
+        "angle_base_top_washer_2",
+        "angle_base_top_washer_3",
+        "brace_vertical_washer_0_0",
+        "brace_vertical_washer_0_1",
+        "brace_vertical_washer_1_0",
+        "brace_vertical_washer_1_1",
+        "brace_vertical_washer_2_0",
+        "brace_vertical_washer_2_1",
+        "brace_vertical_washer_3_0",
+        "brace_vertical_washer_3_1",
+        "camera_base_bottom_washer_0",
+        "camera_base_bottom_washer_1",
+        "camera_base_bottom_washer_2",
+        "camera_base_bottom_washer_3",
+        "camera_base_top_washer_0",
+        "camera_base_top_washer_1",
+        "camera_base_top_washer_2",
+        "camera_base_top_washer_3"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "相机脚8+后撑底8+后撑立面8。",
+      "application": "相机脚8+后撑底8+后撑立面8"
+    },
+    {
+      "id": "W03",
+      "category": "金属垫片",
+      "specification": "Ø9/孔Ø4.4/厚1",
+      "quantity_physical": 8,
+      "cad_entity_count": 4,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "outer_diameter": 9,
+        "inner_diameter": 4.4,
+        "individual_thickness": 1,
+        "modeled_stack_thickness": 2
+      },
+      "cad_names": [
+        "tripod_base_two1mm_washers_0",
+        "tripod_base_two1mm_washers_1",
+        "tripod_base_two1mm_washers_2",
+        "tripod_base_two1mm_washers_3"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "每个CAD实体表示两片1mm垫；4处×2=8片，不能按4实体购4片。",
+      "application": "三脚架夹层4处每处2片"
+    },
+    {
+      "id": "W04",
+      "category": "金属垫片",
+      "specification": "三脚架承压钢垫 Ø20/孔Ø6.8/厚1",
+      "quantity_physical": 1,
+      "cad_entity_count": 1,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "outer_diameter": 20,
+        "inner_diameter": 6.8,
+        "thickness": 1
+      },
+      "cad_names": [
+        "REF_steel_load_washer"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "",
+      "application": "底部三脚架螺母下承压1"
+    },
+    {
+      "id": "I01",
+      "category": "绝缘垫片",
+      "specification": "Ø6/孔Ø3.3/厚0.5",
+      "quantity_physical": 8,
+      "cad_entity_count": 8,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "outer_diameter": 6,
+        "inner_diameter": 3.3,
+        "thickness": 0.5
+      },
+      "cad_names": [
+        "LCD_insulating_washer_0_front",
+        "LCD_insulating_washer_0_rear",
+        "LCD_insulating_washer_1_front",
+        "LCD_insulating_washer_1_rear",
+        "LCD_insulating_washer_2_front",
+        "LCD_insulating_washer_2_rear",
+        "LCD_insulating_washer_3_front",
+        "LCD_insulating_washer_3_rear"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "LCD法兰两面各4。",
+      "application": "LCD四安装法兰两面8"
+    },
+    {
+      "id": "I02",
+      "category": "绝缘垫片",
+      "specification": "Ø6/孔Ø3.3/厚1",
+      "quantity_physical": 4,
+      "cad_entity_count": 4,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "outer_diameter": 6,
+        "inner_diameter": 3.3,
+        "thickness": 1
+      },
+      "cad_names": [
+        "cover_board_insulator_0",
+        "cover_board_insulator_1",
+        "cover_board_insulator_2",
+        "cover_board_insulator_3"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "开发板前/盖板铜柱下4。",
+      "application": "ELF2四角→盖柱绝缘4"
+    },
+    {
+      "id": "I03",
+      "category": "绝缘垫片",
+      "specification": "Ø3.8/孔Ø2.2/厚0.5",
+      "quantity_physical": 8,
+      "cad_entity_count": 8,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "outer_diameter": 3.8,
+        "inner_diameter": 2.2,
+        "thickness": 0.5
+      },
+      "cad_names": [
+        "camera_insulating_washer_0_front",
+        "camera_insulating_washer_0_rear",
+        "camera_insulating_washer_1_front",
+        "camera_insulating_washer_1_rear",
+        "camera_insulating_washer_2_front",
+        "camera_insulating_washer_2_rear",
+        "camera_insulating_washer_3_front",
+        "camera_insulating_washer_3_rear"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "相机PCB两面各4。",
+      "application": "相机PCB四孔两面8"
+    },
+    {
+      "id": "I04",
+      "category": "绝缘垫片",
+      "specification": "Ø4/孔Ø2.2/厚0.5",
+      "quantity_physical": 4,
+      "cad_entity_count": 4,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "outer_diameter": 4,
+        "inner_diameter": 2.2,
+        "thickness": 0.5
+      },
+      "cad_names": [
+        "relay_PCB_insulator_0",
+        "relay_PCB_insulator_1",
+        "relay_PCB_insulator_2",
+        "relay_PCB_insulator_3"
+      ],
+      "purchase_status": "额外装配硬件；模块是否附送未知，先盘点再采购",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "继电器PCB下面4。",
+      "application": "继电器PCB四孔下面4"
+    },
+    {
+      "id": "I05",
+      "category": "绝缘膜",
+      "specification": "0.3mm IMU开窗绝缘片",
+      "quantity_physical": 1,
+      "cad_entity_count": 1,
+      "quantity_unit": "件",
+      "dimensions_mm": {
+        "width": 10.5,
+        "height": 20,
+        "thickness": 0.3,
+        "hole_diameter": 2.2,
+        "hole_centers_local": [
+          [
+            2.3,
+            2.35
+          ],
+          [
+            2.3,
+            17.65
+          ]
+        ]
+      },
+      "cad_names": [
+        "IMU_back_insulating_pad_t0p3"
+      ],
+      "purchase_status": "另备合适绝缘薄膜并裁切；材料耐温/绝缘等级未确认",
+      "certainty": "最终CAD设计数量/名义规格；非实物确认，光杆/孔代表螺纹，实际头型、牙距、牙深及公差须选型核对",
+      "notes": "按templates/IMU_insulating_film_t0p3_TEMPLATE.dxf裁切；不是15×20整片，不得压住背面焊点。",
+      "application": "IMU安装孔侧绝缘/避焊点开口1"
+    }
+  ],
+  "totals_physical_by_category": {
+    "螺钉": 59,
+    "螺母": 24,
+    "螺柱": 16,
+    "绝缘柱": 6,
+    "金属垫片": 41,
+    "绝缘垫片": 24,
+    "绝缘膜": 1
+  },
+  "total_physical_pieces": 171,
+  "counted_cad_entities": 167,
+  "unmatched_nonreference_hardware": [],
+  "excluded_component_owned_reference_examples": [
+    "REF_IMU_header_pin_height8_ASSUMED_0",
+    "REF_IMU_header_pin_height8_ASSUMED_1",
+    "REF_IMU_header_pin_height8_ASSUMED_2",
+    "REF_IMU_header_pin_height8_ASSUMED_3",
+    "REF_IMU_header_pin_height8_ASSUMED_4",
+    "REF_IMU_header_pin_height8_ASSUMED_5",
+    "REF_IMU_header_pin_height8_ASSUMED_6",
+    "REF_IMU_header_pin_height8_ASSUMED_7",
+    "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_0",
+    "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_1",
+    "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_2",
+    "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_3",
+    "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_4",
+    "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_5",
+    "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_6",
+    "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_7",
+    "REF_camera_rear_screw_LIMIT6_APPROX_0",
+    "REF_camera_rear_screw_LIMIT6_APPROX_1",
+    "REF_lamp_foot_neck12_PROVISIONAL",
+    "REF_lamp_lockwheel_D24_H4_PROVISIONAL",
+    "REF_lamp_male_foot18p5x1p9_REFERENCE"
+  ],
+  "excluded_note": "Camera existingrear2screwheads are unmeasured module protrusionrefs, not additional2purchasedscrews. Lampfoot/neck/lockwheel are lampcomponent parts, not new hardware. IMU8frontpins+8rear solder proxies describe samemodule header, no extra16fasteners. Printed tripodnutkeeper is custom printedpart counted elsewhere, not commercial nut.",
+  "not_modeled_but_required_check": [
+    "Tripod/quickrelease camera stud supplied bytripod; do not add arbitrary extra1/4 screw. Verify actualprotrusion/engagement and bottomclearance.",
+    "Module/coldshoe retail kits may include some hardware; supplied quantities unknown, subtract onlyafter inventory.",
+    "All metriccoarse pitches/head driveforms/materialgrades/tolerances are not physicallyconfirmed. CAD names denote nominal threadsize; no purchase SKU selected."
+  ],
+  "pairing_notes": {
+    "camera_posts": "L8: rearM2x8 enters3, frontM2x6 enters3.4, nominalopposingtipgap1.6; verifyactualblindholes",
+    "relay_posts": "L6: bottomM2x8 enters2, topM2x5 enters2.9, nominalopposingtipgap1.1",
+    "cover_posts": "body15 male6 with1mmwasher+PCB1.6 leaves3.4 into boardspacer; coverM3x8 throughcover3+washer.5 enters4.5 into modeledfemale6",
+    "board_spacers": "6×L12 threadedinsulators required;4positions takecovermalethread;2positions takeboardM3x8; carrierM3x10 backside6. No extra6M3nuts modeled.",
+    "shoe": "4mmprinteddeck + target9mmexposed gives5mm geometricpenetration, effectivefullthreads unknown; tipZ82 above nutbottom81.5 by.5; axisfloorZ73 gives9gap."
+  },
+  "differences_vs_existing_BOM": [
+    "数量与原BOM一致，但独立CAD审计将6个绝缘支柱的锁紧型式列为待确认，而不是默认为已验证M3双内牙。",
+    "三脚架4个2mm垫片代理明确拆成8片1mm采购量。",
+    "1/4冷靴螺杆模型头下10mm为参考，不新增成已确认采购规格；仅约9mm露牙目标获设计采用。",
+    "原BOM没有按总量合并型号，本表59螺钉/24螺母/22支柱/65垫片/1膜，共171实物位置，不等于必买171件；配套库存未知。"
+  ]
+}

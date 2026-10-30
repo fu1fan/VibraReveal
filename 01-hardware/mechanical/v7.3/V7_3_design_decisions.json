@@ -1,0 +1,67 @@
+{
+  "version": "V7.3",
+  "geometry_frozen": true,
+  "fabrication_release": false,
+  "baseline": "design_v7_2_final",
+  "changes": [
+    "IMUrear solder clearance edge-open throughrelief in mainweb and0.3pad",
+    "8unmeasured rear solder+pin proxies; barebackdoes notmean no solder",
+    "User56mm boardfront-to-webrear datum distance movescamera group+Y0.24 withmatchingbaseholes andFPCreference"
+  ],
+  "camera_group_shift_Y": -14.3,
+  "board_front_Y": 54.7,
+  "camera_web_rear_Y": 110.7,
+  "datum_distance_mm": 56,
+  "fan_to_frame_modeled_minimum_mm": 15.241062955056647,
+  "IMU": {
+    "PCB_back_Y": 116,
+    "tail_tip_Y_ASSUMED": 113,
+    "tail_length_ASSUMED": 3,
+    "solder_radius_ASSUMED": 1,
+    "solder_height_ASSUMED": 1.3,
+    "slot_XZ": [
+      33,
+      41,
+      60.5,
+      83.5
+    ],
+    "root_radius": 1.5,
+    "conservative_row_to_frame_mm": 1.61,
+    "conservative_row_to_pad_mm": 2.5,
+    "M2_hole_edge_to_slot_mm": 7.1,
+    "top_web_remaining_mm": 3.5,
+    "pad_cut": "remove header-side strip, leave mountinghole-side support; do not clamp solder against pad",
+    "remaining_back_axial_gap_to_cover_mm": 39.3
+  },
+  "relay_center": [
+    55,
+    60
+  ],
+  "top_joint": {
+    "replaceable_screw_USER_CONFIRMED": true,
+    "exposed_target_mm": 9,
+    "deck_mm": 4,
+    "geometric_penetration_mm": 5,
+    "effective_full_thread_mm": null,
+    "purchase_total_length": null,
+    "actual_new_shoe_head_outer_verified": false,
+    "metalhexnut": true,
+    "bridge_or_heatinsert": false
+  },
+  "retained": [
+    "centered camera",
+    "+X IMU",
+    "long gussets",
+    "relay55/60",
+    "round acrylic",
+    "fanonlyonboardcover",
+    "metaltripodhexnut"
+  ],
+  "limits": [
+    "allrear solderdimensions assumed; inspectactual other solder/features too",
+    "GPIO service requires lampremoved",
+    "relay obstructedtop tools require underside release/sideout/lift service",
+    "no physical strength/torque/creep/thermal/modal tests",
+    "56mm isreferenceplane distance, not empty usable space; minimum3Dgap15.241 isdifferent"
+  ]
+}

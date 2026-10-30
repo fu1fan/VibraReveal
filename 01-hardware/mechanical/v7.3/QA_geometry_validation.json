@@ -1,0 +1,70 @@
+{
+  "version": "V7.3",
+  "units": "mm",
+  "manufactured_parts": 9,
+  "STEP_valid": {
+    "A01_H_board_adapter": true,
+    "P01_rear_two_level_brace_1": true,
+    "P02_low_front_camera_frame": true,
+    "P05_tripod_puck_upper": true,
+    "P04_nut_keeper": true,
+    "P03_tripod_puck_lower": true,
+    "A02_base": true,
+    "P01_rear_two_level_brace_0": true,
+    "A03_ELF2_transparent_cover": true
+  },
+  "STEP_solid_counts": {
+    "A01_H_board_adapter": 1,
+    "P01_rear_two_level_brace_1": 1,
+    "P02_low_front_camera_frame": 1,
+    "P05_tripod_puck_upper": 1,
+    "P04_nut_keeper": 1,
+    "P03_tripod_puck_lower": 1,
+    "A02_base": 1,
+    "P01_rear_two_level_brace_0": 1,
+    "A03_ELF2_transparent_cover": 1
+  },
+  "manufactured_STL_nonmanifold_edges": {
+    "A01_H_board_adapter": 0,
+    "A02_base": 0,
+    "P01_rear_two_level_brace_0": 0,
+    "P01_rear_two_level_brace_1": 0,
+    "P02_low_front_camera_frame": 0,
+    "A03_ELF2_transparent_cover": 0,
+    "P03_tripod_puck_lower": 0,
+    "P05_tripod_puck_upper": 0,
+    "P04_nut_keeper": 0
+  },
+  "DXF": {
+    "A03_ELF2_transparent_cover.dxf": {
+      "units": 4,
+      "entity_count": 43,
+      "bad": [],
+      "non_degree2_endpoints": {},
+      "duplicate_count": 0
+    },
+    "A01_H_board_adapter.dxf": {
+      "units": 4,
+      "entity_count": 46,
+      "bad": [],
+      "non_degree2_endpoints": {},
+      "duplicate_count": 0
+    },
+    "A02_base.dxf": {
+      "units": 4,
+      "entity_count": 17,
+      "bad": [],
+      "non_degree2_endpoints": {},
+      "duplicate_count": 0
+    }
+  },
+  "manufactured_intersections": [],
+  "LCD_vs_manufactured_intersections": [],
+  "reference_STL_nonmanifold": {
+    "REF_LCD_exact_STEP.stl": {
+      "triangles": 6352,
+      "nonmanifold_edges": 1
+    }
+  },
+  "limits": "SourceLCDtessellation inherited1nonmanifoldedge; manufactured watertight; no physicalstress/fit/thermal/vibration release"
+}

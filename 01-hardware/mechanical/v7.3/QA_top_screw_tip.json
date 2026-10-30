@@ -1,0 +1,23 @@
+{
+  "version": "V7.3",
+  "units": "mm",
+  "seat_Z": 91,
+  "exposed_thread_target": 9,
+  "tip_Z": 82,
+  "nut_bottom_Z": 81.5,
+  "tip_above_nut_bottom": 0.5,
+  "nominal_geometric_penetration": 5,
+  "effective_full_thread_mm": null,
+  "printed_material_below_tip_maxZ": 73.0,
+  "axial_gap_to_printed_material": 9.0,
+  "replacement_possible_CONFIRMED": true,
+  "new_shoe_head_and_outer_dimensions_CONFIRMED": false,
+  "purchase_screw_total_length": null,
+  "nut_pocket_AF": 11.4,
+  "nut_pocket_Z": [
+    79,
+    87
+  ],
+  "nut_pocket_depth": 8,
+  "scope": "Throughthread nut; nominalsmooththreadmodel only; physical chamfers/fit/torque unverified"
+}

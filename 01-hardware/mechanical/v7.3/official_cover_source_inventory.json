@@ -1,0 +1,53 @@
+{
+  "head": "db9cbe1ae50f492f3ba8029652ccdb0caf0464d8",
+  "structure_last_change": "b0794702e3594065680f030b19d18702be99839a",
+  "files": [
+    {
+      "path": "01-hardware/modules/elf2/05-结构资料/00-亚克力2D图纸/ELF 2 & ELF 2_Lite亚克力加工图纸 V1.1.dxf",
+      "url": "https://cnb.cool/fu1fan/VibraReveal/-/git/raw/db9cbe1ae50f492f3ba8029652ccdb0caf0464d8/01-hardware/modules/elf2/05-%E7%BB%93%E6%9E%84%E8%B5%84%E6%96%99/00-%E4%BA%9A%E5%85%8B%E5%8A%9B2D%E5%9B%BE%E7%BA%B8/ELF%202%20%26%20ELF%202_Lite%E4%BA%9A%E5%85%8B%E5%8A%9B%E5%8A%A0%E5%B7%A5%E5%9B%BE%E7%BA%B8%20V1.1.dxf",
+      "name": "ELF 2 & ELF 2_Lite亚克力加工图纸 V1.1.dxf",
+      "bytes": 507719,
+      "sha256": "60b1d0995d309e6f971cb049f93c3b306535e3385c0f164fefb9c9f2851beae7"
+    },
+    {
+      "path": "01-hardware/modules/elf2/05-结构资料/00-亚克力2D图纸/ELF 2 & ELF 2_Lite亚克力加工图纸 V1.1.pdf",
+      "url": "https://cnb.cool/fu1fan/VibraReveal/-/git/raw/db9cbe1ae50f492f3ba8029652ccdb0caf0464d8/01-hardware/modules/elf2/05-%E7%BB%93%E6%9E%84%E8%B5%84%E6%96%99/00-%E4%BA%9A%E5%85%8B%E5%8A%9B2D%E5%9B%BE%E7%BA%B8/ELF%202%20%26%20ELF%202_Lite%E4%BA%9A%E5%85%8B%E5%8A%9B%E5%8A%A0%E5%B7%A5%E5%9B%BE%E7%BA%B8%20V1.1.pdf",
+      "name": "ELF 2 & ELF 2_Lite亚克力加工图纸 V1.1.pdf",
+      "bytes": 72762,
+      "sha256": "7ed6ddb3096da8cb365506c27df377833beb27490b34ec3c574abfb8824139fb"
+    },
+    {
+      "path": "01-hardware/modules/elf2/05-结构资料/01-亚克力3D图纸/ELF 2&ELF 2_Lite亚克力 V1.1.STEP",
+      "url": "https://cnb.cool/fu1fan/VibraReveal/-/git/raw/db9cbe1ae50f492f3ba8029652ccdb0caf0464d8/01-hardware/modules/elf2/05-%E7%BB%93%E6%9E%84%E8%B5%84%E6%96%99/01-%E4%BA%9A%E5%85%8B%E5%8A%9B3D%E5%9B%BE%E7%BA%B8/ELF%202%26ELF%202_Lite%E4%BA%9A%E5%85%8B%E5%8A%9B%20V1.1.STEP",
+      "name": "ELF 2&ELF 2_Lite亚克力 V1.1.STEP",
+      "bytes": 134957,
+      "sha256": "164c687bb7ab50c384ecdecc1868c6b6d3c9744956bf69eacb45dccfd4b53ff6"
+    }
+  ],
+  "verified_findings": {
+    "cover_outer_mm": [
+      79.5,
+      100,
+      3
+    ],
+    "cover_holes_diameter_mm": 3.5,
+    "grid_mm": [
+      68,
+      90.6
+    ],
+    "GPIO_slot_mm": [
+      10,
+      83.6
+    ],
+    "central_diamond_sides_mm": [
+      22,
+      22
+    ],
+    "plate_to_board": "u=50-q,v=p+37.5",
+    "plate_to_V3_world": "X=q+10,Z=p+72; Y mounting offset unmeasured",
+    "old_dimension_conflict_correction": "Previous22/15vs22.6/15.6 claim was assistant misreading; notch22.60 and15.60 distinct from central22square. Source files unchanged.",
+    "relay_explicit": "21.3square blackMini diagram; horizontalpitch17.3; fourM2; verticalpitchnotexplicit; banner26.9conflicts; userheight15includingPCB",
+    "no_design_changes": true,
+    "V3_manifest_hashes_checked_unchanged": 144
+  }
+}

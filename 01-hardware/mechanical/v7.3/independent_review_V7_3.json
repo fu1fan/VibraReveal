@@ -1,0 +1,22 @@
+{
+  "version": "V7.3 final56mm",
+  "reviewer": "design_camera_frame independent of CAD author",
+  "reviewed": [
+    "actualV7.2 numberedsideimage",
+    "actualV7.3 hero/side/IMUrear pixels",
+    "build.py throughrelief/padcut/rearward proxies",
+    "QA_IMU_rear_clearance exactwitnesspoints",
+    "QA_scope_delta/holes/reproduction/assembly/service",
+    "filmtemplate derived frompad face"
+  ],
+  "findings": [
+    "User2-to4 means PCBfrontY54.7 towebrearY110.7; actual56mm, cameragroup+Y0.24 vsV7.2.15.241minimum ischeck result, notplacementdriver.",
+    "Actual5mmweb edgeopen X33..41/Z60.5..83.5/R1.5; samecut removedpad underpinrow. TwoM2supports retained, nooverallIMUstand-off increase.",
+    "8solder/tail unions included in225partstaticQA;3mmrear/R1/H1.3 areassumptions notmeasurements.",
+    "Conservative row-to-frame1.61mm/pad2.5mm;39.3mmrearward room notallowablepinlength orinsulationrating.",
+    "Otherrear solder/features remainunmodeled; inspect actualboard beforetightening.",
+    "Filmtemplate10.5x20/t0.3 with2D2.2holes separate from3acrylicDXFs.",
+    "Modelvalidity/staticfit doesnotprove strength/creep/thermal/vibration oractual solderfit."
+  ],
+  "status": "passed within stated engineering scope; not fabrication release"
+}

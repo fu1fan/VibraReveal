@@ -1,0 +1,13 @@
+{
+  "pages": 33,
+  "rows": 61,
+  "missing_ids": [],
+  "body_font_pt": 12,
+  "body_leading_pt": 17,
+  "source_font_pt": 11,
+  "source_leading_pt": 16,
+  "pixel_review": "All pages reviewed; corrected orphan category headings and unsupported diameter glyph display to Chinese wording without changing source JSON.",
+  "null_qty_display": "待定, not zero; B14 and B19",
+  "source_json_sha256": "1794bd2ba858069b411caae9a6d698e0d5755ed8dd0cc23ae85b3f2ea653c7b0",
+  "private_identifier_scan": "No private identifiers or links"
+}

@@ -1,0 +1,89 @@
+{
+  "world": {
+    "X": "right inmodelglobal coordinate",
+    "Y": "forward opticalaxis towardscene",
+    "Z": "up"
+  },
+  "ELF2_source_transform": {
+    "X": "60-u",
+    "Z": "v+34.5",
+    "component_normal": "+Y"
+  },
+  "cover_source_transform": {
+    "X": "q+10",
+    "Y": "t+70.7",
+    "Z": "p+72"
+  },
+  "modules": {
+    "relay_center_XY": [
+      55,
+      60
+    ],
+    "IMU_center_XZ": [
+      30,
+      72
+    ],
+    "IMU_PCB_back_front_Y": [
+      116.0,
+      117.6
+    ],
+    "IMU_board_normal": "+Y",
+    "IMU_two_holes_world_XZ": [
+      [
+        24.8,
+        64.35
+      ],
+      [
+        24.8,
+        79.65
+      ]
+    ],
+    "IMU_header_edge": "world+X",
+    "IMU_sensitive_axes_to_world": "UNKNOWN until chip Pin1 and physical board orientation verified; source CAD triad is not sensor axes",
+    "symmetry": "V7 image-left from camera-front is world+X; IMU center+30, camera0, not sensor-axis mirror",
+    "IMU_rear_relief": {
+      "actual_material_X": [
+        33,
+        41
+      ],
+      "Z": [
+        60.5,
+        83.5
+      ],
+      "root_radius": 1.5,
+      "through_web_Y": [
+        110.7,
+        115.7
+      ],
+      "mounts_unchanged": true,
+      "pin_solder_envelopes": "ASSUMED only; actual rear solder must be checked individually"
+    }
+  },
+  "cold_shoe": {
+    "receiver_center_XY": [
+      0,
+      115.7
+    ],
+    "platform_Z": [
+      87,
+      91
+    ],
+    "lamp_bounds_Z": [
+      94.6,
+      174.6
+    ],
+    "lamp_emitting_normal": "+Y",
+    "reference_only": "NEW replaceable-screw shoe confirmed by user. Outer28/headD10x2 remain reference; required exposure9mm gives nominal5mm entry through4mmdeck, full effective engagement and actualpitch unverified."
+  },
+  "group_translation_from_V7": [
+    0,
+    -14.3,
+    0
+  ],
+  "V7_3_plane_distance": {
+    "PCB_front_Y": 54.7,
+    "web_rear_Y": 110.7,
+    "distance": 56,
+    "NOT": "free clearance; components are between"
+  }
+}

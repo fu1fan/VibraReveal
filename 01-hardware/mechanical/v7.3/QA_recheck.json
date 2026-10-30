@@ -1,0 +1,936 @@
+{
+  "A03_ELF2_transparent_cover.dxf": {
+    "units": 4,
+    "entity_count": 43,
+    "bad": [],
+    "non_degree2_endpoints": {},
+    "duplicate_count": 0
+  },
+  "A01_H_board_adapter.dxf": {
+    "units": 4,
+    "entity_count": 46,
+    "bad": [],
+    "non_degree2_endpoints": {},
+    "duplicate_count": 0
+  },
+  "A02_base.dxf": {
+    "units": 4,
+    "entity_count": 17,
+    "bad": [],
+    "non_degree2_endpoints": {},
+    "duplicate_count": 0
+  },
+  "camera_front_M2x6_0.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "angle_base_bottom_washer_0.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "A01_H_board_adapter.stl": {
+    "triangles": 9224,
+    "nonmanifold_edges": 0
+  },
+  "P03_tripod_puck_lower.stl": {
+    "triangles": 1136,
+    "nonmanifold_edges": 0
+  },
+  "relay_top_M2x5_1.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "board_nylon_spacer_5.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "board_carrier_M3x10_0.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "IMU_front_M2x10_0.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "tripod_base_recessed_M4_nut_0.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "LCD_insulating_washer_1_front.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "REF_lamp_lockwheel_D24_H4_PROVISIONAL.stl": {
+    "triangles": 500,
+    "nonmanifold_edges": 0
+  },
+  "camera_base_bottom_washer_0.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "tripod_base_two1mm_washers_0.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "fan_cover_M2p5_nut_3.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "LCD_adapter_steel_washer_0.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "LCD_direct_brass_M3_AF5_L30_1.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "camera_front_M2x6_1.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "board_carrier_M3x10_3.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "REF_relay_control_header_APPROX.stl": {
+    "triangles": 12,
+    "nonmanifold_edges": 0
+  },
+  "angle_base_M4x18_1.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "cover_M3_AF5_L15_male6_1.stl": {
+    "triangles": 1028,
+    "nonmanifold_edges": 0
+  },
+  "brace_vertical_washer_0_0.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_7.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "camera_insulating_washer_2_front.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "shoe_metal_quarter20_HEXnut.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "board_nylon_spacer_2.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "brace_vertical_washer_2_0.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "REF_IMU_header_pin_height8_ASSUMED_1.stl": {
+    "triangles": 500,
+    "nonmanifold_edges": 0
+  },
+  "camera_base_top_washer_1.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "REF_USB_A_stack_source_height16p4.stl": {
+    "triangles": 12,
+    "nonmanifold_edges": 0
+  },
+  "tripod_base_M4x20_3.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "camera_base_M4_nut_0.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "LCD_insulating_washer_3_rear.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "tripod_base_M4x20_1.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "LCD_insulating_washer_3_front.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "brace_vertical_M4_nut_1.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "camera_insulating_washer_3_front.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "angle_base_bottom_washer_2.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "tripod_base_recessed_M4_nut_3.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "camera_insulating_washer_3_rear.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "angle_base_top_washer_1.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "brace_vertical_washer_2_1.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "brace_vertical_washer_3_1.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "REF_GPIO_2x20_source_height9_APPROX.stl": {
+    "triangles": 12,
+    "nonmanifold_edges": 0
+  },
+  "LCD_direct_brass_M3_AF5_L30_2.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "P05_tripod_puck_upper.stl": {
+    "triangles": 2168,
+    "nonmanifold_edges": 0
+  },
+  "A03_ELF2_transparent_cover.stl": {
+    "triangles": 6692,
+    "nonmanifold_edges": 0
+  },
+  "relay_bottom_M2x8_1.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "LCD_adapter_M3_head_shank_3.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "IMU_rear_M2_nut_1.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "REF_sink_keepout40x36_APPROX_height12_MEASURED.stl": {
+    "triangles": 12,
+    "nonmanifold_edges": 0
+  },
+  "REF_OV9281_lens_PROVISIONAL.stl": {
+    "triangles": 500,
+    "nonmanifold_edges": 0
+  },
+  "board_carrier_M3x10_4.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "fan_cover_M2p5x16_3.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "REF_RJ45_source_height13p5_PROVISIONAL.stl": {
+    "triangles": 12,
+    "nonmanifold_edges": 0
+  },
+  "fan_cover_M2p5x16_1.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "camera_rear_M2x8_3.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_6.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "camera_stock_M2_AF4_L8_1.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "camera_base_M4x18_0.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "brace_vertical_M4_nut_3.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "angle_base_M4_nut_3.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "REF_IMU_header_plastic_APPROX.stl": {
+    "triangles": 12,
+    "nonmanifold_edges": 0
+  },
+  "cover_removable_M3x8_0.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "REF_relay_terminal_APPROX_totalheight15.stl": {
+    "triangles": 12,
+    "nonmanifold_edges": 0
+  },
+  "REF_rear_M2_source_footprint_height5p4.stl": {
+    "triangles": 24,
+    "nonmanifold_edges": 0
+  },
+  "angle_base_M4_nut_0.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "brace_vertical_M4_nut_2.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "REF_IMU_header_pin_height8_ASSUMED_4.stl": {
+    "triangles": 500,
+    "nonmanifold_edges": 0
+  },
+  "LCD_adapter_M3_head_shank_1.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "REF_OV9281_PCB.stl": {
+    "triangles": 2044,
+    "nonmanifold_edges": 0
+  },
+  "brace_vertical_M4x16_0.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "board_carrier_M3x10_2.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "camera_insulating_washer_0_front.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "REF_CSI_source_footprint_height5p4_NOMINAL.stl": {
+    "triangles": 12,
+    "nonmanifold_edges": 0
+  },
+  "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_5.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "P01_rear_two_level_brace_0.stl": {
+    "triangles": 2464,
+    "nonmanifold_edges": 0
+  },
+  "camera_base_bottom_washer_2.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "REF_metal_1_4_20_nut.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "REF_IMU_LDO_envelope_APPROX.stl": {
+    "triangles": 12,
+    "nonmanifold_edges": 0
+  },
+  "brace_vertical_M4x16_3.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "board_front_M3x8_5.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "REF_2510_fan_frame_holes_APPROX.stl": {
+    "triangles": 2552,
+    "nonmanifold_edges": 0
+  },
+  "REF_lamp_male_foot18p5x1p9_REFERENCE.stl": {
+    "triangles": 12,
+    "nonmanifold_edges": 0
+  },
+  "board_nylon_spacer_1.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "brace_vertical_washer_0_1.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "angle_base_M4x18_3.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "relay_PCB_insulator_2.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "relay_bottom_M2x8_0.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "camera_rear_M2x8_0.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "tripod_base_two1mm_washers_2.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "fan_cover_M2p5x16_0.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "A02_base.stl": {
+    "triangles": 8652,
+    "nonmanifold_edges": 0
+  },
+  "angle_base_bottom_washer_3.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "cover_removable_washer_3.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "REF_camera_rear_FPC_LIMIT6_APPROX.stl": {
+    "triangles": 12,
+    "nonmanifold_edges": 0
+  },
+  "REF_2510_fan_rotor_simplified.stl": {
+    "triangles": 500,
+    "nonmanifold_edges": 0
+  },
+  "camera_stock_M2_AF4_L8_2.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "IMU_front_M2x10_1.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "LCD_front_M3_head_shank_2.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "REF_camera_rear_screw_LIMIT6_APPROX_1.stl": {
+    "triangles": 500,
+    "nonmanifold_edges": 0
+  },
+  "cover_M3_AF5_L15_male6_0.stl": {
+    "triangles": 1028,
+    "nonmanifold_edges": 0
+  },
+  "LCD_insulating_washer_1_rear.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "camera_base_bottom_washer_1.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "brace_vertical_M4x16_2.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "REF_GPIO_2x10_source_height9_APPROX.stl": {
+    "triangles": 12,
+    "nonmanifold_edges": 0
+  },
+  "camera_base_M4x18_2.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "LCD_insulating_washer_2_rear.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "REF_IMU_chip_position_APPROX_axes_PENDING.stl": {
+    "triangles": 12,
+    "nonmanifold_edges": 0
+  },
+  "LCD_direct_brass_M3_AF5_L30_0.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "REF_VL49_emitting_face_APPROX.stl": {
+    "triangles": 12,
+    "nonmanifold_edges": 0
+  },
+  "brace_vertical_washer_1_0.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "camera_base_M4_nut_2.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "fan_cover_M2p5_nut_1.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "REF_FPC_ROUTE_APPROX_not_bend_validated.stl": {
+    "triangles": 196,
+    "nonmanifold_edges": 0
+  },
+  "angle_base_bottom_washer_1.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "camera_insulating_washer_2_rear.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "REF_IMU_header_pin_height8_ASSUMED_2.stl": {
+    "triangles": 500,
+    "nonmanifold_edges": 0
+  },
+  "camera_insulating_washer_1_rear.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "cover_removable_M3x8_1.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "brace_vertical_washer_1_1.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "REF_VL49_RGB_total66x80x30_body72p8_ASSUMED_101g.stl": {
+    "triangles": 28,
+    "nonmanifold_edges": 0
+  },
+  "relay_PCB_insulator_0.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "relay_PCB_insulator_1.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "cover_board_insulator_3.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "relay_hex_M2_AF4_L6_3.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_1.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "REF_shoe_quarter20_REPLACEABLE_exposed9_REFERENCE.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "REF_LCD_exact_STEP.stl": {
+    "triangles": 6352,
+    "nonmanifold_edges": 1
+  },
+  "fan_cover_M2p5_nut_2.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "relay_PCB_insulator_3.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "REF_LCD_screen_surface.stl": {
+    "triangles": 12,
+    "nonmanifold_edges": 0
+  },
+  "cover_board_insulator_1.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "brace_vertical_washer_3_0.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "REF_relay_HFD4_body10x6p5_height5p65.stl": {
+    "triangles": 12,
+    "nonmanifold_edges": 0
+  },
+  "REF_ELF2_PCB_envelope.stl": {
+    "triangles": 3060,
+    "nonmanifold_edges": 0
+  },
+  "board_nylon_spacer_0.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "camera_insulating_washer_0_rear.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "REF_camera_rear_screw_LIMIT6_APPROX_0.stl": {
+    "triangles": 500,
+    "nonmanifold_edges": 0
+  },
+  "P01_rear_two_level_brace_1.stl": {
+    "triangles": 2464,
+    "nonmanifold_edges": 0
+  },
+  "camera_base_M4x18_3.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "cover_board_insulator_2.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "LCD_adapter_steel_washer_1.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "relay_top_M2x5_0.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "REF_IMU_header_pin_height8_ASSUMED_5.stl": {
+    "triangles": 500,
+    "nonmanifold_edges": 0
+  },
+  "angle_base_top_washer_0.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "cover_removable_M3x8_3.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "LCD_adapter_steel_washer_3.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_3.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "fan_cover_M2p5x16_2.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "angle_base_M4x18_2.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "IMU_back_insulating_pad_t0p3.stl": {
+    "triangles": 1028,
+    "nonmanifold_edges": 0
+  },
+  "angle_base_M4_nut_2.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "REF_lamp_foot_neck12_PROVISIONAL.stl": {
+    "triangles": 12,
+    "nonmanifold_edges": 0
+  },
+  "camera_base_top_washer_2.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "REF_USB3_source_height_APPROX.stl": {
+    "triangles": 12,
+    "nonmanifold_edges": 0
+  },
+  "relay_hex_M2_AF4_L6_0.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "board_nylon_spacer_4.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "angle_base_top_washer_2.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "cover_M3_AF5_L15_male6_3.stl": {
+    "triangles": 1028,
+    "nonmanifold_edges": 0
+  },
+  "LCD_front_M3_head_shank_1.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "camera_rear_M2x8_2.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_2.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "LCD_insulating_washer_0_front.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "LCD_adapter_steel_washer_2.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "tripod_base_M4x20_2.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_4.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "camera_stock_M2_AF4_L8_0.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "P04_nut_keeper.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "camera_base_M4_nut_3.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "REF_IMU_PCB_direct_main_web_D2p2_t1p6_ASSUMED.stl": {
+    "triangles": 1028,
+    "nonmanifold_edges": 0
+  },
+  "camera_base_top_washer_0.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "angle_base_M4x18_0.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "LCD_adapter_M3_head_shank_0.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "cover_removable_M3x8_2.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "camera_base_bottom_washer_3.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "LCD_front_M3_head_shank_3.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "angle_base_M4_nut_1.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "relay_bottom_M2x8_3.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "camera_front_M2x6_2.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "IMU_rear_M2_nut_0.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "cover_M3_AF5_L15_male6_2.stl": {
+    "triangles": 1028,
+    "nonmanifold_edges": 0
+  },
+  "brace_vertical_M4_nut_0.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "camera_insulating_washer_1_front.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "tripod_base_two1mm_washers_1.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "cover_removable_washer_1.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "tripod_base_recessed_M4_nut_1.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "tripod_base_recessed_M4_nut_2.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "board_front_M3x8_4.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "P02_low_front_camera_frame.stl": {
+    "triangles": 7076,
+    "nonmanifold_edges": 0
+  },
+  "LCD_direct_brass_M3_AF5_L30_3.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "fan_cover_M2p5_nut_0.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "LCD_insulating_washer_0_rear.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "board_carrier_M3x10_1.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "relay_hex_M2_AF4_L6_1.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "angle_base_top_washer_3.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "camera_front_M2x6_3.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "board_nylon_spacer_3.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "REF_IMU_header_pin_height8_ASSUMED_0.stl": {
+    "triangles": 500,
+    "nonmanifold_edges": 0
+  },
+  "REF_relay_PCB_21p3_holes17p3_Y_ASSUMED.stl": {
+    "triangles": 2044,
+    "nonmanifold_edges": 0
+  },
+  "cover_board_insulator_0.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "board_carrier_M3x10_5.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "camera_rear_M2x8_1.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "cover_removable_washer_0.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "camera_base_M4x18_1.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "LCD_front_M3_head_shank_0.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "REF_IMU_header_pin_height8_ASSUMED_7.stl": {
+    "triangles": 500,
+    "nonmanifold_edges": 0
+  },
+  "LCD_adapter_M3_head_shank_2.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "LCD_insulating_washer_2_front.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "camera_base_top_washer_3.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "tripod_base_M4x20_0.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "cover_removable_washer_2.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "relay_top_M2x5_3.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_0.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "brace_vertical_M4x16_1.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "tripod_base_two1mm_washers_3.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "camera_stock_M2_AF4_L8_3.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "REF_IMU_header_pin_height8_ASSUMED_3.stl": {
+    "triangles": 500,
+    "nonmanifold_edges": 0
+  },
+  "REF_IMU_header_pin_height8_ASSUMED_6.stl": {
+    "triangles": 500,
+    "nonmanifold_edges": 0
+  },
+  "relay_top_M2x5_2.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "camera_base_M4_nut_1.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "REF_pictured_purchased_shoe_outer28_APPROX.stl": {
+    "triangles": 1060,
+    "nonmanifold_edges": 0
+  },
+  "relay_bottom_M2x8_2.stl": {
+    "triangles": 1004,
+    "nonmanifold_edges": 0
+  },
+  "relay_hex_M2_AF4_L6_2.stl": {
+    "triangles": 528,
+    "nonmanifold_edges": 0
+  },
+  "REF_steel_load_washer.stl": {
+    "triangles": 1008,
+    "nonmanifold_edges": 0
+  },
+  "manufactured_intersections": [],
+  "valid_solids": {
+    "A01_H_board_adapter": true,
+    "P01_rear_two_level_brace_1": true,
+    "P02_low_front_camera_frame": true,
+    "P05_tripod_puck_upper": true,
+    "P04_nut_keeper": true,
+    "P03_tripod_puck_lower": true,
+    "A02_base": true,
+    "P01_rear_two_level_brace_0": true,
+    "A03_ELF2_transparent_cover": true
+  },
+  "exact_LCD_vs_manufactured_intersections": []
+}

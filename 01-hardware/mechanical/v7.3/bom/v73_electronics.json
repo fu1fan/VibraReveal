@@ -1,0 +1,170 @@
+{
+  "scope": "V7.3 whole-machine BOM electronic module research; no CAD/BOM edits or purchases",
+  "checked_UTC": "2026-10-30T04:12Z",
+  "source_policy": "Repository archived manufacturer documents and official manufacturer pages. Exact installed SKU not inferred from family specs.",
+  "sources": {
+    "ELF_README": "https://cnb.cool/fu1fan/VibraReveal/-/blob/main/01-hardware/modules/elf2/README.md",
+    "ELF_SPEC": "https://cnb.cool/fu1fan/VibraReveal/-/blob/main/01-hardware/modules/elf2/ELF%202_Product%20spec_20260409.pdf",
+    "ELF_QUICK": "https://cnb.cool/fu1fan/VibraReveal/-/blob/main/01-hardware/modules/elf2/01-%E6%95%99%E7%A8%8B%E6%96%87%E6%A1%A3/ELF%202%E5%BC%80%E5%8F%91%E6%9D%BF%E5%BF%AB%E9%80%9F%E4%BD%BF%E7%94%A8%E6%89%8B%E5%86%8C.pdf",
+    "ELF_HW": "https://cnb.cool/fu1fan/VibraReveal/-/blob/main/01-hardware/modules/elf2/01-教程文档/进阶篇之-ELF 2开发板硬件设计教程.pdf",
+    "LCD_README": "https://cnb.cool/fu1fan/VibraReveal/-/blob/main/01-hardware/modules/7inch_HDMI_LCD_C/README.md",
+    "LCD_OFFICIAL": "https://docs.waveshare.net/7inch_HDMI_LCD_C/",
+    "CAM_README": "https://cnb.cool/fu1fan/VibraReveal/-/blob/main/01-hardware/modules/ov9281/README.md",
+    "CAM_DRAWING": "https://cnb.cool/fu1fan/VibraReveal/-/blob/main/01-hardware/modules/ov9281/mechanical/OV9281-15P摄像头 仁恒2024年9月11日.pdf"
+  },
+  "items": [
+    {
+      "name": "ELF 2 RK3588 board",
+      "quantity": 1,
+      "confirmed": [
+        "Project identifies ELF 2 RK3588, not ELF2 Lite.",
+        "Repository mechanical reference is V1.3 ELF2/ELF2_Lite shared drawing; installed PCB revision unconfirmed.",
+        "Archived 20260409 spec lists 4GB LPDDR4+32GB eMMC (ELF2+244GSE32GCCxxxxx:xx) and 8GB+64GB (ELF2+248GSE64GCCxxxxx:xx).",
+        "Spec lists 15-pin 2-lane CSI and a separate26-pin 4-lane CSI; do not interchange.",
+        "One standard HDMI TX socket is listed."
+      ],
+      "unresolved": [
+        "Which installed RAM/eMMC SKU and PCB revision",
+        "Actual camera socket pin mapping/contact orientation verification"
+      ],
+      "evidence": [
+        "ELF_README",
+        "ELF_SPEC"
+      ]
+    },
+    {
+      "name": "Waveshare 7inch HDMI LCD (C)",
+      "quantity": 1,
+      "confirmed": [
+        "1024x600 IPS,5-point capacitive touch,60Hz",
+        "Standard HDMI video; micro USB supplies power and touch data.",
+        "5V nominal,4.75–5.25V; input current >=500mA,2.5W nominal.",
+        "OfficialSKU11199 bare display;11284 with black/white case. Reference1118 STEP is mechanical file identifier, not procurementSKU."
+      ],
+      "unresolved": [
+        "Actual purchased SKU/case state and PCB REV; do not equate downloaded STEP with exact installed revision.",
+        "REV-dependent touch/backlight behavior and actual cable routing/length."
+      ],
+      "evidence": [
+        "LCD_README",
+        "LCD_OFFICIAL"
+      ],
+      "cables": [
+        {
+          "name": "HDMI data cable",
+          "quantity": 1,
+          "spec": "standard HDMI male-to-male inferred from both published sockets",
+          "unresolved": "length,plug angle/body envelope and final fit"
+        },
+        {
+          "name": "USB touch/power cable",
+          "quantity": 1,
+          "spec": "board USB host to screen microUSB; data-capable,not charge-only",
+          "unresolved": "host port selection,length,current budget,need for powered hub"
+        }
+      ]
+    },
+    {
+      "name": "Renheng OV9281 15P mono global-shutter camera module",
+      "quantity": 1,
+      "confirmed": [
+        "Project README explicitly15P FPC/MIPI CSI-2,Renheng module",
+        "Mechanical PDF pin table1..15,2data lanes+clock;contact drawing labels pitch1±0.1. This establishes camera-side reference pitch1mm,not end-to-end cable compatibility.",
+        "Archived drawing lens table lists2G2P+IR,EFL2.6,F/No2.6±5%; exact purchased lens configuration not independently confirmed."
+      ],
+      "unresolved": [
+        "Purchased lens SKU/focal length/FOV/aperture/working distance; README itself marks lens properties TODO.",
+        "Actual module board revision and contact side",
+        "ELF-side connector pitch/contact side and complete pin mapping; straight/reversed contacts not confirmed"
+      ],
+      "evidence": [
+        "CAM_README",
+        "CAM_DRAWING",
+        "ELF_SPEC"
+      ]
+    },
+    {
+      "name": "CSI FPC/FFC camera cable",
+      "quantity": 1,
+      "user_fixed": "200mm procurement length",
+      "candidate": "15conductor; camera-side reference1mm pitch",
+      "procurement_hold": [
+        "Do not release based only on15Pfilename. Verify both ends pitch,thickness,insertion length,contact-side same/opposite and pin1mapping.",
+        "200mm is user-selected length,not verified electrical/high-frame-rate or mechanical bend/strain-relief compatibility.",
+        "No confirmed same-side/opposite-side type. Manual same-direction FPC note concerns a DISPLAY, not this camera.",
+        "Adapter/transition board is conditional only if actual selected ELF connector does not mate to the camera; do not assume a 30-pin board connector or automatically buy 15-to-15 cable."
+      ]
+    },
+    {
+      "name": "Main ELF2 power adapter + Type-C cable",
+      "quantity": 1,
+      "confirmed": [
+        "Archived hardware tutorial says12V20W PD into dedicated Type-C power port; adapter must explicitly support12V output,prefer supplied adapter.",
+        "20260409 spec DC12V; package listsHA716C PD20W single-C adapter +CTC310N60W C-C1m."
+      ],
+      "conflict": "Quick-start lists12V3A DC power lead, whereas hardware tutorial/spec accessory list20W PD. Do not silently merge as one established purchased adapter.",
+      "procurement_hold": [
+        "Actual installed board revision/power port and supplied adapter label",
+        "Whole-system load budget for board,screen>=500mA at5V,fan and other modules",
+        "Final external/battery/regulator/fuse/wiring architecture not defined; genericPD label does not guarantee12V profile."
+      ],
+      "evidence": [
+        "ELF_SPEC",
+        "ELF_HW",
+        "ELF_QUICK"
+      ]
+    }
+  ],
+  "not_confirmed": [
+    "Trigger wiring/level/pin assignment/power topology; no inferred trigger cable part selection.",
+    "No proofUSBboardpowerbudget covers screen plus allperipherals."
+  ],
+  "local_evidence_sha256": {
+    "ovmechanical.pdf": "66a83c8aa8760ec2e209d1f2f443f2b026503db8e36f28e9b2a3e40406825d1a",
+    "elfhw.txt": "a7189a0f156d17a5b1e47b8f5af6058e5eefb2c8c27c616d3504b51306cf871b",
+    "elfquick.txt": "fed5e9db80cadc4d015a8fc97da30a0ac1638cad418a4a6b94fbf23d8daec865",
+    "elf_quick.pdf": "9edd7f3abae9952766bee1ce6d69d4c8aaee530ab5f765718187cd85b540ec6f",
+    "ov9281.readme": "6174ded404471ff48bbf148f5c212888529bb8f56081d85d1c39a7a3bb6464bf",
+    "elf_hw.pdf": "d6acdb8d44c3c2dd108e05048ed5b1cc34527a6aa6b1b8fb5cc73d1775859334",
+    "elf2.readme": "ef8452d5212879b2c52714cdab6af260a6f3079b0e10eab3595d83fc65fd2715",
+    "elfspec.pdf": "0749e97c129ad59a4862b1a9921c9352a928ed7a7b1f24b85d7e5c385eb15f2e",
+    "7inch_HDMI_LCD_C.readme": "e1d329cf378a380696f4084be44bbf851559439ddd1f3b335d1413e748dde665",
+    "elfspec.txt": "8e894f71698502171a94aaeb603eae3a03efb84b606a2a32bb92e3037ec1d977"
+  },
+  "page_locator_convention": "PDF physical page, 1-based; web sources have no fixed page.",
+  "source_pages": {
+    "ELF_SPEC": {
+      "RAM_storage": [
+        1,
+        2,
+        3,
+        7
+      ],
+      "CSI_ports": [
+        5
+      ],
+      "adapter_and_order_SKUs": [
+        7
+      ]
+    },
+    "ELF_QUICK": {
+      "12V3A_accessory": [
+        12
+      ]
+    },
+    "ELF_HW": {
+      "12V20W_PD_supply": [
+        11
+      ],
+      "note": "PDF page11 printed page9"
+    },
+    "CAM_DRAWING": {
+      "pin_table_pitch_lens": [
+        1
+      ]
+    },
+    "LCD_OFFICIAL": {
+      "page": "HTML parameters/interfaces"
+    }
+  }
+}

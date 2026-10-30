@@ -1,0 +1,378 @@
+{
+  "cover_module_upward150mm_conservative_swept_box_hits": [],
+  "moving_parts": [
+    "REF_2510_fan_frame_holes_APPROX",
+    "REF_2510_fan_rotor_simplified",
+    "fan_cover_M2p5x16_0",
+    "fan_cover_M2p5_nut_0",
+    "fan_cover_M2p5x16_1",
+    "fan_cover_M2p5_nut_1",
+    "fan_cover_M2p5x16_2",
+    "fan_cover_M2p5_nut_2",
+    "fan_cover_M2p5x16_3",
+    "fan_cover_M2p5_nut_3",
+    "A03_ELF2_transparent_cover"
+  ],
+  "remove_before_lift": [
+    "cover_removable_washer_0",
+    "cover_removable_M3x8_0",
+    "cover_removable_washer_1",
+    "cover_removable_M3x8_1",
+    "cover_removable_washer_2",
+    "cover_removable_M3x8_2",
+    "cover_removable_washer_3",
+    "cover_removable_M3x8_3"
+  ],
+  "conditions": [
+    "remove lamp before cover screwdriver operation",
+    "unplug fanwire",
+    "disengage four cover screws and washers",
+    "no externalGPIOplugs withinremovalpath",
+    "FFC relaxedwithoutstrain; cablegeometryprovisional"
+  ],
+  "driver_tests": [
+    {
+      "fastener": "camera_front_M2x6_0",
+      "shaft_radius_mm": 2,
+      "length_mm": 40,
+      "direction": "Y",
+      "hits": []
+    },
+    {
+      "fastener": "camera_front_M2x6_1",
+      "shaft_radius_mm": 2,
+      "length_mm": 40,
+      "direction": "Y",
+      "hits": []
+    },
+    {
+      "fastener": "camera_front_M2x6_2",
+      "shaft_radius_mm": 2,
+      "length_mm": 40,
+      "direction": "Y",
+      "hits": []
+    },
+    {
+      "fastener": "camera_front_M2x6_3",
+      "shaft_radius_mm": 2,
+      "length_mm": 40,
+      "direction": "Y",
+      "hits": []
+    },
+    {
+      "fastener": "REF_shoe_quarter20_REPLACEABLE_exposed9_REFERENCE",
+      "shaft_radius_mm": 2,
+      "length_mm": 60,
+      "direction": "Z",
+      "hits": []
+    },
+    {
+      "fastener": "IMU_front_M2x10_0",
+      "shaft_radius_mm": 2,
+      "length_mm": 40,
+      "direction": "Y",
+      "hits": []
+    },
+    {
+      "fastener": "IMU_front_M2x10_1",
+      "shaft_radius_mm": 2,
+      "length_mm": 40,
+      "direction": "Y",
+      "hits": []
+    },
+    {
+      "fastener": "cover_removable_M3x8_0",
+      "shaft_radius_mm": 2,
+      "length_mm": 90,
+      "direction": "Y",
+      "hits": []
+    },
+    {
+      "fastener": "cover_removable_M3x8_1",
+      "shaft_radius_mm": 2,
+      "length_mm": 90,
+      "direction": "Y",
+      "hits": []
+    },
+    {
+      "fastener": "cover_removable_M3x8_2",
+      "shaft_radius_mm": 2,
+      "length_mm": 90,
+      "direction": "Y",
+      "hits": []
+    },
+    {
+      "fastener": "cover_removable_M3x8_3",
+      "shaft_radius_mm": 2,
+      "length_mm": 90,
+      "direction": "Y",
+      "hits": []
+    },
+    {
+      "fastener": "camera_base_M4x18_0",
+      "shaft_radius_mm": 2.5,
+      "length_mm": 80,
+      "direction": "Z",
+      "hits": []
+    },
+    {
+      "fastener": "camera_base_M4x18_1",
+      "shaft_radius_mm": 2.5,
+      "length_mm": 80,
+      "direction": "Z",
+      "hits": []
+    },
+    {
+      "fastener": "camera_base_M4x18_2",
+      "shaft_radius_mm": 2.5,
+      "length_mm": 80,
+      "direction": "Z",
+      "hits": []
+    },
+    {
+      "fastener": "camera_base_M4x18_3",
+      "shaft_radius_mm": 2.5,
+      "length_mm": 80,
+      "direction": "Z",
+      "hits": []
+    },
+    {
+      "fastener": "angle_base_M4x18_0",
+      "shaft_radius_mm": 2.5,
+      "length_mm": 80,
+      "direction": "Z",
+      "hits": []
+    },
+    {
+      "fastener": "angle_base_M4x18_1",
+      "shaft_radius_mm": 2.5,
+      "length_mm": 80,
+      "direction": "Z",
+      "hits": []
+    },
+    {
+      "fastener": "angle_base_M4x18_2",
+      "shaft_radius_mm": 2.5,
+      "length_mm": 80,
+      "direction": "Z",
+      "hits": []
+    },
+    {
+      "fastener": "angle_base_M4x18_3",
+      "shaft_radius_mm": 2.5,
+      "length_mm": 80,
+      "direction": "Z",
+      "hits": []
+    },
+    {
+      "fastener": "tripod_base_M4x20_1",
+      "shaft_radius_mm": 2.5,
+      "length_mm": 80,
+      "direction": "Z",
+      "hits": []
+    },
+    {
+      "fastener": "tripod_base_M4x20_3",
+      "shaft_radius_mm": 2.5,
+      "length_mm": 80,
+      "direction": "Z",
+      "hits": []
+    },
+    {
+      "fastener": "brace_vertical_M4x16_0",
+      "shaft_radius_mm": 2.5,
+      "length_mm": 60,
+      "direction": "NEG_Y",
+      "hits": []
+    },
+    {
+      "fastener": "brace_vertical_M4x16_1",
+      "shaft_radius_mm": 2.5,
+      "length_mm": 60,
+      "direction": "NEG_Y",
+      "hits": []
+    },
+    {
+      "fastener": "brace_vertical_M4x16_2",
+      "shaft_radius_mm": 2.5,
+      "length_mm": 60,
+      "direction": "NEG_Y",
+      "hits": []
+    },
+    {
+      "fastener": "brace_vertical_M4x16_3",
+      "shaft_radius_mm": 2.5,
+      "length_mm": 60,
+      "direction": "NEG_Y",
+      "hits": []
+    }
+  ],
+  "limits": [
+    "rearbrace basebolts installed BEFORE its verticalbolts; LCDmodule last; reverse order forservice",
+    "shaft envelopes only; handles and recess fitunmodeled",
+    "fan fastening isoff-board serviceaftercover+fanlift, notthroughcamera",
+    "camera base drivers require FPC movedaside; rearbraceverticaldriver test removesLCDmodule/columns first",
+    "tripod rowY50 assemblebeforeboard; rowY80 hasnewUaccess and D5shaft test"
+  ],
+  "lamp_slide_forward50mm_conservative_sweep_hits": [],
+  "lamp_service_conditions": [
+    "release actual foot lockwheel/retention first; modeled generic foot only",
+    "slide +Y50 then lift; physical SKU safety latch dimensions unknown",
+    "remove lamp before centralquarter screw service; original5mmexposedstudNOTcompatible with4mmdeck",
+    "camera rear screws/IMUnuts preassemblelooseframe; shoe nutinsert beforecamera, notclaimed fullycaptive"
+  ],
+  "provisional_IO_corridors": [
+    {
+      "name": "GPIO_2x20_STATIC_ASSUMED_plug26p2",
+      "hits": []
+    },
+    {
+      "name": "GPIO_2x10_STATIC_ASSUMED_plug26p2",
+      "hits": []
+    },
+    {
+      "name": "GPIO_2x20_ASSUMED_plug26p2_pluswithdraw20",
+      "hits": [
+        {
+          "part": "REF_VL49_RGB_total66x80x30_body72p8_ASSUMED_101g",
+          "volume_mm3": 1302.8676000000034
+        }
+      ]
+    },
+    {
+      "name": "GPIO_2x10_ASSUMED_plug26p2_pluswithdraw20",
+      "hits": [
+        {
+          "part": "REF_VL49_RGB_total66x80x30_body72p8_ASSUMED_101g",
+          "volume_mm3": 1054.1000000000001
+        }
+      ]
+    },
+    {
+      "name": "RJ45_negativeX_nominal",
+      "hits": []
+    },
+    {
+      "name": "USBstack_negativeX_nominal",
+      "hits": []
+    },
+    {
+      "name": "USB3_negativeX_nominal",
+      "hits": []
+    },
+    {
+      "name": "GPIO_2x20_afterwithdraw_exit_positiveX80",
+      "hits": [
+        {
+          "part": "REF_VL49_RGB_total66x80x30_body72p8_ASSUMED_101g",
+          "volume_mm3": 1302.8676000000041
+        }
+      ]
+    },
+    {
+      "name": "GPIO_2x10_afterwithdraw_exit_negativeX80",
+      "hits": [
+        {
+          "part": "REF_VL49_RGB_total66x80x30_body72p8_ASSUMED_101g",
+          "volume_mm3": 1157.8500000000008
+        }
+      ]
+    },
+    {
+      "name": "positiveX_side_IO_ASSUMED",
+      "hits": []
+    }
+  ],
+  "IO_corridors_AFTER_LAMP_REMOVED": [
+    {
+      "name": "GPIO_2x20_STATIC_ASSUMED_plug26p2",
+      "hits": []
+    },
+    {
+      "name": "GPIO_2x10_STATIC_ASSUMED_plug26p2",
+      "hits": []
+    },
+    {
+      "name": "GPIO_2x20_ASSUMED_plug26p2_pluswithdraw20",
+      "hits": []
+    },
+    {
+      "name": "GPIO_2x10_ASSUMED_plug26p2_pluswithdraw20",
+      "hits": []
+    },
+    {
+      "name": "RJ45_negativeX_nominal",
+      "hits": []
+    },
+    {
+      "name": "USBstack_negativeX_nominal",
+      "hits": []
+    },
+    {
+      "name": "USB3_negativeX_nominal",
+      "hits": []
+    },
+    {
+      "name": "GPIO_2x20_afterwithdraw_exit_positiveX80",
+      "hits": []
+    },
+    {
+      "name": "GPIO_2x10_afterwithdraw_exit_negativeX80",
+      "hits": []
+    },
+    {
+      "name": "positiveX_side_IO_ASSUMED",
+      "hits": []
+    }
+  ],
+  "IO_operating_tradeoff": "Withlampinstalled, modeledstaticGPIOplugbody fits but20mmwithdrawal/sideexit sweep blocked; remove lamp forGPIO service. Actualplug/wiregeometry unverified.",
+  "IO_limits": "GPIO hypotheticalplugbody depth26.2 +20mmforwardwithdrawal, then80mmoutwardsideexit; uses exactsourceheaderbodywidth only, noaddedhousingmargin. NOT infinitefrontinsertion oractualplug validation. Actualplug/wirebend dimensions unknown; removelampforoversize/longstraightapproach. Sidecorridors hypothetical. RemoveA03coverforoversizeGPIOhousing ifneeded.",
+  "topnut_insertion_conservative_sweeps": [
+    {
+      "step": "nut_slide_fromfront_atZ73p5",
+      "hits": []
+    },
+    {
+      "step": "nut_lift8mm_intohexpocket",
+      "hits": []
+    }
+  ],
+  "topnut_conditions": [
+    "installnut beforecameraPCB/lens; removeexistingnut andshoe screw duringtest",
+    "holdnut when completelyunbolted; antirotationpocket doesnotprove adapterrotationrestraint",
+    "Replaceability USER CONFIRMED; target9mm exposed belowshoe gives5mm nominal penetration, fullthread engagement pending physical chamfers; original5mm unsuitable"
+  ],
+  "rearbrace_exact_LCD_and_hardware_clearance": [
+    {
+      "brace": "P01_rear_two_level_brace_0",
+      "nearest_part_and_distance_mm": [
+        "LCD_direct_brass_M3_AF5_L30_0",
+        1.1132486540518727
+      ],
+      "exact_source_LCD_distance_mm": 6.080700646020372
+    },
+    {
+      "brace": "P01_rear_two_level_brace_1",
+      "nearest_part_and_distance_mm": [
+        "LCD_direct_brass_M3_AF5_L30_2",
+        1.1132486540518727
+      ],
+      "exact_source_LCD_distance_mm": 8.400370305326508
+    }
+  ],
+  "IMU_rear_nut_insertion_10mm_continuous_sweeps": [
+    {
+      "nut": 0,
+      "start_Y": 99.10000000000001,
+      "travel_positiveY": 10,
+      "hits": []
+    },
+    {
+      "nut": 1,
+      "start_Y": 99.10000000000001,
+      "travel_positiveY": 10,
+      "hits": []
+    }
+  ],
+  "IMU_nut_access_limit": "nutgeometry only, notfinger/handmodel; preassemblelooseframe asbefore"
+}

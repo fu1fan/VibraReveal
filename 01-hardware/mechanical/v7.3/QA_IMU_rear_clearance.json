@@ -1,0 +1,115 @@
+{
+  "version": "V7.3",
+  "units": "mm",
+  "unmeasured_reference": true,
+  "assumed_tail_length": 3,
+  "assumed_solder_radius": 1,
+  "assumed_solder_height": 1.3,
+  "reference_count": 8,
+  "reference_geometry": "Each rearlead union with solderannulus, singlevalid solid; not excluded from staticQA",
+  "PCB_back_Y": 116.0,
+  "tail_end_Y": 113.0,
+  "slot_actual_X": [
+    33,
+    41
+  ],
+  "slot_Z": [
+    60.5,
+    83.5
+  ],
+  "root_radius": 1.5,
+  "frame_Y": [
+    110.69999999999999,
+    115.69999999999999
+  ],
+  "pad_Y": [
+    115.69999999999999,
+    116.0
+  ],
+  "M2_hole_centers_XZ": [
+    [
+      24.8,
+      64.35
+    ],
+    [
+      24.8,
+      79.65
+    ]
+  ],
+  "hole_edge_to_slot_min_X": 7.1,
+  "top_remaining_web": 3.5,
+  "gusset_top_to_slot_Z": 2.5,
+  "conservative_row_bounds": [
+    35.5,
+    37.5,
+    113.0,
+    116.0,
+    62.11,
+    81.89
+  ],
+  "row_vs_frame": {
+    "distance_mm": 1.6099999999999994,
+    "point_on_first": [
+      37.5,
+      113.0,
+      62.11
+    ],
+    "point_on_second": [
+      37.5,
+      113.0,
+      60.5
+    ]
+  },
+  "row_vs_trimmed_pad": {
+    "distance_mm": 2.5,
+    "point_on_first": [
+      35.5,
+      116.0,
+      81.89
+    ],
+    "point_on_second": [
+      33.0,
+      116.00000000000001,
+      81.89
+    ]
+  },
+  "row_positive_volume_intersections": [],
+  "backward_row_prism_obstacles": [
+    {
+      "part": "A03_ELF2_transparent_cover",
+      "nearest_Y": 73.7,
+      "distance_from_PCB_back_along_minusY": 42.3,
+      "remaining_after_assumed3mm_tail": 39.3
+    },
+    {
+      "part": "REF_ELF2_PCB_envelope",
+      "nearest_Y": 54.699999999999996,
+      "distance_from_PCB_back_along_minusY": 61.300000000000004,
+      "remaining_after_assumed3mm_tail": 58.300000000000004
+    },
+    {
+      "part": "REF_rear_M2_source_footprint_height5p4",
+      "nearest_Y": 53.1,
+      "distance_from_PCB_back_along_minusY": 62.9,
+      "remaining_after_assumed3mm_tail": 59.9
+    },
+    {
+      "part": "A01_H_board_adapter",
+      "nearest_Y": 41.1,
+      "distance_from_PCB_back_along_minusY": 74.9,
+      "remaining_after_assumed3mm_tail": 71.9
+    },
+    {
+      "part": "REF_LCD_exact_STEP",
+      "nearest_Y": 4.6,
+      "distance_from_PCB_back_along_minusY": 111.4,
+      "remaining_after_assumed3mm_tail": 108.4
+    }
+  ],
+  "limits": [
+    "Row envelope larger than separate8solderproxies, but all dimensions assumptions; must measure actualpins/solder",
+    "Firstbackward obstacle is geometric bound only, not permissible pin length or electricalclearance certification",
+    "Otherback solder/joints not represented; inspect actual board before tightening",
+    "No strength/creep/EMC/vibration validation"
+  ]
+}

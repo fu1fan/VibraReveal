@@ -1,0 +1,393 @@
+{
+  "status": "V7.3 relay service; replaceable shoe confirmed; physical dimensions pending",
+  "center": [
+    55,
+    60
+  ],
+  "hole_centers": [
+    [
+      46.35,
+      51.35
+    ],
+    [
+      46.35,
+      68.65
+    ],
+    [
+      63.65,
+      51.35
+    ],
+    [
+      63.65,
+      68.65
+    ]
+  ],
+  "static_intersections": [],
+  "slide_X30_bbox_sweep_hits": [],
+  "after_slide_lift_Z50_bbox_sweep_hits": [],
+  "slide_conditions": "disconnect wires, remove4 bottomM2 screws; remove actual tripod quickrelease if obstructing underside (not modeled)",
+  "driver_tests": [
+    {
+      "fastener": "relay_bottom_M2x8_0",
+      "direction": "-Z",
+      "D4_shaft_hits": []
+    },
+    {
+      "fastener": "relay_top_M2x5_0",
+      "direction": "+Z",
+      "D4_shaft_hits": [
+        {
+          "part": "REF_ELF2_PCB_envelope",
+          "volume_mm3": 13.47308043033849
+        },
+        {
+          "part": "REF_rear_M2_source_footprint_height5p4",
+          "volume_mm3": 20.446958403258467
+        }
+      ]
+    },
+    {
+      "fastener": "relay_bottom_M2x8_1",
+      "direction": "-Z",
+      "D4_shaft_hits": []
+    },
+    {
+      "fastener": "relay_top_M2x5_1",
+      "direction": "+Z",
+      "D4_shaft_hits": []
+    },
+    {
+      "fastener": "relay_bottom_M2x8_2",
+      "direction": "-Z",
+      "D4_shaft_hits": []
+    },
+    {
+      "fastener": "relay_top_M2x5_2",
+      "direction": "+Z",
+      "D4_shaft_hits": []
+    },
+    {
+      "fastener": "relay_bottom_M2x8_3",
+      "direction": "-Z",
+      "D4_shaft_hits": []
+    },
+    {
+      "fastener": "relay_top_M2x5_3",
+      "direction": "+Z",
+      "D4_shaft_hits": []
+    }
+  ],
+  "terminal_vertical_D4_tool_hits": [
+    {
+      "part": "cover_M3_AF5_L15_male6_0",
+      "volume_mm3": 44.153623826657224
+    }
+  ],
+  "wire_assumed_10x30x6_frontY_hits": [],
+  "wire_assumption": "Not measured terminal entry direction, cable insulation/bend/strain relief not verified",
+  "nearest_distances": [
+    {
+      "relay_part": "relay_hex_M2_AF4_L6_0",
+      "other": "P05_tripod_puck_upper",
+      "distance_mm": 15.26887088567227
+    },
+    {
+      "relay_part": "relay_hex_M2_AF4_L6_0",
+      "other": "A01_H_board_adapter",
+      "distance_mm": 17.119068315769994
+    },
+    {
+      "relay_part": "relay_hex_M2_AF4_L6_0",
+      "other": "tripod_base_two1mm_washers_2",
+      "distance_mm": 19.578473717994672
+    },
+    {
+      "relay_part": "relay_bottom_M2x8_0",
+      "other": "P05_tripod_puck_upper",
+      "distance_mm": 14.450000000000003
+    },
+    {
+      "relay_part": "relay_bottom_M2x8_0",
+      "other": "P03_tripod_puck_lower",
+      "distance_mm": 16.468530596261466
+    },
+    {
+      "relay_part": "relay_bottom_M2x8_0",
+      "other": "P01_rear_two_level_brace_1",
+      "distance_mm": 20.860376072185506
+    },
+    {
+      "relay_part": "relay_PCB_insulator_0",
+      "other": "A01_H_board_adapter",
+      "distance_mm": 16.682700620702875
+    },
+    {
+      "relay_part": "relay_PCB_insulator_0",
+      "other": "P05_tripod_puck_upper",
+      "distance_mm": 18.706215544572345
+    },
+    {
+      "relay_part": "relay_PCB_insulator_0",
+      "other": "P01_rear_two_level_brace_1",
+      "distance_mm": 19.878871086050122
+    },
+    {
+      "relay_part": "relay_top_M2x5_0",
+      "other": "A01_H_board_adapter",
+      "distance_mm": 14.050355867379308
+    },
+    {
+      "relay_part": "relay_top_M2x5_0",
+      "other": "P05_tripod_puck_upper",
+      "distance_mm": 17.844677077492886
+    },
+    {
+      "relay_part": "relay_top_M2x5_0",
+      "other": "REF_ELF2_PCB_envelope",
+      "distance_mm": 18.8
+    },
+    {
+      "relay_part": "relay_hex_M2_AF4_L6_1",
+      "other": "P02_low_front_camera_frame",
+      "distance_mm": 3.0562463709114382
+    },
+    {
+      "relay_part": "relay_hex_M2_AF4_L6_1",
+      "other": "camera_base_top_washer_2",
+      "distance_mm": 9.257377412342853
+    },
+    {
+      "relay_part": "relay_hex_M2_AF4_L6_1",
+      "other": "camera_base_M4x18_2",
+      "distance_mm": 10.257377412342857
+    },
+    {
+      "relay_part": "relay_bottom_M2x8_1",
+      "other": "P02_low_front_camera_frame",
+      "distance_mm": 4.227332015474048
+    },
+    {
+      "relay_part": "relay_bottom_M2x8_1",
+      "other": "camera_base_bottom_washer_2",
+      "distance_mm": 9.653815745797004
+    },
+    {
+      "relay_part": "relay_bottom_M2x8_1",
+      "other": "camera_base_M4_nut_2",
+      "distance_mm": 10.13830379309409
+    },
+    {
+      "relay_part": "relay_PCB_insulator_1",
+      "other": "P02_low_front_camera_frame",
+      "distance_mm": 3.378708619887753
+    },
+    {
+      "relay_part": "relay_PCB_insulator_1",
+      "other": "camera_base_top_washer_2",
+      "distance_mm": 9.555908920905376
+    },
+    {
+      "relay_part": "relay_PCB_insulator_1",
+      "other": "camera_base_M4x18_2",
+      "distance_mm": 10.553815745797007
+    },
+    {
+      "relay_part": "relay_top_M2x5_1",
+      "other": "P02_low_front_camera_frame",
+      "distance_mm": 4.227332015474048
+    },
+    {
+      "relay_part": "relay_top_M2x5_1",
+      "other": "camera_base_top_washer_2",
+      "distance_mm": 9.92401926911663
+    },
+    {
+      "relay_part": "relay_top_M2x5_1",
+      "other": "camera_base_M4x18_2",
+      "distance_mm": 10.653815745797
+    },
+    {
+      "relay_part": "relay_hex_M2_AF4_L6_2",
+      "other": "A01_H_board_adapter",
+      "distance_mm": 9.749545450733432
+    },
+    {
+      "relay_part": "relay_hex_M2_AF4_L6_2",
+      "other": "LCD_adapter_M3_head_shank_2",
+      "distance_mm": 12.364650451127034
+    },
+    {
+      "relay_part": "relay_hex_M2_AF4_L6_2",
+      "other": "LCD_adapter_steel_washer_2",
+      "distance_mm": 13.23668774393698
+    },
+    {
+      "relay_part": "relay_bottom_M2x8_2",
+      "other": "A01_H_board_adapter",
+      "distance_mm": 11.177054109395453
+    },
+    {
+      "relay_part": "relay_bottom_M2x8_2",
+      "other": "LCD_adapter_M3_head_shank_2",
+      "distance_mm": 14.422409190722863
+    },
+    {
+      "relay_part": "relay_bottom_M2x8_2",
+      "other": "P01_rear_two_level_brace_1",
+      "distance_mm": 15.25
+    },
+    {
+      "relay_part": "relay_PCB_insulator_2",
+      "other": "A01_H_board_adapter",
+      "distance_mm": 10.057570236162844
+    },
+    {
+      "relay_part": "relay_PCB_insulator_2",
+      "other": "LCD_adapter_M3_head_shank_2",
+      "distance_mm": 12.293538807892974
+    },
+    {
+      "relay_part": "relay_PCB_insulator_2",
+      "other": "LCD_adapter_steel_washer_2",
+      "distance_mm": 13.312287825099462
+    },
+    {
+      "relay_part": "relay_top_M2x5_2",
+      "other": "A01_H_board_adapter",
+      "distance_mm": 10.157570236162845
+    },
+    {
+      "relay_part": "relay_top_M2x5_2",
+      "other": "LCD_adapter_M3_head_shank_2",
+      "distance_mm": 12.257418550004095
+    },
+    {
+      "relay_part": "relay_top_M2x5_2",
+      "other": "LCD_adapter_steel_washer_2",
+      "distance_mm": 13.291609526314186
+    },
+    {
+      "relay_part": "relay_hex_M2_AF4_L6_3",
+      "other": "P02_low_front_camera_frame",
+      "distance_mm": 17.10314804853893
+    },
+    {
+      "relay_part": "relay_hex_M2_AF4_L6_3",
+      "other": "A03_ELF2_transparent_cover",
+      "distance_mm": 22.958496510340755
+    },
+    {
+      "relay_part": "relay_hex_M2_AF4_L6_3",
+      "other": "camera_base_top_washer_2",
+      "distance_mm": 23.1182413622248
+    },
+    {
+      "relay_part": "relay_bottom_M2x8_3",
+      "other": "P02_low_front_camera_frame",
+      "distance_mm": 18.32162001489523
+    },
+    {
+      "relay_part": "relay_bottom_M2x8_3",
+      "other": "camera_base_bottom_washer_2",
+      "distance_mm": 23.273641502181693
+    },
+    {
+      "relay_part": "relay_bottom_M2x8_3",
+      "other": "camera_base_M4_nut_2",
+      "distance_mm": 24.204577144604187
+    },
+    {
+      "relay_part": "relay_PCB_insulator_3",
+      "other": "P02_low_front_camera_frame",
+      "distance_mm": 17.350461663610538
+    },
+    {
+      "relay_part": "relay_PCB_insulator_3",
+      "other": "A03_ELF2_transparent_cover",
+      "distance_mm": 22.492451996385228
+    },
+    {
+      "relay_part": "relay_PCB_insulator_3",
+      "other": "camera_base_top_washer_2",
+      "distance_mm": 23.174504535623576
+    },
+    {
+      "relay_part": "relay_top_M2x5_3",
+      "other": "P02_low_front_camera_frame",
+      "distance_mm": 17.69527744748293
+    },
+    {
+      "relay_part": "relay_top_M2x5_3",
+      "other": "A03_ELF2_transparent_cover",
+      "distance_mm": 19.386670104330683
+    },
+    {
+      "relay_part": "relay_top_M2x5_3",
+      "other": "cover_M3_AF5_L15_male6_0",
+      "distance_mm": 20.162598760256717
+    },
+    {
+      "relay_part": "REF_relay_PCB_21p3_holes17p3_Y_ASSUMED",
+      "other": "P02_low_front_camera_frame",
+      "distance_mm": 3.398896879871465
+    },
+    {
+      "relay_part": "REF_relay_PCB_21p3_holes17p3_Y_ASSUMED",
+      "other": "camera_base_top_washer_2",
+      "distance_mm": 8.799097399172087
+    },
+    {
+      "relay_part": "REF_relay_PCB_21p3_holes17p3_Y_ASSUMED",
+      "other": "A01_H_board_adapter",
+      "distance_mm": 9.326574934025892
+    },
+    {
+      "relay_part": "REF_relay_HFD4_body10x6p5_height5p65",
+      "other": "A01_H_board_adapter",
+      "distance_mm": 12.883516600680116
+    },
+    {
+      "relay_part": "REF_relay_HFD4_body10x6p5_height5p65",
+      "other": "REF_ELF2_PCB_envelope",
+      "distance_mm": 14.75
+    },
+    {
+      "relay_part": "REF_relay_HFD4_body10x6p5_height5p65",
+      "other": "board_nylon_spacer_0",
+      "distance_mm": 15.25
+    },
+    {
+      "relay_part": "REF_relay_terminal_APPROX_totalheight15",
+      "other": "REF_ELF2_PCB_envelope",
+      "distance_mm": 7.964923100695953
+    },
+    {
+      "relay_part": "REF_relay_terminal_APPROX_totalheight15",
+      "other": "cover_M3_AF5_L15_male6_0",
+      "distance_mm": 8.0
+    },
+    {
+      "relay_part": "REF_relay_terminal_APPROX_totalheight15",
+      "other": "cover_board_insulator_0",
+      "distance_mm": 8.005623023850173
+    },
+    {
+      "relay_part": "REF_relay_control_header_APPROX",
+      "other": "A01_H_board_adapter",
+      "distance_mm": 11.531261856362471
+    },
+    {
+      "relay_part": "REF_relay_control_header_APPROX",
+      "other": "P01_rear_two_level_brace_1",
+      "distance_mm": 14.538225476308996
+    },
+    {
+      "relay_part": "REF_relay_control_header_APPROX",
+      "other": "REF_ELF2_PCB_envelope",
+      "distance_mm": 15.482893786369523
+    }
+  ],
+  "old_relay_holes_removed": true,
+  "distance_scope": "Exact distances to8nearest AABB candidates perrelaypart, notexhaustive globalminimum",
+  "contact_note": "Horizontal slide retainsbaseZ6contact, zero positivevolume notfriction-free"
+}

@@ -1,0 +1,21 @@
+{
+  "pages": 15,
+  "body_font_pt": 12,
+  "body_leading_pt": 20,
+  "table_and_notes_pt": 11,
+  "original_paragraphs_preserved": 23,
+  "text_bounds_issues": [],
+  "CAD_modified": false,
+  "render_review": "All15 pages previously inspected; compressed cover and both annotated plates re-rendered and inspected at full page resolution; labels remain legible.",
+  "source_images": "Original final CAD PNGs, unchanged; source image labels retained.",
+  "rebuild": "python make_pdf_readable.py",
+  "dependencies": [
+    "reportlab",
+    "PyMuPDF",
+    "ezdxf"
+  ],
+  "sha256": "e4c10b0c0e198129f418ba172a75eaf46c8d958a1e8f9f4b0d76b9dd9ab5eb86",
+  "pdf_bytes": 2078627,
+  "image_compression": "JPEG quality95,4:4:4,original pixel resolution,white alpha composite; source PNG unchanged",
+  "portable_release_rebuild": "Relative-path script successfully executed; same technical content and image inputs, refreshed PDF metadata."
+}

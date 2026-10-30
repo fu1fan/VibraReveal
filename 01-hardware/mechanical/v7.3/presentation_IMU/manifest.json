@@ -1,0 +1,252 @@
+{
+  "version": "V7.3",
+  "display_only": true,
+  "units": "mm",
+  "parts": [
+    {
+      "name": "VIEW_actual_frame_local_crop",
+      "path": "VIEW_actual_frame_local_crop.stl",
+      "material": "print",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 2498.304631917248
+    },
+    {
+      "name": "VIEW_REF_IMU_PCB_direct_main_web_D2p2_t1p6_ASSUMED",
+      "path": "VIEW_REF_IMU_PCB_direct_main_web_D2p2_t1p6_ASSUMED.stl",
+      "material": "pcb",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 467.8357532453024
+    },
+    {
+      "name": "VIEW_IMU_back_insulating_pad_t0p3",
+      "path": "VIEW_IMU_back_insulating_pad_t0p3.stl",
+      "material": "nylon",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 60.71920373349576
+    },
+    {
+      "name": "VIEW_IMU_front_M2x10_0",
+      "path": "VIEW_IMU_front_M2x10_0.stl",
+      "material": "metal",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 49.561765703032535
+    },
+    {
+      "name": "VIEW_IMU_rear_M2_nut_0",
+      "path": "VIEW_IMU_rear_M2_nut_0.stl",
+      "material": "metal",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 17.143702091160407
+    },
+    {
+      "name": "VIEW_IMU_front_M2x10_1",
+      "path": "VIEW_IMU_front_M2x10_1.stl",
+      "material": "metal",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 49.561765703032535
+    },
+    {
+      "name": "VIEW_IMU_rear_M2_nut_1",
+      "path": "VIEW_IMU_rear_M2_nut_1.stl",
+      "material": "metal",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 17.143702091160375
+    },
+    {
+      "name": "VIEW_REF_IMU_chip_position_APPROX_axes_PENDING",
+      "path": "VIEW_REF_IMU_chip_position_APPROX_axes_PENDING.stl",
+      "material": "print",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 6.8250000000000615
+    },
+    {
+      "name": "VIEW_REF_IMU_LDO_envelope_APPROX",
+      "path": "VIEW_REF_IMU_LDO_envelope_APPROX.stl",
+      "material": "print",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 18.0
+    },
+    {
+      "name": "VIEW_REF_IMU_header_plastic_APPROX",
+      "path": "VIEW_REF_IMU_header_plastic_APPROX.stl",
+      "material": "print",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 124.99999999999997
+    },
+    {
+      "name": "VIEW_REF_IMU_header_pin_height8_ASSUMED_0",
+      "path": "VIEW_REF_IMU_header_pin_height8_ASSUMED_0.stl",
+      "material": "print",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 1.7693449825017722
+    },
+    {
+      "name": "VIEW_REF_IMU_header_pin_height8_ASSUMED_1",
+      "path": "VIEW_REF_IMU_header_pin_height8_ASSUMED_1.stl",
+      "material": "print",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 1.7693449825017717
+    },
+    {
+      "name": "VIEW_REF_IMU_header_pin_height8_ASSUMED_2",
+      "path": "VIEW_REF_IMU_header_pin_height8_ASSUMED_2.stl",
+      "material": "print",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 1.7693449825017717
+    },
+    {
+      "name": "VIEW_REF_IMU_header_pin_height8_ASSUMED_3",
+      "path": "VIEW_REF_IMU_header_pin_height8_ASSUMED_3.stl",
+      "material": "print",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 1.7693449825017717
+    },
+    {
+      "name": "VIEW_REF_IMU_header_pin_height8_ASSUMED_4",
+      "path": "VIEW_REF_IMU_header_pin_height8_ASSUMED_4.stl",
+      "material": "print",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 1.7693449825017717
+    },
+    {
+      "name": "VIEW_REF_IMU_header_pin_height8_ASSUMED_5",
+      "path": "VIEW_REF_IMU_header_pin_height8_ASSUMED_5.stl",
+      "material": "print",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 1.7693449825017717
+    },
+    {
+      "name": "VIEW_REF_IMU_header_pin_height8_ASSUMED_6",
+      "path": "VIEW_REF_IMU_header_pin_height8_ASSUMED_6.stl",
+      "material": "print",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 1.7693449825017717
+    },
+    {
+      "name": "VIEW_REF_IMU_header_pin_height8_ASSUMED_7",
+      "path": "VIEW_REF_IMU_header_pin_height8_ASSUMED_7.stl",
+      "material": "print",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 1.7693449825017717
+    },
+    {
+      "name": "VIEW_REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_0",
+      "path": "VIEW_REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_0.stl",
+      "material": "metal",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 4.63095889880365
+    },
+    {
+      "name": "VIEW_REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_1",
+      "path": "VIEW_REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_1.stl",
+      "material": "metal",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 4.630958898803648
+    },
+    {
+      "name": "VIEW_REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_2",
+      "path": "VIEW_REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_2.stl",
+      "material": "metal",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 4.630958898803648
+    },
+    {
+      "name": "VIEW_REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_3",
+      "path": "VIEW_REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_3.stl",
+      "material": "metal",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 4.630958898803648
+    },
+    {
+      "name": "VIEW_REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_4",
+      "path": "VIEW_REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_4.stl",
+      "material": "metal",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 4.630958898803648
+    },
+    {
+      "name": "VIEW_REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_5",
+      "path": "VIEW_REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_5.stl",
+      "material": "metal",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 4.630958898803649
+    },
+    {
+      "name": "VIEW_REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_6",
+      "path": "VIEW_REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_6.stl",
+      "material": "metal",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 4.630958898803648
+    },
+    {
+      "name": "VIEW_REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_7",
+      "path": "VIEW_REF_IMU_rear_solder_tail_L3_R1_H1p3_ASSUMED_7.stl",
+      "material": "metal",
+      "display_only": true,
+      "manufactured": false,
+      "volume_mm3": 4.630958898803648
+    }
+  ],
+  "crop_bounds": [
+    18,
+    45,
+    103.24,
+    127.24,
+    57,
+    89
+  ],
+  "suggested_camera_location": [
+    85,
+    65.24,
+    98
+  ],
+  "suggested_camera_target": [
+    31,
+    115.69999999999999,
+    72
+  ],
+  "annotation_points": {
+    "PCB_back": [
+      36.5,
+      116.0,
+      72
+    ],
+    "tail_tip": [
+      36.5,
+      113.0,
+      73.27
+    ],
+    "relief_lower_edge": [
+      37.5,
+      113.0,
+      60.5
+    ]
+  },
+  "actual_geometry_note": "Frame cropped only to local area for view. Actual edge-open relief and actual trimmedpad retained, not hidden to fake clearance. No cut through rear solder proxies.",
+  "solder_tail_reference": "ASSUMED rear3mm, solderR1/H1.3; actual must measure; other rear solder features not modeled"
+}

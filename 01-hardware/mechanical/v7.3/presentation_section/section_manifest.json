@@ -1,0 +1,64 @@
+{
+  "version": "V7.3",
+  "units": "mm",
+  "display_only": true,
+  "not_manufacturing": true,
+  "parts": [
+    {
+      "name": "SEC_frame_cut_X0_negative",
+      "path": "SEC_frame_cut_X0_negative.stl",
+      "material": "print",
+      "manufactured": false,
+      "display_only": true,
+      "volume_mm3": 3519.5293865338767
+    },
+    {
+      "name": "SEC_purchased_shoe_cut_X0_negative",
+      "path": "SEC_purchased_shoe_cut_X0_negative.stl",
+      "material": "metal",
+      "manufactured": false,
+      "display_only": true,
+      "volume_mm3": 1708.4522206937518
+    },
+    {
+      "name": "SEC_top_HEXnut_full",
+      "path": "SEC_top_HEXnut_full.stl",
+      "material": "metal",
+      "manufactured": false,
+      "display_only": true,
+      "volume_mm3": 412.6857490617793
+    },
+    {
+      "name": "SEC_replaceable_stud_full_REFERENCE",
+      "path": "SEC_replaceable_stud_full_REFERENCE.stl",
+      "material": "metal",
+      "manufactured": false,
+      "display_only": true,
+      "volume_mm3": 473.77180711542576
+    }
+  ],
+  "cut_plane": "X=0; negative half of actualframe/shoe kept; actualnut andbolt kept whole",
+  "crop_bounds": [
+    -20,
+    20,
+    100.7,
+    131.7,
+    70,
+    100
+  ],
+  "omitted": "camera,lamp andrestofassembly forclarity",
+  "nut_bounds_Z": [
+    81.5,
+    87
+  ],
+  "deck_bounds_Z": [
+    87,
+    91
+  ],
+  "insertion": [
+    "cameraPCB/lens removed",
+    "nutfrontslideatZ73.5..79",
+    "lift8mm to81.5..87"
+  ],
+  "warning": "Replaceable screw USER CONFIRMED;9mm exposed target NOT total screw length; newshoe and head geometry reference, fullthread engagement unverified"
+}

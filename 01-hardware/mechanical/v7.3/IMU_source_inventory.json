@@ -1,0 +1,46 @@
+{
+  "commit": "8f0f1d1f4a158f74409caea71d98b44045550059",
+  "documents": [
+    {
+      "path": "01-hardware/modules/icm-42688-p/README.md",
+      "local": "01-hardware__modules__icm-42688-p__README.md",
+      "url": "https://cnb.cool/fu1fan/VibraReveal/-/git/raw/8f0f1d1f4a158f74409caea71d98b44045550059/01-hardware/modules/icm-42688-p/README.md",
+      "sha256": "a86fc2cad7059a76c093e173c6d0553162783290590ba1edf5c2ba8b5079fd90"
+    },
+    {
+      "path": "01-hardware/modules/icm-42688-p/schematic/IMU_ICM42688P(303ICM42681).pdf",
+      "local": "schematic.pdf",
+      "url": "https://cnb.cool/fu1fan/VibraReveal/-/git/raw/8f0f1d1f4a158f74409caea71d98b44045550059/01-hardware/modules/icm-42688-p/schematic/IMU_ICM42688P%28303ICM42681%29.pdf",
+      "sha256": "1f1a9af96986eede6703786c88ff383ee8c8feb1d6eaebbe670a3ccdbf65c688"
+    },
+    {
+      "path": "01-hardware/modules/icm-42688-p/艾尔赛六轴IMU模块ICM42688姿态传感器陀螺仪.pdf",
+      "local": "01-hardware__modules__icm-42688-p__艾尔赛六轴IMU模块ICM42688姿态传感器陀螺仪.pdf",
+      "url": "https://cnb.cool/fu1fan/VibraReveal/-/git/raw/8f0f1d1f4a158f74409caea71d98b44045550059/01-hardware/modules/icm-42688-p/%E8%89%BE%E5%B0%94%E8%B5%9B%E5%85%AD%E8%BD%B4IMU%E6%A8%A1%E5%9D%97ICM42688%E5%A7%BF%E6%80%81%E4%BC%A0%E6%84%9F%E5%99%A8%E9%99%80%E8%9E%BA%E4%BB%AA.pdf",
+      "sha256": "214413b8e0ecdab40a749551fb9bc7f95ee970a735ad1a8e12a7f69351af5827"
+    },
+    {
+      "path": "01-hardware/modules/icm-42688-p/datasheets/C1850418_姿态传感器-陀螺仪_ICM-42688-P_规格书_WJ56255.PDF",
+      "local": "01-hardware__modules__icm-42688-p__datasheets__C1850418_姿态传感器-陀螺仪_ICM-42688-P_规格书_WJ56255.PDF",
+      "url": "https://cnb.cool/fu1fan/VibraReveal/-/git/raw/8f0f1d1f4a158f74409caea71d98b44045550059/01-hardware/modules/icm-42688-p/datasheets/C1850418_%E5%A7%BF%E6%80%81%E4%BC%A0%E6%84%9F%E5%99%A8-%E9%99%80%E8%9E%BA%E4%BB%AA_ICM-42688-P_%E8%A7%84%E6%A0%BC%E4%B9%A6_WJ56255.PDF",
+      "sha256": "4d7c04e3e86f37defe27c20a82b9fcd9d4ddbd3b9d68a525c2d49595d52cf97a"
+    }
+  ],
+  "verified_mechanical": {
+    "board_mm": [
+      15,
+      20
+    ],
+    "mounting_holes_count": 2,
+    "hole_center_pitch_mm": 15.3,
+    "hole_line_to_far_edge_mm": 12.7,
+    "derived_hole_line_to_near_edge_mm": 2.3,
+    "mounting_hole_diameter": null,
+    "PCB_thickness": null,
+    "assembled_height": null,
+    "vertical_end_offsets": "sum4.7,notindividuallydimensioned",
+    "connector": "8pin2.54pitch perREADME; actualassembly/projectionunknown",
+    "axes": "chipdatasheetp53 only; imageCADtriad notconfirmed sensoraxis"
+  },
+  "design_modified": false
+}

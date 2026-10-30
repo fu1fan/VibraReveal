@@ -1,0 +1,34 @@
+{
+  "units": "mm",
+  "source": "actual CAD pad STEP exported from assembly into presentation_IMU",
+  "template_file": "templates/IMU_insulating_film_t0p3_TEMPLATE.dxf",
+  "material": "insulating film0.3mm; choose appropriateelectrical/thermalmaterial; no product rating asserted",
+  "not_acrylic_panel": true,
+  "adds_manufactured_solid": false,
+  "local_origin": "worldX22.5,Z62; templatex=X-22.5,v=Z-62",
+  "flat_bbox": [
+    10.5,
+    20.0
+  ],
+  "holes": [
+    {
+      "center": [
+        2.3000000000000007,
+        2.3500000000000085
+      ],
+      "diameter": 2.2
+    },
+    {
+      "center": [
+        2.3000000000000007,
+        17.65000000000002
+      ],
+      "diameter": 2.2
+    }
+  ],
+  "entity_count": 6,
+  "non_degree2_endpoints": {},
+  "duplicate_count": 0,
+  "unexpected_entity_types": [],
+  "fit_note": "Cut away header side; never installuncutpad acrossrear solder row. Actual solder envelope must measure."
+}

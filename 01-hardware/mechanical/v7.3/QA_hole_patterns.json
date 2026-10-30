@@ -1,0 +1,63 @@
+{
+  "units": "mm",
+  "new_relay_holes": [
+    [
+      46.35,
+      51.35
+    ],
+    [
+      46.35,
+      68.65
+    ],
+    [
+      63.65,
+      51.35
+    ],
+    [
+      63.65,
+      68.65
+    ]
+  ],
+  "new_relay_present": true,
+  "old_relay_absent": true,
+  "new_camera_holes": [
+    [
+      -37,
+      81.7
+    ],
+    [
+      -37,
+      103.7
+    ],
+    [
+      37,
+      81.7
+    ],
+    [
+      37,
+      103.7
+    ]
+  ],
+  "new_camera_present": true,
+  "old_camera_holes": [
+    [
+      -37,
+      81.46
+    ],
+    [
+      -37,
+      103.46
+    ],
+    [
+      37,
+      81.46
+    ],
+    [
+      37,
+      103.46
+    ]
+  ],
+  "old_camera_absent": true,
+  "intersecting_distinct_circles": [],
+  "base_circle_count": 16
+}

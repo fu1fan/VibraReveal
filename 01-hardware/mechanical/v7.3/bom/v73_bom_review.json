@@ -1,0 +1,166 @@
+{
+  "review_scope": "Independent read-only CAD-based mechanical/BOM quantity review; not electricalscheme or shoppingSKU approval",
+  "reviewed_file": "bom/bom_data.json",
+  "reviewed_sha256": "e294c0f0e3a3082ea18c0b2f00c66b869b64af6ba81b9d488566613e80234a39",
+  "reviewed_row_count": 61,
+  "unique_ids": true,
+  "hardware_rows_checked": 29,
+  "hardware_quantity_mismatches": [],
+  "hardware_physical_net_total": 171,
+  "hardware_CAD_instances": 167,
+  "physical_minus_CAD_reason": "4CAD washer stacks represent2physical1mmwashers each",
+  "hardware_mapping_audit_file": "bom/v73_fasteners.json",
+  "manufactured_mapping": {
+    "B01": [
+      "A01_H_board_adapter"
+    ],
+    "B02": [
+      "A02_base"
+    ],
+    "B03": [
+      "A03_ELF2_transparent_cover"
+    ],
+    "B04": [
+      "P01_rear_two_level_brace_0",
+      "P01_rear_two_level_brace_1"
+    ],
+    "B05": [
+      "P02_low_front_camera_frame"
+    ],
+    "B06": [
+      "P03_tripod_puck_lower"
+    ],
+    "B07": [
+      "P04_nut_keeper"
+    ],
+    "B08": [
+      "P05_tripod_puck_upper"
+    ]
+  },
+  "manufactured_quantity_mismatches": [
+    "B04"
+  ],
+  "manufactured_uncovered": [],
+  "manufactured_spurious": [],
+  "manufactured_totals": {
+    "acrylic": 3,
+    "printed_instances": 6,
+    "printed_design_families": 5,
+    "manufactured_solids": 9,
+    "insulating_film_separate": 1
+  },
+  "duplicate_component_checks": [
+    "LCD complete module1, notscreen/driverdoublecount",
+    "camera+matchinglens1set withbareboardconditionalnote, notadditionalunconditional lens",
+    "lampfoot/neck/lockwheel notextra purchases",
+    "camera rear2existing screwproxies notextra hardware",
+    "8IMUfrontpins/8rearsolderproxies not16extra purchasedpins",
+    "tripod quickrelease screw notsecondcoldshoe screw",
+    "M4washer stacks unpacked8not4",
+    "top+bottom1/4nuts2correct",
+    "P04printedkeeper notconfusedwithmetalnut or topcap"
+  ],
+  "findings": [
+    {
+      "severity": "correct_text",
+      "location": "notes:顶部与底部螺母",
+      "issue": "槽按AF11.1、厚5.5 confusesnutnominaldims withpocket",
+      "fix": "Say nutreferenceAF11.1/t5.5; top actualpocketAF11.4/depth8Z79..87, inspectactualparts beforefit"
+    },
+    {
+      "severity": "retain_fit_information",
+      "location": "N01/N02/N03/N04 specs",
+      "issue": "Mergedrows omitreferencenutAF/thickness essentialforcapturedpockets",
+      "fix": "Append modelAF/thickness respectively5/2,4/1.6,7/3.2,11.1/5.5mm; labelreferenceandverifyactual"
+    },
+    {
+      "severity": "known_pending",
+      "location": "P02 insulatingcolumn",
+      "issue": "CADsmoothD3.2bore cannotproveactualthreadedtype",
+      "status": "Mergedrow correctlyflags requirementandpendingpurchase confirmation; nochange needed"
+    },
+    {
+      "severity": "out_of_scope_pending",
+      "location": "B10/B19/B20/B23 electronicpower/display",
+      "issue": "Parent activelyupdatingverifiedLCDinterfaces/powerdocumentconflict; thisreviewdoesnotapprove voltage/loadscheme"
+    }
+  ],
+  "verdict": "PASS mechanical quantities/coverage; correct2wording/spec-retention findings beforefinal; no new physicalquantity omissions identified.",
+  "final_reviewed_sha256": "4797363a8a6831e105bff6c008121becb345912ce427d97f4fba3ed0f49946c2",
+  "final_reviewed_row_count": 61,
+  "final_hardware_quantity_mismatches": [],
+  "final_corrections_verified": {
+    "nut_AF_thickness_present": true,
+    "nut_vs_pocket_distinguished": true
+  },
+  "final_verdict": "PASS mechanical61rowversion: hardwarequantitiesand9manufacturedinstances unchanged, bothmechanicalwordingfindings corrected; electronics separatelyreviewed byotheragent.",
+  "final_manufactured_mapping": {
+    "B22": {
+      "name": "A01 H形开发板转接板",
+      "CAD_names": [
+        "A01_H_board_adapter"
+      ],
+      "quantity": 1,
+      "pass": true
+    },
+    "B23": {
+      "name": "A02底板",
+      "CAD_names": [
+        "A02_base"
+      ],
+      "quantity": 1,
+      "pass": true
+    },
+    "B24": {
+      "name": "A03透明元件侧盖",
+      "CAD_names": [
+        "A03_ELF2_transparent_cover"
+      ],
+      "quantity": 1,
+      "pass": true
+    },
+    "B25": {
+      "name": "P01双高度后撑",
+      "CAD_names": [
+        "P01_rear_two_level_brace_0",
+        "P01_rear_two_level_brace_1"
+      ],
+      "quantity": 2,
+      "pass": true
+    },
+    "B26": {
+      "name": "P02相机主架",
+      "CAD_names": [
+        "P02_low_front_camera_frame"
+      ],
+      "quantity": 1,
+      "pass": true
+    },
+    "B27": {
+      "name": "P03三脚架下座",
+      "CAD_names": [
+        "P03_tripod_puck_lower"
+      ],
+      "quantity": 1,
+      "pass": true
+    },
+    "B28": {
+      "name": "P04螺母防脱塞",
+      "CAD_names": [
+        "P04_nut_keeper"
+      ],
+      "quantity": 1,
+      "pass": true
+    },
+    "B29": {
+      "name": "P05三脚架上座",
+      "CAD_names": [
+        "P05_tripod_puck_upper"
+      ],
+      "quantity": 1,
+      "pass": true
+    }
+  },
+  "final_manufactured_quantity_pass": true,
+  "mapping_note": "Originalmanufactured_mapping describesinitial58rowsnapshot; final_manufactured_mapping matches reordered61rowsnapshot."
+}
