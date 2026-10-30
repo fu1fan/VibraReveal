@@ -54,6 +54,8 @@ VibraReveal/
 
 顶层目录按研发顺序编号；`04-algorithms/phase-motion/` 已整理 Python 算法、依赖与运行说明，其余应用和工具目录主要为规划占位；`01-hardware/` 已归档实际器件资料，`02-platform/` 含 `RK3588-OV9281` 子模块。
 
+`10-env/` 提供云原生开发与云原生构建共用的开发环境镜像（Python、ELF2 系统构建与交叉编译、code-server），镜像只在推送 `dev-env-v*` Tag 时重建发布，用法见 [10-env/README.md](10-env/README.md)。
+
 ## 4. 硬件与模块资料
 
 已采购模块按型号独立建档，资料放在 [01-hardware/modules](01-hardware/modules)：
