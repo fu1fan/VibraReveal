@@ -49,7 +49,7 @@ ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/dev-env:<tag>
      按钮定义在 `.cnb/web_trigger.yml`；同一分组下的「开发环境自检」按钮只做检查，不重建镜像。
      按钮需要仓库写权限，且只在分支详情页显示。
 
-- 同一时刻只允许一个发布任务（`lock`）；该 Tag 也会按仓库约定同步到 GitHub。
+- 同一时刻只允许一个发布任务（`lock`）；走 Tag 入口时该 Tag 还会按仓库约定同步到 GitHub。
 - 镜像标签为 Tag 名（`.../dev-env:dev-env-v1.0.0`）与 `latest`，`latest` 指向最近一次成功发布。
   云原生开发引用 `latest`；要固定版本或复现旧环境，把 `$: vscode:` 的 `image` 换成具体 Tag。
 - 镜像发布成功之前，云原生开发会因为拉不到镜像而起不来（`docker.image` 没有 `build` 兜底），
