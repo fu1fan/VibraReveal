@@ -15,6 +15,7 @@
 FROM ubuntu:22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
+RUN printf 'Acquire::Retries "3";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' > /etc/apt/apt.conf.d/80-network-retries
 
 ENV LANG=C.UTF-8 \
     LANGUAGE=C.UTF-8 \
@@ -68,7 +69,7 @@ RUN set -eux; \
 COPY 10-env/retry.sh /usr/local/lib/dev-env-retry.sh
 RUN set -eux; \
     curl --retry 5 --retry-all-errors -fsSL https://deb.nodesource.com/setup_20.x -o /tmp/nodesource.sh; \
-    bash /tmp/nodesource.sh; \
+    sh /usr/local/lib/dev-env-retry.sh bash /tmp/nodesource.sh; \
     rm /tmp/nodesource.sh; \
     apt-get install -y --no-install-recommends nodejs; \
     rm -rf /var/lib/apt/lists/* /root/.npm
