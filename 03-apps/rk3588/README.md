@@ -102,4 +102,4 @@ python3 06-tests/image_transport.py /tmp/vr-stream-host /path/vr-receive /path/v
 `--source synthetic --frames N --fps F` 用于受控负载：实时按 F 生产，离线连续生产。
 统计的 payloadMBps 是应用有效字节数/秒，不包含协议头，也不是 USB PHY 速率。
 
-硬件验收与构建身份见 [2026-10-31 记录](../../08-docs/validation/image-transport-2026-10-31.md)。
+硬件验收与构建身份见 [正式 Bulk 图像验收](../../08-docs/validation/usb-bulk-images-2026-10-31.md)。

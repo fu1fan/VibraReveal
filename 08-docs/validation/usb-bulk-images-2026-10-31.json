@@ -1,0 +1,244 @@
+{
+  "date": "2026-10-31",
+  "build": "cnb-3v6-1k68n7ur5",
+  "artifact_digest": "sha256:c3718643991e012e45fb9db7caed1772d6f7c8fd6e23de5d6d9e99d1b3a877d2",
+  "identity": {
+    "application_commit": "f0c343beccf41e0c7abafb873caa37725db48900",
+    "dirty": false,
+    "scripts_sha256": {
+      "S91vrstream": "1abab54c9b8f59317437581d0cd380791bdfd0eda907209eed566e8a5dc20f09",
+      "vr-usb-stream": "db7b7aa8ad0a0f9c8259f2744717d87485eba5a812fae643a50d4adbd4866fd5",
+      "vr-usb-stream-daemon": "51f2a31115daebee67a4f1ff3ae595406a772689ba2b46ebe588ab1f717640f0"
+    },
+    "sdk": {
+      "image": "docker.cnb.cool/fu1fan/rk3588-ov9281/app-sdk@sha256:d2a21493198e25881cb03144bf4dd45b76e773e6cbbad1b62d6debbd4aa73cef",
+      "system_commit": "ac7c05413b3882f578cb94be4b2edfe3958d84c6"
+    },
+    "sha256": "24f278cbcdc430178174750ad13bb2ccb178fd2117418d8e5474f5bf0ba569b2",
+    "bulk_benchmark_sha256": "467f68991c2a011554fed1d79ba6c8bc0ce8407102ddaa78f1976cc51422ca30"
+  },
+  "format": {
+    "width": 1280,
+    "height": 800,
+    "stride": 2560,
+    "valid_bits": 10
+  },
+  "realtime": {
+    "receiver": {
+      "firstSequence": 0,
+      "firstTimestampNS": 11031169770000,
+      "frames": 36000,
+      "lastSequence": 35999,
+      "lastTimestampNS": 11329614760000,
+      "payloadBytes": 73728000000,
+      "seconds": 298.51590945833595,
+      "senderQueueDropped": 0,
+      "sequenceGaps": 0,
+      "sourceFPS": 120,
+      "syntheticTimestamps": false
+    },
+    "sender": {
+      "transport": "bulk",
+      "sent": 36000,
+      "payloadBytes": 73728000000,
+      "queueDropped": 0,
+      "ringHighWater": 11,
+      "ringCapacity": 32,
+      "sourceFPS": 120,
+      "seconds": 298.467,
+      "payloadMBps": 247.022
+    },
+    "captureFPS": 120.62189417218899,
+    "receiverPayloadMBps": 246.9818112333817
+  },
+  "acceptance": {
+    "pause-100ms": {
+      "sender_exit": 0,
+      "receiver_exit": 0,
+      "receiver_pause_seconds": 0.1,
+      "receiver": {
+        "firstSequence": 0,
+        "firstTimestampNS": 11385571891000,
+        "frames": 600,
+        "lastSequence": 599,
+        "lastTimestampNS": 11390537812000,
+        "payloadBytes": 1228800000,
+        "seconds": 5.0372208333574235,
+        "senderQueueDropped": 0,
+        "sequenceGaps": 0,
+        "sourceFPS": 120,
+        "syntheticTimestamps": false,
+        "payloadMBps": 243.9440399084065
+      },
+      "sender": {
+        "transport": "bulk",
+        "sent": 600,
+        "payloadBytes": 1228800000,
+        "queueDropped": 0,
+        "ringHighWater": 6,
+        "ringCapacity": 32,
+        "sourceFPS": 120,
+        "seconds": 4.9886,
+        "payloadMBps": 246.322
+      }
+    },
+    "overrun-800ms": {
+      "sender_exit": 1,
+      "receiver_exit": 1,
+      "receiver_pause_seconds": 0.8
+    },
+    "reconnect": {
+      "sender_exit": 0,
+      "receiver_exit": 0,
+      "receiver_pause_seconds": 0,
+      "receiver": {
+        "firstSequence": 0,
+        "firstTimestampNS": 11398979915000,
+        "frames": 240,
+        "lastSequence": 239,
+        "lastTimestampNS": 11400961267000,
+        "payloadBytes": 491520000,
+        "seconds": 2.0530431666702498,
+        "senderQueueDropped": 0,
+        "sequenceGaps": 0,
+        "sourceFPS": 120,
+        "syntheticTimestamps": false,
+        "payloadMBps": 239.41045564919955
+      },
+      "sender": {
+        "transport": "bulk",
+        "sent": 240,
+        "payloadBytes": 491520000,
+        "queueDropped": 0,
+        "ringHighWater": 1,
+        "ringCapacity": 32,
+        "sourceFPS": 120,
+        "seconds": 2.00497,
+        "payloadMBps": 245.151
+      }
+    },
+    "offline-1": {
+      "sender_exit": 0,
+      "receiver_exit": 0,
+      "receiver_pause_seconds": 0,
+      "receiver": {
+        "firstSequence": 0,
+        "firstTimestampNS": 0,
+        "frames": 1200,
+        "lastSequence": 1199,
+        "lastTimestampNS": 9991666667,
+        "payloadBytes": 2457600000,
+        "seconds": 5.9640420416835696,
+        "senderQueueDropped": 0,
+        "sequenceGaps": 0,
+        "sourceFPS": 120,
+        "syntheticTimestamps": true,
+        "payloadMBps": 412.06952982951344
+      },
+      "sender": {
+        "transport": "bulk",
+        "sent": 1200,
+        "payloadBytes": 2457600000,
+        "queueDropped": 0,
+        "ringHighWater": 0,
+        "ringCapacity": 32,
+        "sourceFPS": 120,
+        "seconds": 5.96396,
+        "payloadMBps": 412.075
+      }
+    },
+    "offline-2": {
+      "sender_exit": 0,
+      "receiver_exit": 0,
+      "receiver_pause_seconds": 0,
+      "receiver": {
+        "firstSequence": 0,
+        "firstTimestampNS": 0,
+        "frames": 1200,
+        "lastSequence": 1199,
+        "lastTimestampNS": 9991666667,
+        "payloadBytes": 2457600000,
+        "seconds": 5.887748916691635,
+        "senderQueueDropped": 0,
+        "sequenceGaps": 0,
+        "sourceFPS": 120,
+        "syntheticTimestamps": true,
+        "payloadMBps": 417.40910401813494
+      },
+      "sender": {
+        "transport": "bulk",
+        "sent": 1200,
+        "payloadBytes": 2457600000,
+        "queueDropped": 0,
+        "ringHighWater": 0,
+        "ringCapacity": 32,
+        "sourceFPS": 120,
+        "seconds": 5.88762,
+        "payloadMBps": 417.418
+      }
+    },
+    "offline-3": {
+      "sender_exit": 0,
+      "receiver_exit": 0,
+      "receiver_pause_seconds": 0,
+      "receiver": {
+        "firstSequence": 0,
+        "firstTimestampNS": 0,
+        "frames": 1200,
+        "lastSequence": 1199,
+        "lastTimestampNS": 9991666667,
+        "payloadBytes": 2457600000,
+        "seconds": 5.945448791666422,
+        "senderQueueDropped": 0,
+        "sequenceGaps": 0,
+        "sourceFPS": 120,
+        "syntheticTimestamps": true,
+        "payloadMBps": 413.3581981977127
+      },
+      "sender": {
+        "transport": "bulk",
+        "sent": 1200,
+        "payloadBytes": 2457600000,
+        "queueDropped": 0,
+        "ringHighWater": 0,
+        "ringCapacity": 32,
+        "sourceFPS": 120,
+        "seconds": 5.94526,
+        "payloadMBps": 413.372
+      }
+    }
+  },
+  "record": {
+    "receiver": {
+      "firstSequence": 12000,
+      "firstTimestampNS": 1000000000000,
+      "frames": 150,
+      "lastSequence": 12149,
+      "lastTimestampNS": 1001241666667,
+      "payloadBytes": 307200000,
+      "seconds": 0.7731412499852013,
+      "senderQueueDropped": 0,
+      "sequenceGaps": 0,
+      "sourceFPS": 120,
+      "syntheticTimestamps": false
+    },
+    "validation": {
+      "frames": 150,
+      "payload_sha256": "40739b93c384c3c5bf546571da545e24a08136f3d7fa7c0780e815a6fcdd6fd8",
+      "index_exact": true,
+      "dimensions": [
+        1280,
+        800
+      ],
+      "stride": 2560,
+      "valid_bits": 10
+    }
+  },
+  "overrun_error": "Note: --set-subdev-fps is only for testing.\nNormally media-ctl is used to configure the video pipeline.\nioctl: VIDIOC_SUBDEV_S_FRAME_INTERVAL (pad=0)\n\tFrames per second: 120.000 (120000/1000)\nbulk_ready mount=/dev/ffs-vri requestBytes=262144 queue=32\nerror: Capture ring overrun: receiver cannot sustain source rate\n",
+  "service": "start/capture/stop/restart twice passed; sender termination automatically restarted; service left running",
+  "limits": [
+    "No physical unplug or reboot acceptance in this Bulk change",
+    "Long realtime verifies and discards payload, not Metal processing or sustained disk recording",
+    "Offline max uses tmpfs RAW and no receiver disk output"
+  ]
+}

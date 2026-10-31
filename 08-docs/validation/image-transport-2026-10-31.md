@@ -1,5 +1,7 @@
 # USB 图像传输验收 · 2026-10-31
 
+> 正式图像通道现已改为 USB Bulk；最新全分辨率 120 fps 与离线吞吐结果见 [Bulk 图像验收](usb-bulk-images-2026-10-31.md)。本文保留早期 TCP 验收历史。
+
 ## 已完成
 
 - 开发前从 CNB 拉取 VibraReveal main `d743b7f`；本地 `.gitignore` 未改动。

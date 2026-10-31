@@ -82,3 +82,5 @@ rmdir /sys/kernel/config/usb_gadget/rockchip/functions/ffs.vrbench
 
 Mac 再运行 `python3 09-tools/check-usb-link.py` 确认 NCM 路由恢复。
 整个测试不修改 `/etc/.usb_config`、USB 启动脚本或 Wi-Fi 配置。
+
+正式图像协议验收使用 [`image_acceptance.py`](image_acceptance.py)，不是本页的诊断字节流工具。
