@@ -24,6 +24,7 @@ Options: --bits 8|10|12|16 (default 8; >8 uses right-aligned uint16 LE)
          --filter auto|causal|zero-phase (auto: realtime causal, offline zero-phase)
          --spectrum report.json --probe x,y --spectrum-level 0 (offline only)
          --scratch-dir PATH (offline scratch storage; default system temporary directory)
+         --telemetry PATH --discard-output true|false (stream measurement; still computes/readbacks pixels)
          --usb true (native USB Bulk image stream)
          --connect IPv4 --port 5910 (USB NCM stream; dimensions/rate/time from protocol)
          --archive capture.vri (verified transport archive; dimensions/rate/time from protocol)
@@ -55,7 +56,7 @@ func run() throws {
     guard ["stream", "offline", "benchmark"].contains(mode) else { throw BackendError.invalid(usage) }
     var options: [String: String] = [:]
     var i = 1
-    let allowed: Set<String> = ["width","height","fps","low","high","alpha","levels","max-pixels","min-pixels","frames","bits","stride","roi","adaptive","mode","filter","spectrum","probe","spectrum-level","scratch-dir","usb","connect","port","archive"]
+    let allowed: Set<String> = ["width","height","fps","low","high","alpha","levels","max-pixels","min-pixels","frames","bits","stride","roi","adaptive","mode","filter","spectrum","probe","spectrum-level","scratch-dir","telemetry","discard-output","usb","connect","port","archive"]
     while i < arguments.count {
         let key = String(arguments[i].dropFirst(2))
         guard arguments[i].hasPrefix("--"), allowed.contains(key), i+1 < arguments.count, options[key] == nil else {
@@ -76,6 +77,13 @@ func run() throws {
     guard ["usb", "connect", "archive"].filter({ options[$0] != nil }).count <= 1 else {
         throw BackendError.invalid("Choose --connect or --archive")
     }
+    guard options["telemetry"] == nil || mode == "stream",
+          options["discard-output"] == nil || mode == "stream" else {
+        throw BackendError.invalid("Telemetry/discard-output require stream mode")
+    }
+    let discardOutput=options["discard-output"] ?? "false"
+    guard ["true","false"].contains(discardOutput) else { throw BackendError.invalid("Invalid discard-output") }
+    let telemetry=try options["telemetry"].map { try StreamTelemetry(path: $0) }
     let networkInput = options["usb"] != nil || options["connect"] != nil || options["archive"] != nil
     guard options["port"] == nil || options["connect"] != nil else { throw BackendError.invalid("--port requires --connect") }
     if networkInput && (mode == "benchmark" || ["width", "height", "bits", "fps", "stride"].contains(where: { options[$0] != nil })) {
@@ -233,7 +241,13 @@ func run() throws {
         let errorLock = NSLock()
         var outputError: Error?
         let backend = try RealtimeMagnifier(configuration: config) { result in
-            do { try writeOutput(result.get()) }
+            let completed=ProcessInfo.processInfo.systemUptime
+            do {
+                let frame=try result.get()
+                if discardOutput != "true" { try writeOutput(frame) }
+                try telemetry?.complete(frame, at: completed,
+                    sinkSeconds: ProcessInfo.processInfo.systemUptime-completed)
+            }
             catch { errorLock.lock(); outputError = error; errorLock.unlock() }
         }
         stderr("Metal device: \(backend.deviceName)")
@@ -243,7 +257,9 @@ func run() throws {
             errorLock.lock(); let failure = outputError; errorLock.unlock()
             if let failure { throw failure }
             guard let frame = try readFrame(sequence: sequence) else { break }
+            try telemetry?.receive(frame, at: ProcessInfo.processInfo.systemUptime)
             let admission = backend.submit(frame)
+            if case .replaced(let old) = admission { try telemetry?.drop(old) }
             if case .rejected(let reason) = admission { throw BackendError.invalid(reason) }
             sequence &+= 1
         }
@@ -251,6 +267,7 @@ func run() throws {
         errorLock.lock(); let failure = outputError; errorLock.unlock()
         if let failure { throw failure }
         let stats = backend.statistics
+        try telemetry?.finish(stats, transport: transport?.statistics)
         stderr("submitted=\(stats.submitted) completed=\(stats.completed) dropped=\(stats.dropped) failed=\(stats.failed)")
     }
 }

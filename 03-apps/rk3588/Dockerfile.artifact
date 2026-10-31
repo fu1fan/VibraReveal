@@ -1,6 +1,7 @@
 # Distribution container only; the binary runs against the board's pinned SDK ABI.
 FROM scratch
 COPY vr-stream /vr-stream
+COPY vr-clock-probe /vr-clock-probe
 COPY vr-bulk-source /vr-bulk-source
 COPY build-info.json /build-info.json
 COPY scripts /scripts

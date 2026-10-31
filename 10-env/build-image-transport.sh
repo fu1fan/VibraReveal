@@ -22,6 +22,7 @@ metadata = {
     'scripts_sha256': {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted((build / 'scripts').iterdir())},
     'sdk': json.loads((root / '10-env/sdk.lock.json').read_text()),
     'sha256': hashlib.sha256(binary.read_bytes()).hexdigest(),
+    'clock_probe_sha256': hashlib.sha256((build / 'vr-clock-probe').read_bytes()).hexdigest(),
     'bulk_benchmark_sha256': hashlib.sha256((build / 'vr-bulk-source').read_bytes()).hexdigest(),
 }
 (build / 'build-info.json').write_text(json.dumps(metadata, indent=2) + '\n')
