@@ -46,6 +46,10 @@ ssh root@BOARD_WIFI_IP 'chmod +x /tmp/vr-stream'
 先在板端确认 OV9281 对应视频节点和 sensor 节点，不依赖 `/dev/video-camera0`（可能指向 ISP）。
 ELF2 当前连接为 `/dev/video11`、`/dev/v4l-subdev2`。采集速率由 sensor 的 frame interval 查询得到，
 `--fps` 不覆盖真实相机速率。曝光、sensor FPS 和 RAW compact 模式由采集配置负责。
+切换 OV9281 模式时还需同步 vertical_blanking；仅切换 FPS 而保留旧 vblank 会让实际采集速率仍接近 30 FPS。
+例如在停止采集后，`v4l2-ctl -d /dev/v4l-subdev2 --set-subdev-fps pad=0,fps=120`，
+再执行 `v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl=vertical_blanking=110`。
+30 FPS 模式对应 vblank=2856。最终以采集中读回的 frame interval 和帧时间戳为准。
 
 ```sh
 # 板端：先记录原值；采集停止后可恢复。不要在其他采集程序运行时切换。
