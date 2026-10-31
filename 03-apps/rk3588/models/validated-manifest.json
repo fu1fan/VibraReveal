@@ -1,0 +1,28 @@
+{
+  "target": "rk3588",
+  "quantized": false,
+  "encoder_size": 448,
+  "prompt_slots": 8,
+  "toolkit_version": "2.5.0",
+  "upstream": "https://github.com/airockchip/rknn_model_zoo/tree/main/examples/mobilesam",
+  "models": {
+    "encoder": {
+      "source": "encoder.onnx",
+      "onnx_sha256": "09ad167250443d5cd9d94ee4e46ab4c5163e97e9bfbaf1834039862307242489",
+      "file": "mobilesam_encoder.rknn",
+      "rknn_sha256": "006a61ef229a7db6a1356389e0768ef7923c38443b74a31abb29ae427bb5be30"
+    },
+    "decoder": {
+      "source": "decoder.onnx",
+      "onnx_sha256": "56671c3f7f1efdf7a64d97d9db3883388a5a37ee3dd986f5411e0c0e249694ed",
+      "file": "mobilesam_decoder.rknn",
+      "rknn_sha256": "ef5b79a609f5997b0cf9cccac9a96d509fcf7da454ac7eb75d7f833a4631fd12"
+    }
+  },
+  "runtime": {
+    "repository": "https://github.com/airockchip/rknn-toolkit2",
+    "commit": "2c723177a94fac65cbc036d722907ddbc91980cf",
+    "sha256": "4b6cc575bedf8952b13db4b1190fa3b3d2ac213f00be774ff6ccd19d651970c0"
+  },
+  "sdk_header_sha256": "2d4160cd868efd7b83a72587e411c16d6972da5876e067bd73665cea778ce666"
+}

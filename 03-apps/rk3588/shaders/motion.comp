@@ -1,0 +1,99 @@
+#version 450
+layout(local_size_x=8, local_size_y=8) in;
+// One arena avoids per-dispatch descriptor allocation and descriptor alignment
+// constraints. All offsets are floats; regions of each dispatch do not overlap.
+layout(std430, binding=0) buffer Arena { float a[]; };
+layout(push_constant) uniform Params {
+    uint op, w, h, sw, sh, src, other, dst, history, fresh;
+    float b0, b2, a1, a2, alpha;
+} p;
+const float PI=3.14159265358979323846;
+int reflect101(int x,int n) {
+    if(n==1) return 0;
+    int period=2*(n-1); x=((x%period)+period)%period;
+    return x<n?x:period-x;
+}
+float at(uint base,int x,int y) {
+    return a[base+uint(reflect101(y,int(p.h)))*p.w+uint(reflect101(x,int(p.w)))];
+}
+float resized(uint base,uvec2 id) {
+    vec2 pos=clamp((vec2(id)+0.5)*vec2(p.sw,p.sh)/vec2(p.w,p.h)-0.5,
+                   vec2(0),vec2(p.sw-1,p.sh-1));
+    uvec2 lo=uvec2(pos), hi=min(lo+1,uvec2(p.sw-1,p.sh-1));
+    vec2 f=fract(pos);
+    return mix(mix(a[base+lo.y*p.sw+lo.x],a[base+lo.y*p.sw+hi.x],f.x),
+               mix(a[base+hi.y*p.sw+lo.x],a[base+hi.y*p.sw+hi.x],f.x),f.y);
+}
+void main() {
+    uvec2 id=gl_GlobalInvocationID.xy;
+    if(id.x>=p.w || id.y>=p.h) return;
+    uint j=id.y*p.w+id.x;
+    const float even[5]=float[](0.0625,0.25,0.375,0.25,0.0625);
+    const float odd[5]=float[](-0.125,-0.25,0,0.25,0.125);
+    if(p.op==6) {
+        float gx=0,gy=0;
+        const float weights[3]=float[](1,2,1);
+        for(int y=-1;y<=1;++y) for(int x=-1;x<=1;++x) {
+            float v=at(p.src,int(id.x)+x,int(id.y)+y);
+            gx+=v*float(x)*weights[y+1]/4.0;
+            gy+=v*float(y)*weights[x+1]/4.0;
+        }
+        float mag=length(vec2(gx,gy)); uint n=p.w*p.h;
+        a[p.dst+j]=mag;
+        a[p.dst+n+j]=mag>1e-8?gx/mag:0;
+        a[p.dst+2*n+j]=mag>1e-8?gy/mag:0;
+    } else if(p.op==7) {
+        uint n=p.w*p.h; float mag=a[p.src+j];
+        vec2 normal=vec2(a[p.src+n+j],a[p.src+2*n+j]);
+        ivec2 d=ivec2(round(normal));
+        float before=at(p.src,int(id.x)-d.x,int(id.y)-d.y);
+        float after=at(p.src,int(id.x)+d.x,int(id.y)+d.y);
+        // Strict on one side breaks equal-gradient plateaus deterministically.
+        bool peak=mag>=p.alpha && mag>before && mag>=after;
+        bool selected=false;
+        for(int y=-int(p.sw);y<=int(p.sw);++y) for(int x=-int(p.sw);x<=int(p.sw);++x)
+            selected=selected || at(p.other,int(id.x)+x,int(id.y)+y)>0.0;
+        a[p.dst+j]=peak?1:0;
+        a[p.dst+n+j]=peak && selected?1:0;
+    } else if(p.op==8) {
+        bool selected=false;
+        for(int y=-int(p.sw);y<=int(p.sw);++y) for(int x=-int(p.sw);x<=int(p.sw);++x)
+            selected=selected || at(p.src,int(id.x)+x,int(id.y)+y)>0.0;
+        a[p.dst+j]=selected?1:0;
+    } else if(p.op<=1) {
+        float v=0;
+        for(int i=-2;i<=2;++i)
+            v+=even[i+2]*at(p.src,int(id.x)+(p.op==0?i:0),int(id.y)+(p.op==1?i:0));
+        a[p.dst+j]=v;
+    } else if(p.op==2) a[p.dst+j]=resized(p.src,id);
+    else if(p.op==3) a[p.dst+j]=a[p.src+j]-resized(p.other,id);
+    else if(p.op==5) a[p.dst+j]=a[p.src+j]+resized(p.other,id);
+    else {
+        float rx=0,ry=0;
+        for(int y=-2;y<=2;++y) for(int x=-2;x<=2;++x) {
+            float v=at(p.src,int(id.x)+x,int(id.y)+y);
+            rx+=v*odd[x+2]*even[y+2]; ry+=v*even[x+2]*odd[y+2];
+        }
+        float r=sqrt(rx*rx+ry*ry)+1e-6;
+        float phi=atan(a[p.src+j],r);
+        if(p.op==9) { a[p.dst+j]=phi; return; }
+        if(p.op==10) {
+            float angle=p.alpha*a[p.history+j];
+            a[p.dst+j]=a[p.src+j]*cos(angle)+r*sin(angle); return;
+        }
+        uint s=p.history+7*j;
+        if(p.fresh!=0) {
+            a[s]=phi; a[s+1]=phi;
+            for(uint k=2;k<7;++k) a[s+k]=0;
+        }
+        float delta=phi-a[s+1];
+        float wrapped=delta-2*PI*floor((delta+PI)/(2*PI));
+        if(wrapped==-PI && delta>0) wrapped=PI;
+        if(abs(delta)>=PI) a[s+2]+=wrapped-delta;
+        float x=phi+a[s+2]-a[s];
+        float y=p.b0*x+p.b2*a[s+4]-p.a1*a[s+5]-p.a2*a[s+6];
+        float angle=p.alpha*y;
+        a[p.dst+j]=a[p.src+j]*cos(angle)+r*sin(angle);
+        a[s+1]=phi; a[s+4]=a[s+3]; a[s+3]=x; a[s+6]=a[s+5]; a[s+5]=y;
+    }
+}

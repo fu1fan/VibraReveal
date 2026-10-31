@@ -1,4 +1,6 @@
-# RK3588 图像采集与高速传输
+# RK3588 图像采集与计算后端
+
+五项 GPU/NPU 后端、接口及命令见 [BACKENDS.md](BACKENDS.md)。
 
 `vr-stream` 是 C++17 单会话发送器，支持 V4L2 相机、已有 RAW 文件及合成负载。
 图像走自定义 USB Bulk；管理和部署走 Wi-Fi。协议与队列策略见 [VRI1](../../05-protocol/README.md)。
@@ -103,3 +105,100 @@ python3 06-tests/image_transport.py /tmp/vr-stream-host /path/vr-receive /path/v
 统计的 payloadMBps 是应用有效字节数/秒，不包含协议头，也不是 USB PHY 速率。
 
 硬件验收与构建身份见 [正式 Bulk 图像验收](../../08-docs/validation/usb-bulk-images-2026-10-31.md)。
+
+## 板端 Vulkan ROI 实时运动放大
+
+新增 `vr-motion`，直接读取 V4L2 GREY/Y10，截取指定区域后上传 GPU。
+Vulkan 1.0 compute 完成三层（可配 1～8 层）高斯/拉普拉斯金字塔、Riesz 近似局部相位、
+因果 IIR 带通、相位旋转和重建。与 Mac 端采用同一算法结构；输出是 ROI 尺寸的灰度图像。
+`alpha` 是相位增益，不是标定后的物理位移倍率。边缘采用 reflect101；允许奇数尺寸和单像素轴。
+
+### 构建与启动
+
+默认构建保持原有采集发送器；启用新目标需要 SDK sysroot 内的 Vulkan headers/loader，
+以及**构建主机**上的 `glslangValidator`。在 CNB SDK 环境内执行：
+
+```sh
+elf2-cmake -S 03-apps/rk3588 -B /tmp/vr-motion-build \
+  -DCMAKE_BUILD_TYPE=Release -DVR_BUILD_VULKAN_MOTION=ON -DBUILD_TESTING=OFF
+elf2-sdk run cmake --build /tmp/vr-motion-build --parallel 4
+```
+
+部署 `vr-motion` 和 `motion.comp.spv` 到对应 ABI 的 RK3588 系统，通过 `--shader` 指定后者。
+也可 `cmake --install`；默认 shader 安装到 `${prefix}/share/vibrareveal/motion.comp.spv`。
+此变更未修改现有 OCI transport 制品流水线，旧制品中不包含新程序。
+
+相机须已设置 RAW 非 compact、真实 sensor FPS 和对应 vblank（见上文），并停止占用同一
+V4L2 节点的 `vr-stream` 服务。`--fps` 是算法/输出帧率，**不会修改传感器寄存器**。
+例如传感器为 120 FPS，处理中心附近 256×256 ROI、目标 30 FPS：
+
+```sh
+vr-motion --source camera --device /dev/video11 --sensor /dev/v4l-subdev2 \
+  --width 1280 --height 800 --bits 10 \
+  --x 512 --y 272 --roi-width 256 --roi-height 256 \
+  --fps 30 --low 3 --high 12 --alpha 12 --levels 3 --frames 900 \
+  --shader /usr/local/share/vibrareveal/motion.comp.spv --output amplified.vrv
+```
+
+参数在启动时设置；更改 ROI/帧率需重启会话。`--frames 0` 表示相机持续采集。
+目标 FPS 必须等于真实 sensor FPS 或是它的整数分频（120 → 120/60/40/30 等），
+否则返回 `UNSUPPORTED_FPS`。抽帧不提供时间抗混叠；运动频率应低于目标 Nyquist 频率。
+每一个原始采集帧仍检查序号和时间戳，主动抽帧不会掩盖采集丢帧。
+ROI 限制为 1,048,576 像素，还受设备 storage-buffer 限制；不会自动缩小区域或降低帧率。
+
+不指定 `--output` 时只处理并检查实时预算。`--output -` 写 stdout，可连接自定义显示/编码进程；
+本程序不含 HDMI 窗口、视频编码器，也不改变现有 VRI1 USB 协议。
+文件使用独立的 `VRV1` 帧格式，每帧 40 字节小端头 + `width*height` 个 float32 像素：
+
+| 偏移 | 类型 | 含义 |
+| --- | --- | --- |
+| 0 | char[4] | `VRV1` |
+| 4, 8, 12 | uint32 | ROI 宽、高、payload 字节数 |
+| 16 | uint64 | 原始相机帧序号（主动抽帧后允许间隔） |
+| 24 | uint64 | 采集 CLOCK_MONOTONIC 纳秒 |
+| 32, 36 | uint32 | 目标 FPS 分子、分母 |
+| 40 | float32[] | 行优先的放大灰度，标称 0～1，可能超范围；显示时自行裁剪 |
+
+错误时最后一帧可能只有部分字节，读取者必须检查完整性。已有文件不会被覆盖。
+
+### 实时失败行为
+
+应用事件在 stderr 输出 JSON Lines（`ready` / `complete` / `error`）；Mali 驱动可能夹杂普通诊断行，
+接收端按 `{` 开头识别应用事件。`--output -` 会将驱动 stdout 隔离到 stderr，避免污染二进制流。
+错误包含 `code`、`message`，
+退出码 2 表示明确的运行/配置错误，1 表示其他异常。采集线程保留至多两个待处理帧。
+
+| 错误码 | 含义 |
+| --- | --- |
+| `GPU_DEADLINE_EXCEEDED` | Vulkan 提交至 fence 完成超过 `1000/fps` ms，建议减小 ROI 或 FPS |
+| `PROCESSING_DEADLINE_EXCEEDED` | ROI 转换、GPU、读回合计超过一帧预算 |
+| `CAPTURE_FRAME_DROPPED` | V4L2 原始帧序号缺口 |
+| `CAPTURE_TIMING_ERROR` | 原始采集间隔偏离 sensor 标称值超过 20% |
+| `PROCESSING_QUEUE_OVERFLOW` | GPU/CPU/输出消费速度不足，两个待处理槽已满 |
+| `OUTPUT_DEADLINE_EXCEEDED` | 输出写入超过一帧预算 |
+| `PIPELINE_DEADLINE_EXCEEDED` | 处理与输出的总时间超过一帧预算 |
+| `VULKAN_ERROR` | Vulkan 返回错误，包括 device lost |
+
+超预算立即失败，不继续输出损坏的时域历史。GPU 错误报告的是包含驱动/队列等待的提交耗时，
+不能据此把所有超时都归因为 GPU 算力；采集、CPU、输出问题分别报告。
+Vulkan 无法取消已提交任务：报告错误后析构仍需等待 GPU 安全释放资源，驱动卡死可能延迟退出。
+普通文件系统写入同样不能保证内核调用有硬实时上限；管道使用 nonblocking + poll 截止时间。
+每帧预算包括首帧实际 dispatch，驱动首次执行过慢也会报错。
+
+### 验证
+
+在装有 Vulkan loader/ICD、glslang、CMake 和 NumPy 的 Linux 测试环境：
+
+```sh
+cmake -S 03-apps/rk3588 -B /tmp/vr-motion-test -DVR_BUILD_VULKAN_MOTION=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build /tmp/vr-motion-test --parallel 4
+ctest --test-dir /tmp/vr-motion-test --output-on-failure
+python3 06-tests/vulkan_motion.py /tmp/vr-motion-test/motion-test.f32
+python3 06-tests/vulkan_motion_cli.py /tmp/vr-motion-test/vr-motion /tmp/vr-motion-test/motion.comp.spv
+```
+
+测试包含非零增益 64 帧与独立 NumPy 参考比较、alpha=0 重建、奇数/细长 ROI、输入 stride、
+错误参数、损坏帧、帧序号/时间戳中断及会话失败后拒绝继续。
+软件 Vulkan 只能验证功能，不代表 Mali-G610 性能；正式板上应从小 ROI 起测，记录无错误的持续运行区间，
+再逐步增加尺寸/帧率，并确认负载超过极限时收到明确错误。已完成的 Mali-G610 短时实机验收见 [2026-10-31 记录](../../08-docs/validation/vulkan-roi-motion-2026-10-31.md)；
+其中 128×128@120 和 256×256@60 的短测通过，不能据此保证长时间持续吞吐或热稳定性。

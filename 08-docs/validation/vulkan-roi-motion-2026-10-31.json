@@ -1,0 +1,102 @@
+{
+  "base_commit": "29e943ea85d0004ebcc5cab0058f7999cf395c9f",
+  "uncommitted_sources": true,
+  "build_environment": "CNB cnb-dq3-1k68p5981",
+  "sdk": {
+    "image": "docker.cnb.cool/fu1fan/rk3588-ov9281/app-sdk@sha256:d2a21493198e25881cb03144bf4dd45b76e773e6cbbad1b62d6debbd4aa73cef",
+    "system_commit": "ac7c05413b3882f578cb94be4b2edfe3958d84c6"
+  },
+  "source_sha256": {
+    "03-apps/rk3588/CMakeLists.txt": "f7bdd84cb472124d0434eaa6ddf1cb1b761e3593a7ab35bb6b5f18102c39aed4",
+    "03-apps/rk3588/src/vulkan_motion.hpp": "8044a481ec19ef4e47bb6d77e46cc819a50ed4dbaea8c9bfa057283ba1134654",
+    "03-apps/rk3588/src/vulkan_motion.cpp": "51693ff4279a1421fa2404564122c6eef877373b29e75de71283bc791021ce3a",
+    "03-apps/rk3588/src/motion_main.cpp": "564c78b55336d8f8388a746b373df32e36a1133fba957e2919af566c90931108",
+    "03-apps/rk3588/src/camera.cpp": "dee79c5425c6005d82ff55b40b8fd394fc9d9ec65e8e535961615f173e223015",
+    "03-apps/rk3588/shaders/motion.comp": "301da27eca70ca3b18dfa861d93389b5256278d32a7d42be7ad2c3a3584326ad",
+    "03-apps/rk3588/tests/motion_test.cpp": "113aa68ddf67237ce41d642aa1d071154e4c4f4aeb444e75c628ece7d2de3200"
+  },
+  "binary_sha256": {
+    "vr-motion": "5b36a2e2312a66eaa7e5e277a613061c22bfa91fecc3a955787346fd75cb1255",
+    "vr-motion-test": "1872e2b72b5b548545a8dc5a523922040332a3b3303e262aa7c4cdc81015686c",
+    "motion.comp.spv": "bf9e05c708face0422a93c46e5aebabc5fe9fb70aed97775b525869ed9716d9c"
+  },
+  "validation": {
+    "date": "2026-10-31",
+    "device": "RK3588 Mali-G610 g24p0-00eac0 rk_so_ver 10",
+    "sensor_fps": 120,
+    "levels": 3,
+    "low_hz": 3,
+    "high_hz": 12,
+    "alpha": 12,
+    "cpu_reference_max_abs_error_lavapipe": 3.2492609e-06,
+    "cpu_reference_max_abs_error_mali": 5.1674332e-06,
+    "camera_cases": [
+      {
+        "roi": [
+          256,
+          256
+        ],
+        "fps": 30,
+        "frames": 300,
+        "result": "complete"
+      },
+      {
+        "roi": [
+          128,
+          128
+        ],
+        "fps": 120,
+        "frames": 360,
+        "result": "complete"
+      },
+      {
+        "roi": [
+          256,
+          256
+        ],
+        "fps": 60,
+        "frames": 180,
+        "result": "complete"
+      },
+      {
+        "roi": [
+          256,
+          256
+        ],
+        "fps": 120,
+        "result": "PROCESSING_DEADLINE_EXCEEDED",
+        "processing_ms": 9.598
+      },
+      {
+        "roi": [
+          512,
+          512
+        ],
+        "fps": 120,
+        "result": "GPU_DEADLINE_EXCEEDED",
+        "fence_wait_ms": 8.776543
+      },
+      {
+        "roi": [
+          1280,
+          800
+        ],
+        "fps": 120,
+        "result": "GPU_DEADLINE_EXCEEDED",
+        "fence_wait_ms": 8.549376
+      }
+    ],
+    "stdout_case": {
+      "roi": [
+        256,
+        256
+      ],
+      "fps": 30,
+      "frames": 30,
+      "bytes": 7865520,
+      "source_sequence_step": 4,
+      "driver_log_contamination": false
+    },
+    "restored_service": "S91vrstream"
+  }
+}

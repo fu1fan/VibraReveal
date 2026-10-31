@@ -8,7 +8,7 @@
 - CLI 二进制数据流集成检查：`python3 06-tests/macos_backend_cli.py /path/to/vibrareveal`。
 - 测试内容和本机性能记录：[macOS VALIDATION](../03-apps/macos/VALIDATION.md)。
 
-真实采集、传输及持续运行验收仍需单独完成。
+真实 Bulk 采集与 Metal 处理已有约五分钟验收，见下文；长期稳定性及真实位移标定仍需单独完成。
 
 ## 图像传输
 
@@ -47,3 +47,20 @@ python3 06-tests/usb-bulk/metal_acceptance.py --board root@192.168.8.204 \
 每次使用新的输出目录。得到逐帧遥测、发送/接收日志、时钟样本和分阶段延迟分位数。
 脚本断言 USB 接收完整和所有帧处理尺寸不变；**算法丢帧是被测结果，不要求为零**。
 结束后按需恢复 `/etc/init.d/S91vrstream start`。不要并行运行其他 Metal 测试，避免干扰结果。
+
+## RK3588 Vulkan / RKNN 后端
+
+构建选项与依赖见 [后端接口](../03-apps/rk3588/BACKENDS.md)。在具备 Vulkan 的 Linux 环境运行：
+
+```sh
+ctest --test-dir /path/to/backend-build --output-on-failure
+python3 06-tests/vulkan_motion.py /path/to/backend-build/motion-test.f32
+python3 06-tests/vulkan_motion_cli.py /path/to/backend-build/vr-motion /path/to/backend-build/motion.comp.spv
+python3 06-tests/rk3588_backend.py /path/to/backend-build
+```
+
+- [五项后端验收](../08-docs/validation/rk3588-backends-2026-10-31.md)：特征提取、交互选物与录像完整性。
+- [零相位验收与复现](../08-docs/validation/rk3588-offline-filter-2026-10-31.md)：`offline_filter.py` 的 prepare/check/compare 流程及 Metal/Mali 对照。
+- [实时 ROI 验收](../08-docs/validation/vulkan-roi-motion-2026-10-31.md)：实际相机短测与超预算失败。
+
+RKNN 选择测试需要实际 NPU、对应模型和运行时，按后端文档显式运行；不作为无硬件环境的 CTest 项。
