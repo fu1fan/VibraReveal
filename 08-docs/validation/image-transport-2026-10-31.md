@@ -6,9 +6,9 @@
 - macOS Swift/Xcode/Metal 可用。现有后端 21 项测试、新增协议 4 项测试通过。
 - 跨语言集成通过：RAW+idx 逐字节校验、奇数尺寸/行 padding、119.88 FPS 元数据、59.94 FPS 实时节奏、慢接收端空间降采样及队列丢帧、截断/CRC/异常断连，以及原始录像直接接入 Metal 离线算法。
 - CNB 环境自检 `cnb-e0t-1k687u4jo` 成功：固定 SDK 的 CMake/Vulkan 交叉编译和缓存复用。
-- 应用构建 `cnb-ohh-1k689g8tg` 成功，应用 commit `7e381a9e6467cc42499d6cf40846913b4b559c0f`。
-  ARM64 程序 SHA256：`c29bc56f78c6f5233c8f57ed314c6a39832c492e022d736e4fcaf1f9bf476123`。
-  制品：`docker.cnb.cool/fu1fan/vibrareveal/image-transport@sha256:9918ea836cbe9fd5f602c933ebc337c3c3c88b5a7bd4052148d7a498b4da5bcc`。
+- 应用构建 `cnb-8df-1k68a5e5d` 成功，应用 commit `fe1c9a24e3f86248958b7358aba04128df1ca148`。
+  ARM64 程序 SHA256：`181d740bec5bf43484e4c6aed619634ac2eb6780b97816116b41707e8cc149cf`。
+  制品：`docker.cnb.cool/fu1fan/vibrareveal/image-transport@sha256:b6bce947e0647532d014edbfb0f09aace18254d7f19b9e5b950220c9eb766ad5`。
 - 首轮 NCM 系统构建 `cnb-anu-1k6891q58` 成功，系统 commit `123806998cae13be755c5fb87a562d61fbe7ba7e`。
   boot.img SHA256：`49b1e2f446de319a2465bbf5d7800b313eb1299572ee8f82bb8c7038a22abe7d`。
   update.img SHA256：`e134e2e8d2024557ad656604d2bb362d762ee542ad128ff3d0f31aba83c3516b`。
@@ -18,7 +18,7 @@
 - 板端已启动新 Linux 5.10.209 内核，Wi-Fi `192.168.8.204` 的 SSH 正常。
   USB 物理链路为 SuperSpeed；Mac 已加载 `AppleUSBNCMControl/AppleUSBNCMData`。
 - NCM 启动联调修正了 `ifname` 必须含 `%d` 和 udev 重复 update 的幂等性问题。
-  修正后板端 `vrusb0=192.168.77.1/24`，独立 dnsmasq 已启动；新源码 CNB 构建为 `cnb-pn9-1k689qu0r`，51 项 Linux 回归通过。
+  修正后板端 `vrusb0=192.168.77.1/24`，独立 dnsmasq 已启动；最终源码 `2c63f6606fb04675c9024249c53daf816a05f8d1` 的 CNB 构建 `cnb-pn9-1k689qu0r` 已成功，51 项 Linux 回归、系统镜像、SDK 导出和制品发布全部通过。
 - 相机为 `/dev/video11`，sensor `/dev/v4l-subdev2` 当前声明 1280×800@30 FPS。
   关闭 RKCIF compact 后为 Y10，stride=2560，单帧 2,048,000 字节；板端 30 帧 V4L2 采集成功。
 
