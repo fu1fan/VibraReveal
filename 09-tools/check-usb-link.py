@@ -29,7 +29,9 @@ def names(node):
 
 try:
     destination = str(ipaddress.IPv4Address(sys.argv[1] if len(sys.argv) > 1 else '192.168.77.1'))
-    ncm = plistlib.loads(run('ioreg', '-r', '-c', 'AppleUSBNCMData', '-a'))
+    # -l includes child IOEthernetInterface properties (including BSD Name).
+    registry = run('ioreg', '-r', '-c', 'AppleUSBNCMData', '-a', '-l')
+    ncm = plistlib.loads(registry) if registry.strip() else []
     interfaces = set(names(ncm))
     if not interfaces:
         raise RuntimeError('No registered USB NCM network interface. Unlock the Mac screen and reconnect/restart the USB gadget; check configd InterfaceNamer logs.')

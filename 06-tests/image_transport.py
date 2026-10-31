@@ -126,6 +126,13 @@ with tempfile.TemporaryDirectory(prefix='vr-transport-tests-') as temporary:
             data = readn(sock, struct.unpack_from('<I', header, 12)[0])
             assert zlib.crc32(data) == struct.unpack_from('<I', header, 64)[0]
             widths.append(struct.unpack_from('<I', header, 16)[0])
+            if widths[-1] == 128:
+                sequence = struct.unpack_from('<Q', header, 32)[0]
+                # Check optimized 2x2 averaging against independent source pixels.
+                expected = [sum(((2*x+dx)*13+(2*y+dy)*7+sequence*3) & 1023
+                                for dy in range(2) for dx in range(2)) // 4
+                            for y in range(96) for x in range(128)]
+                assert list(struct.unpack('<12288H', data)) == expected
             drops.append(struct.unpack_from('<Q', header, 56)[0])
             time.sleep(0.025)
             sock.sendall(header[32:40])

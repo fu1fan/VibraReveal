@@ -152,6 +152,27 @@ static Frame reduced(const Frame& f,uint32_t scale) {
     r.bits=f.bits; r.sequence=f.sequence; r.timestamp=f.timestamp;
     uint32_t bpp=f.bits==8?1:2; r.stride=r.width*bpp;
     r.data.resize(size_t(r.stride)*r.height);
+    // The common first adaptation must fit inside a high-FPS frame budget.
+    // Fixed 2x2 boxes avoid per-pixel divisions and allow vectorization.
+    if(scale==2 && f.width%2==0 && f.height%2==0) {
+        for(uint32_t y=0;y<r.height;++y) {
+            const auto* a=f.data.data()+size_t(2*y)*f.stride;
+            const auto* b=a+f.stride;
+            auto* out=r.data.data()+size_t(y)*r.stride;
+            if(bpp==1) {
+                for(uint32_t x=0;x<r.width;++x)
+                    out[x]=(uint32_t(a[2*x])+a[2*x+1]+b[2*x]+b[2*x+1])/4;
+            } else {
+                for(uint32_t x=0;x<r.width;++x) {
+                    size_t p=4*x;
+                    uint32_t sum=uint32_t(a[p])+a[p+2]+b[p]+b[p+2]+
+                        ((uint32_t(a[p+1])+a[p+3]+b[p+1]+b[p+3])<<8);
+                    out[2*x]=uint8_t(sum/4); out[2*x+1]=uint8_t(sum/1024);
+                }
+            }
+        }
+        return r;
+    }
     // Area averaging preserves the whole field of view, including odd-size edges.
     for(uint32_t y=0;y<r.height;++y) for(uint32_t x=0;x<r.width;++x) {
         uint32_t x0=uint64_t(x)*f.width/r.width,x1=uint64_t(x+1)*f.width/r.width;
