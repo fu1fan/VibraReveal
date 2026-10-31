@@ -1,0 +1,72 @@
+{
+  "base_commit": "29e943ea85d0004ebcc5cab0058f7999cf395c9f",
+  "source_sha256": {
+    "03-apps/rk3588/src/select_main.cpp": "3d022d3c85f957cac3b0fee11008239d64a27577aabe497b391e3cabefeb9092",
+    "03-apps/rk3588/src/motion_main.cpp": "564c78b55336d8f8388a746b373df32e36a1133fba957e2919af566c90931108",
+    "03-apps/rk3588/src/features_main.cpp": "100f49085b1a7330b497127965f58f1a674ce06ef59bf583b1553f11712d87f2",
+    "03-apps/rk3588/src/vulkan_motion.hpp": "570a39fc184d8d31b5a56d7fb0c7597765e21e527e6545428ba07549197a8834",
+    "03-apps/rk3588/src/bulk_transport.cpp": "b277e91ef55a900bef599cecb207418836b84eb53df88d4719036aae4323eab3",
+    "03-apps/rk3588/src/camera.cpp": "dee79c5425c6005d82ff55b40b8fd394fc9d9ec65e8e535961615f173e223015",
+    "03-apps/rk3588/src/bulk_bench.cpp": "6a2831b8e0c8e51f0ffe3de663a0e00d025d5cfb57e3c7362d4ff82ebf1f6dc3",
+    "03-apps/rk3588/src/mobile_sam.hpp": "a9840984a230febc0fbb0a5a3b4c148d0d38dc24d6814ef012842ca9a71bb33e",
+    "03-apps/rk3588/src/backend_io.hpp": "eba62f3e99aeea6389d9d268f193299f390dc9423a84231964a1ec3a63e63c90",
+    "03-apps/rk3588/src/clock_probe.cpp": "b2c710cb15d2938ed63320398e48a00a68723f412da0985cfb7332f98a3fe2ee",
+    "03-apps/rk3588/src/crc32.hpp": "c9177441b9111b111aa27299b963a94fdb330e2ff57c9fafe3ce6e21de137600",
+    "03-apps/rk3588/src/mobile_sam.cpp": "7ba3473e6f67bb8bac421e993afb3a3edd7d55bda5056d7193a23eaea313b16a",
+    "03-apps/rk3588/src/offline_main.cpp": "eb5b0d6886f3d5c9afc5a9c5321473094396a70cf129375465322589fa3aeac3",
+    "03-apps/rk3588/src/frame.hpp": "9702bb400db1a1db5ce7795376cee479c47a7abbacfe9967590bd31ca6748ff8",
+    "03-apps/rk3588/src/main.cpp": "f8172c6f579e1325eec312f90dddadb7e72e5a389ca5ebe922fe9899eeaf5c4a",
+    "03-apps/rk3588/src/bulk_transport.hpp": "b560f0f616af87450545a3a6db78cfcef5b7718be4ba240bc2bcd47bfd4b28b7",
+    "03-apps/rk3588/src/vulkan_motion.cpp": "9fd563290fa7695876d27cab4fb661e0c44f456d4343b5f1a6412380c35b2a3b",
+    "03-apps/rk3588/shaders/motion.comp": "6ef7dccc80622691b842f31cd70b9a2ee8bd7fa2af2136024f0bd26267a1fd95",
+    "03-apps/rk3588/CMakeLists.txt": "dff65b434ead433c83175f2553fe8f1860d5c72791e8c1194531814f9493fa27"
+  },
+  "models": {
+    "target": "rk3588",
+    "quantized": false,
+    "encoder_size": 448,
+    "prompt_slots": 8,
+    "toolkit_version": "2.5.0",
+    "upstream": "https://github.com/airockchip/rknn_model_zoo/tree/main/examples/mobilesam",
+    "models": {
+      "encoder": {
+        "source": "encoder.onnx",
+        "onnx_sha256": "09ad167250443d5cd9d94ee4e46ab4c5163e97e9bfbaf1834039862307242489",
+        "file": "mobilesam_encoder.rknn",
+        "rknn_sha256": "006a61ef229a7db6a1356389e0768ef7923c38443b74a31abb29ae427bb5be30"
+      },
+      "decoder": {
+        "source": "decoder.onnx",
+        "onnx_sha256": "56671c3f7f1efdf7a64d97d9db3883388a5a37ee3dd986f5411e0c0e249694ed",
+        "file": "mobilesam_decoder.rknn",
+        "rknn_sha256": "ef5b79a609f5997b0cf9cccac9a96d509fcf7da454ac7eb75d7f833a4631fd12"
+      }
+    },
+    "runtime": {
+      "repository": "https://github.com/airockchip/rknn-toolkit2",
+      "commit": "2c723177a94fac65cbc036d722907ddbc91980cf",
+      "sha256": "4b6cc575bedf8952b13db4b1190fa3b3d2ac213f00be774ff6ccd19d651970c0"
+    },
+    "sdk_header_sha256": "2d4160cd868efd7b83a72587e411c16d6972da5876e067bd73665cea778ce666"
+  },
+  "validation": {
+    "gpu": "Mali-G610",
+    "selection_encoder_ms": 118.377,
+    "selection_decoder_ms": 29.5566,
+    "offline_frames": 16,
+    "offline_width": 1280,
+    "offline_height": 800,
+    "offline_process_wall_seconds": 0.9
+  },
+  "package": {
+    "file": "vr-rk3588-backends-20261031.tar.gz",
+    "sha256": "f7b6999da520c30f538645461bb330c0b766642fbf293f320266f82c0f36755e",
+    "board_hash_check": "24 files passed",
+    "relocatable_wrapper_smoke": [
+      "select",
+      "features",
+      "offline"
+    ],
+    "build_environment": "cnb-guk-1k68r7c5g"
+  }
+}

@@ -1,0 +1,11 @@
+# Local mise configuration and lockfile
+/mise.toml
+/mise.local.toml
+/.mise.toml
+/.mise.local.toml
+/mise.lock
+
+# Local Python environment and bytecode
+/.venv/
+__pycache__/
+*.py[cod]

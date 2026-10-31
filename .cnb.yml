@@ -1,6 +1,32 @@
 # CNB is the source of truth; push branches and tags to the GitHub mirror.
 
 $:
+  api_trigger_image_transport:
+    - name: Build RK3588 image transport
+      runner:
+        tags: cnb:arch:amd64
+        cpus: 4
+      git:
+        submodules: false
+      services:
+        - docker
+      docker:
+        image: ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/daily-env:latest
+        volumes:
+          - elf2-sdk-v1:/cache/elf2-sdk:copy-on-write
+      stages:
+        - name: Cross compile with pinned SDK
+          script: sh 10-env/build-image-transport.sh /tmp/image-transport-build
+          timeout: 15m
+        - name: Publish binary and build identity
+          script: |
+            set -eu
+            IMAGE="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/image-transport:build-${CNB_BUILD_ID}"
+            docker build --platform linux/arm64 -f 03-apps/rk3588/Dockerfile.artifact -t "$IMAGE" /tmp/image-transport-build
+            docker push "$IMAGE"
+            docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE"
+          timeout: 10m
+
   tag_push:
     - &sync_tags_to_github
       name: Sync tags to GitHub

@@ -6,11 +6,19 @@ let package = Package(
     platforms: [.macOS(.v13)],
     products: [
         .library(name: "VibraRevealBackend", targets: ["VibraRevealBackend"]),
-        .executable(name: "vibrareveal", targets: ["vibrareveal"])
+        .executable(name: "vibrareveal", targets: ["vibrareveal"]),
+        .library(name: "VibraRevealTransport", targets: ["VibraRevealTransport"]),
+        .executable(name: "vr-receive", targets: ["vr-receive"])
     ],
     targets: [
         .target(name: "VibraRevealBackend", resources: [.copy("Resources/Motion.metal")]),
-        .executableTarget(name: "vibrareveal", dependencies: ["VibraRevealBackend"]),
+        .systemLibrary(name: "CLibUSB", pkgConfig: "libusb-1.0", providers: [.brew(["libusb"])]),
+        .target(name: "CVRBulk", dependencies: ["CLibUSB"], publicHeadersPath: "include"),
+        .target(name: "VibraRevealTransport", dependencies: ["VibraRevealBackend", "CVRBulk"]),
+        .executableTarget(name: "vr-receive", dependencies: ["VibraRevealTransport"]),
+        .executableTarget(name: "vibrareveal", dependencies: ["VibraRevealBackend", "VibraRevealTransport"]),
+        .testTarget(name: "VibraRevealTransportTests", dependencies: ["VibraRevealTransport"]),
         .testTarget(name: "VibraRevealBackendTests", dependencies: ["VibraRevealBackend"])
-    ]
+    ],
+    cxxLanguageStandard: .cxx17
 )

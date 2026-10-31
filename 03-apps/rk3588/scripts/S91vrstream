@@ -1,0 +1,19 @@
+#!/bin/sh
+PID=/run/vr-usb-stream-daemon.pid
+case "${1:-}" in
+  start)
+    start-stop-daemon -S -b -m -p "$PID" -x /usr/local/sbin/vr-usb-stream-daemon
+    ;;
+  stop)
+    start-stop-daemon -K -p "$PID" -s TERM || true
+    # The daemon and owned session must finish cleanup before another can start.
+    i=0
+    while [ -f "$PID" ] && kill -0 "$(cat "$PID")" 2>/dev/null; do
+      i=$((i+1)); [ "$i" -lt 100 ] || exit 1
+      sleep 0.1
+    done
+    rm -f "$PID"
+    ;;
+  restart) "$0" stop && "$0" start ;;
+  *) echo "Usage: $0 start|stop|restart" >&2; exit 1 ;;
+esac

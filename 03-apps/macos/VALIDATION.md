@@ -68,7 +68,9 @@ vibrareveal benchmark --mode offline --width 1921 --height 1081 --fps 240 --fram
 
 ## 已知边界
 
-- 未接入真实全局快门相机、AVFoundation 或 RK3588 网络输入；未验收长时运行、功耗、热降频和采集到输出延迟。
+- 以上是早期合成基线；真实 RK3588 USB Bulk 输入已接入，实机端到端验收见仓库 `08-docs/validation`。AVFoundation、功耗及热降频专项未验收。
 - 离线默认零相位，整段 FFT 目前用于频谱分析而非视频时间滤波；真实可变帧率需预处理时间轴。局部相位频谱不等于物理位移标定或全图热力图。
 - macOS 13 为声明的最低部署版本，本次只在当前本机系统执行，未验证所有 macOS/Intel GPU 组合。
 - 本地工作目录的 XCTest 签名遇到 Finder 扩展属性错误，改用 `/tmp` scratch path 后成功；未修改用户原有文件的扩展属性。
+
+真实 USB Bulk → Metal 全分辨率 120 fps 的实际帧率、端到端延迟与丢帧记录见 [实机验收](../../08-docs/validation/usb-bulk-metal-2026-10-31.md)。

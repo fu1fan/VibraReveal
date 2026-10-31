@@ -1,0 +1,53 @@
+#!/bin/sh
+# One owned FunctionFS session. Management and deployment stay on Wi-Fi.
+set -eu
+G=/sys/kernel/config/usb_gadget/rockchip
+M=/dev/ffs-vri
+exec 9>/run/vr-usb-stream.lock
+flock -n 9 || { echo 'An image session is already running' >&2; exit 1; }
+UDC=$(cat "$G/UDC")
+[ -n "$UDC" ] || UDC=fc000000.usb
+child=
+cleanup() {
+    trap - EXIT INT TERM HUP
+    printf '\n' > "$G/UDC" 2>/dev/null || true
+    if [ -n "$child" ]; then kill "$child" 2>/dev/null || true; wait "$child" 2>/dev/null || true; fi
+    rm -f "$G/configs/b.1/f-ffs.vri"
+    umount "$M" 2>/dev/null || true
+    rmdir "$G/functions/ffs.vri" 2>/dev/null || true
+    printf '%s' "$UDC" > "$G/UDC" || true
+}
+trap cleanup EXIT
+trap 'exit 143' TERM HUP
+trap 'exit 130' INT
+# Recover only our own stale function after an unclean process exit.
+if [ -L "$G/configs/b.1/f-ffs.vri" ]; then
+    printf '\n' > "$G/UDC" 2>/dev/null || true
+    rm -f "$G/configs/b.1/f-ffs.vri"
+    umount "$M" 2>/dev/null || true
+fi
+mkdir -p "$G/functions/ffs.vri" "$M"
+mount -t functionfs vri "$M"
+# Configure the actual sensor before opening capture; FPS is then read by vr-stream.
+case " $* " in
+  *' --source camera '*)
+    printf '0 0 0 0\n' > /sys/devices/platform/rkcif-mipi-lvds5/compact_test
+    v4l2-ctl -d /dev/v4l-subdev2 --set-subdev-fps pad=0,fps=120
+    v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl=vertical_blanking=110
+    ;;
+esac
+/usr/local/bin/vr-stream --transport bulk --ffs "$M" "$@" &
+child=$!
+i=0
+while [ ! -e "$M/ep2" ]; do
+    kill -0 "$child" 2>/dev/null || { wait "$child"; exit 1; }
+    i=$((i+1)); [ "$i" -lt 100 ] || { echo 'FunctionFS startup timed out' >&2; exit 1; }
+    sleep 0.05
+done
+printf '\n' > "$G/UDC"
+ln -s "$G/functions/ffs.vri" "$G/configs/b.1/f-ffs.vri"
+printf '%s' "$UDC" > "$G/UDC"
+status=0
+wait "$child" || status=$?
+child=
+exit "$status"

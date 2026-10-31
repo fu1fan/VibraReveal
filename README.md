@@ -11,7 +11,7 @@ VibraReveal（振见）是一个软硬件协同研发项目：利用 **OV9281 �
 > **系统与应用分别维护。** 本仓库只管理应用、算法、通信协议、整机硬件设计和实验资料。RK3588 的 Linux 系统、内核、设备树、OV9281 驱动、rootfs 和系统镜像由独立仓库 [RK3588-OV9281](https://cnb.cool/fu1fan/RK3588-OV9281) 维护。
 
 > [!NOTE]
-> **Work in Progress：** 本仓库已有 Python 离线运动放大与频谱参考实现，已有 [macOS Metal 放大后端](03-apps/macos/)（实时自适应/离线全分辨率），尚无端到端相机应用。驱动与 Vulkan 环境已有进展，但不代表高速传输、实时运动放大或多传感器同步已通过验收。
+> **Work in Progress（2026-10-31）：** 已打通 OV9281 → RK3588 → USB Bulk → macOS Metal 命令行链路，并实现板端 Vulkan / RKNN 计算后端。全分辨率 120 FPS 图像传输通过约五分钟零丢帧验收；同条件 Metal 处理队列仍丢弃 0.1833% 输入帧，不能称为端到端零丢帧。图形界面、多后端并发、物理位移标定及整机长期稳定性仍待完成。
 
 ## 1. 项目目标
 
@@ -26,7 +26,7 @@ VibraReveal（振见）是一个软硬件协同研发项目：利用 **OV9281 �
 
 | 仓库                                                       | 维护内容                                                     | 典型产物                               |
 | ---------------------------------------------------------- | ------------------------------------------------------------ | -------------------------------------- |
-| **[RK3588-OV9281](https://cnb.cool/fu1fan/RK3588-OV9281)** | ELF2/RK3588 板级支持、Buildroot、Linux 内核及设备树、OV9281 驱动、基础系统服务、GPU/NPU 驱动与运行时 | `update.img`；未来可提供版本化应用 SDK |
+| **[RK3588-OV9281](https://cnb.cool/fu1fan/RK3588-OV9281)** | ELF2/RK3588 板级支持、Buildroot、Linux 内核及设备树、OV9281 驱动、基础系统服务、GPU/NPU 驱动与运行时 | `update.img`、按 digest 固定的版本化应用 SDK |
 | **VibraReveal（本仓库）**                                  | RK3588 Linux 用户态应用、Vulkan Shader、Mac Metal 应用、算法、设备通信、原型机械/电子设计与实验 | ARM64 应用包、Mac 应用、协议与设计文件 |
 
 > [!NOTE]
@@ -52,7 +52,7 @@ VibraReveal/
 └── 10-env/            # 日常 IDE、按需应用 SDK 与完整系统环境入口
 ```
 
-顶层目录按研发顺序编号；`04-algorithms/phase-motion/` 已整理 Python 算法、依赖与运行说明，`03-apps/macos/` 已实现无界面 Metal 放大后端，其余应用和工具目录主要为规划占位；`01-hardware/` 已归档实际器件资料，`02-platform/` 含 `RK3588-OV9281` 子模块。
+顶层目录按研发顺序编号；`03-apps/rk3588/` 包含采集、USB Bulk 传输、Vulkan 放大/特征与 RKNN 选物后端，`03-apps/macos/` 包含 Swift 接收器与 Metal 实时/离线放大后端；`04-algorithms/phase-motion/` 提供 Python 参考实现，`06-tests/` 与 `08-docs/validation/` 保存回归脚本和验收证据。硬件资料与系统子模块分别位于 `01-hardware/` 和 `02-platform/`。
 
 `10-env/` 提供轻量日常镜像（Python、code-server）和独立完整系统环境。应用 SDK 从系统流水线产物按固定 digest 加载；日常镜像支持页面按钮、API 和 `dev-env-v*` Tag 发布，用法见 [10-env/README.md](10-env/README.md)。
 
@@ -71,26 +71,42 @@ VibraReveal/
 
 ## 5. 当前进度与路线图
 
-- [x] 确定 OV9281 + RK3588 的高速灰度采集路线
-- [x] 维护独立的 [RK3588-OV9281](https://cnb.cool/fu1fan/RK3588-OV9281) 系统源码/构建仓库，并以子模块形式接入 `02-platform/`
-- [x] 完成现有 OV9281 驱动适配工作；新系统仓库中的最新修复仍待板级验收
-- [x] 调通 RK3588 的 Vulkan 运行环境
-- [x] 归档 ELF 2 开发板、OV9281 模组与 7 寸 HDMI 屏资料
-- [ ] 完成可在真实开发板上验收的系统版本并整理应用交叉编译 SDK
-- [ ] 在 `03-apps/rk3588/` 建立可独立构建、安装和回滚的应用骨架
-- [ ] 完成 RK3588→MacBook 的高速 RAW 传输与持续丢帧测试
-- [ ] 设计帧编号、时钟域、曝光时间和 IMU 数据协议
-- [x] 整理 [Python 相位运动放大、因果与频谱参考](04-algorithms/phase-motion/)及离线自检
-- [x] 开发 [Mac Metal 相位运动放大后端基线](03-apps/macos/)（实时自适应与离线逐帧处理；待真实链路验收）
-- [ ] 开发 Vulkan 局部运动特征、热点扫描和频谱预分析
-- [ ] 加入 ROI 跟踪、NPU 目标识别及可选深度估计
-- [ ] 集成 IMU、自振检测与视觉辅助补偿
-- [ ] 完成整机 CAD、电子连接、标定和连续运行测试
+截至 **2026-10-31**，已完成能力与验证边界如下：
+
+| 能力 | 当前结果 | 验收记录 |
+| --- | --- | --- |
+| 相机与 USB Bulk 传输 | 1280×800 Y10，36,000 帧约 298.5 秒，零序号缺口/发送丢弃；离线最高约 417.4 MB/s | [图像传输](08-docs/validation/usb-bulk-images-2026-10-31.md) |
+| Mac Metal 实时放大 | 同尺寸完成 35,934/36,000 帧，队列替换 66 帧；估算采集至结果 P50/P95 为 17.865/20.005 ms | [处理延迟与丢帧](08-docs/validation/usb-bulk-metal-2026-10-31.md) |
+| 板端 Vulkan 实时 ROI | 128×128@120、256×256@60 短测通过；全帧@120 超预算并明确报错 | [ROI 短测](08-docs/validation/vulkan-roi-motion-2026-10-31.md) |
+| GPU 对焦/边缘与 NPU 选物 | Mali 特征计算与 MobileSAM encoder/decoder 实机通过；分割质量仅验证公开灰度示例 | [五项后端](08-docs/validation/rk3588-backends-2026-10-31.md) |
+| 整段离线全帧放大 | 默认前后向零相位滤波，保留全部帧与时间信息；480 帧夹具 Mali/Metal 最大灰度误差约 2.38×10⁻⁶ | [零相位对照](08-docs/validation/rk3588-offline-filter-2026-10-31.md) |
+
+上述吞吐和延迟依赖记录中的设备、负载与测试时长；数值一致性不等于物理位移精度标定。USB 完整接收与算法处理零丢帧分别验收，短时通过不代表全天运行或多后端并发达标。
+
+- [x] 确定 OV9281 + RK3588 采集路线，完成驱动适配、首次采集帧率修复及板端验证
+- [x] 维护独立系统仓库与子模块，建立固定 digest 的应用交叉编译 SDK
+- [x] 建立独立应用构建、传输服务部署/恢复及可搬迁后端包
+- [x] 完成高速 RAW 传输、CRC/序号/END 校验、过载失败与重连验收
+- [x] 实现 VRI1 帧编号、单调时间、位深、stride 与完整性协议
+- [x] 整理 [Python 相位运动放大与频谱参考](04-algorithms/phase-motion/)
+- [x] 实现 [Mac Metal 实时/离线后端](03-apps/macos/)，完成真实 Bulk 输入短期验收
+- [x] 实现 [RK3588 五项后端](03-apps/rk3588/BACKENDS.md)及整段零相位离线处理
+- [x] 归档 ELF 2、OV9281、HDMI 屏与 IMU 模块资料
+- [ ] 完成热点扫描、振动频谱预分析与跨帧 ROI 跟踪
+- [ ] 完成多后端并发调度、端到端零丢帧优化和持续负载验收
+- [ ] 集成图形界面、视频编解码与可选深度估计
+- [ ] 补充曝光元数据、IMU 数据协议与时间同步，完成自振检测/视觉辅助补偿
+- [ ] 完成机械与电子集成、真实位移标定、服务冷启动及整机长期稳定性验收
 
 ## 6. 文档索引
 
 | 内容                            | 位置                                                                     |
 | ------------------------------- | ------------------------------------------------------------------------ |
+| RK3588 采集与传输 | [03-apps/rk3588/README.md](03-apps/rk3588/README.md) |
+| Vulkan / RKNN 后端与模型转换 | [03-apps/rk3588/BACKENDS.md](03-apps/rk3588/BACKENDS.md) |
+| Mac Metal 后端与使用方式 | [03-apps/macos/README.md](03-apps/macos/README.md) |
+| VRI1 图像传输协议 | [05-protocol/README.md](05-protocol/README.md) |
+| 回归测试与硬件验收入口 | [06-tests/README.md](06-tests/README.md) |
 | Python 算法安装、运行、数据格式 | [04-algorithms/phase-motion/README.md](04-algorithms/phase-motion/README.md) |
 | 开发环境镜像、ELF2 构建与交叉编译、IDE 状态持久化 | [10-env/README.md](10-env/README.md) |
 | 数据流、模块职责、目标目录结构  | [08-docs/architecture/overview.md](08-docs/architecture/overview.md)       |
