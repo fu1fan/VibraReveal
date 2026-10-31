@@ -1,0 +1,20 @@
+#!/bin/sh
+# Recreate the FunctionFS session after completion, unplug, or host failure.
+set -eu
+child=
+stop() {
+    trap - TERM INT HUP
+    if [ -n "$child" ]; then kill "$child" 2>/dev/null || true; wait "$child" 2>/dev/null || true; fi
+    exit 0
+}
+trap stop TERM INT HUP
+while :; do
+    /usr/local/sbin/vr-usb-stream --source camera --mode realtime --frames 0 --timeout 60 --ring-frames 32 --usb-queue 32 &
+    child=$!
+    wait "$child" || true
+    child=
+    sleep 1 &
+    child=$!
+    wait "$child" || true
+    child=
+done

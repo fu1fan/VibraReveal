@@ -177,16 +177,16 @@ stdout 的每帧布局：`UInt32 小端 JSON 字节数` + `UTF-8 JSON` + `width 
 
 ## RK3588 USB 输入
 
-图像走 USB NCM，SSH 和文件部署走 Wi-Fi。使用方式、CNB 编译与线路配置见
+图像走自定义 USB Bulk（需 `brew install libusb`），SSH 和文件部署走 Wi-Fi。使用方式、CNB 编译与线路配置见
 [RK3588 发送端](../rk3588/README.md)，字节格式见 [VRI1](../../05-protocol/README.md)。
 
 ```sh
 # 独立接收，尽可能释放 USB/磁盘吞吐；输出保留逐帧采集元数据
-vr-receive --host 192.168.77.1 --output capture.vri
+vr-receive --usb --output capture.vri
 # 协议校验和吞吐测试，不写盘
-vr-receive --host 192.168.77.1
+vr-receive --usb
 # 按 sender HELLO 使用真实 FPS、尺寸、位深和时间，不能另传 --fps/--width 等覆盖
-vibrareveal stream --connect 192.168.77.1 --low 3 --high 12 > amplified.vrm
+vibrareveal stream --usb true --low 3 --high 12 > amplified.vrm
 vibrareveal offline --archive capture.vri --low 3 --high 12 > amplified.vrm
 ```
 
@@ -198,3 +198,7 @@ vibrareveal offline --archive capture.vri --low 3 --high 12 > amplified.vrm
 库的 `FrameReader.readNext()` 直接返回后端 `InputFrame`，使用采集时间而非到达时间。
 `info` 保存源尺寸/FPS/时间来源标志，`statistics` 保存接收帧数、有效字节数、序号缺口和发送队列丢弃数。
 FrameReader 是串行对象；实时数据读取应持续提交给 `RealtimeMagnifier`，避免处理阻塞网络读取。
+
+Bulk 接收通过异步请求环形缓冲持续读取，没有逐帧确认。图像通道保持全尺寸且遇缺帧报错；
+Metal 实时算法仍有独立负载控制，不能将传输无丢帧等同于算法全帧处理。
+需要 TCP 兼容模式时使用 `--connect ADDRESS` / `vr-receive --host ADDRESS`，板端显式 `--transport tcp`。

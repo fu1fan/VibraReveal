@@ -10,7 +10,7 @@ UDC=$(cat "$G/UDC")
 child=
 cleanup() {
     trap - EXIT INT TERM HUP
-    printf '\n' > "$G/UDC" || true
+    printf '\n' > "$G/UDC" 2>/dev/null || true
     if [ -n "$child" ]; then kill "$child" 2>/dev/null || true; wait "$child" 2>/dev/null || true; fi
     rm -f "$G/configs/b.1/f-ffs.vri"
     umount "$M" 2>/dev/null || true
@@ -20,6 +20,12 @@ cleanup() {
 trap cleanup EXIT
 trap 'exit 143' TERM HUP
 trap 'exit 130' INT
+# Recover only our own stale function after an unclean process exit.
+if [ -L "$G/configs/b.1/f-ffs.vri" ]; then
+    printf '\n' > "$G/UDC" 2>/dev/null || true
+    rm -f "$G/configs/b.1/f-ffs.vri"
+    umount "$M" 2>/dev/null || true
+fi
 mkdir -p "$G/functions/ffs.vri" "$M"
 mount -t functionfs vri "$M"
 # Configure the actual sensor before opening capture; FPS is then read by vr-stream.

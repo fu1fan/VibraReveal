@@ -55,12 +55,12 @@ final class TransportTests: XCTestCase {
     }
     func testOfflineRejectsGapsRealtimeReportsThem() throws {
         let data=Data(repeating: 5,count: 8)
-        for flags: UInt64 in [0,1] {
+        for flags: UInt64 in [0,1,4,5] {
             let bytes=header(kind: 1,flags: flags)+header(kind: 2,sequence: 1,time: 1,data: data,flags: flags)+data
                 + header(kind: 2,sequence: 3,time: 3,data: data,flags: flags)+data+header(kind: 3,sequence: 2,time: 16,flags: flags)
             try archive(bytes) { reader in
                 XCTAssertNotNil(try reader.readNext())
-                if flags == 0 { XCTAssertThrowsError(try reader.readNext()) }
+                if flags != 1 { XCTAssertThrowsError(try reader.readNext()) }
                 else {
                     XCTAssertNotNil(try reader.readNext()); XCTAssertNil(try reader.readNext())
                     XCTAssertEqual(reader.statistics.sequenceGaps,1)
@@ -68,4 +68,21 @@ final class TransportTests: XCTestCase {
             }
         }
     }
+    func testPipelinedRealtimeRejectsResizeAndEndDrops() throws {
+        let pixels=Data(repeating: 5,count: 8)
+        let hello=header(kind: 1,flags: 5)
+        var resized=header(kind: 2,sequence: 0,time: 1,data: pixels,flags: 5)
+        resized[16]=2
+        try archive(hello+resized+pixels) { reader in
+            XCTAssertTrue(reader.info.pipelined)
+            XCTAssertThrowsError(try reader.readNext())
+        }
+        var end=header(kind: 3,sequence: 1,time: 8,flags: 5)
+        end[56]=1
+        try archive(hello+header(kind: 2,sequence: 0,time: 1,data: pixels,flags: 5)+pixels+end) { reader in
+            XCTAssertNotNil(try reader.readNext())
+            XCTAssertThrowsError(try reader.readNext())
+        }
+    }
+
 }

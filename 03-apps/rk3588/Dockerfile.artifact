@@ -3,4 +3,5 @@ FROM scratch
 COPY vr-stream /vr-stream
 COPY vr-bulk-source /vr-bulk-source
 COPY build-info.json /build-info.json
+COPY scripts /scripts
 CMD ["/vr-stream", "--help"]

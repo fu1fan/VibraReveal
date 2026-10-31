@@ -160,8 +160,8 @@ private final class USBConnection {
 }
 
 /// Serial reader. CRC, lengths and end totals are checked before success.
-/// Real-time ACKs precede downstream processing; the magnifier supplies its own
-/// bounded queue. Offline reads apply natural TCP backpressure, without drops.
+/// Bulk uses bounded asynchronous USB queues without per-frame ACKs. The legacy
+/// TCP realtime mode acknowledges frames. Downstream processing has its own queue.
 public final class FrameReader {
     public let info: FrameHeader
     public private(set) var statistics = TransportStatistics()
@@ -236,7 +236,7 @@ public final class FrameReader {
             return nil
         }
         if (!info.realtime || info.pipelined) && (h.width != info.width || h.height != info.height || h.stride != info.stride || h.dropped != 0) {
-            throw TransportError.invalid("Offline dimensions/drop counter changed")
+            throw TransportError.invalid("Lossless dimensions/drop counter changed")
         }
         if let p = previous {
             guard h.sequence > p.sequence, h.timestampNS > p.timestampNS else {
