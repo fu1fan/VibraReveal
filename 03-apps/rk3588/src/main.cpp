@@ -292,9 +292,12 @@ static void serve(Options o) {
             if(!frame) break;
             auto begin=Clock::now();
             Frame output=scale==1 ? std::move(*frame) : reduced(*frame,scale);
+            auto reducedAt=Clock::now();
             auto h=header(o,output,2,dropped);
+            auto checksumAt=Clock::now();
             transfer(client.value,h.data(),h.size(),true,o.timeout);
             transfer(client.value,output.data.data(),output.data.size(),true,o.timeout);
+            auto writtenAt=Clock::now();
             if(o.realtime) {
                 // Receiver acknowledges bytes before downstream processing. This
                 // bounds queued TCP data and measures USB/receiver throughput.
@@ -313,6 +316,10 @@ static void serve(Options o) {
                 if((overruns>=std::max(3u,uint32_t(std::ceil(fps/10))) || queuePressure) &&
                    (output.width>32 || output.height>32)) {
                     std::cerr<<"adaptation_service_ms="<<ema*1000<<"\n";
+                    std::cerr<<"last_frame_ms reduce="<<std::chrono::duration<double,std::milli>(reducedAt-begin).count()
+                        <<" crc="<<std::chrono::duration<double,std::milli>(checksumAt-reducedAt).count()
+                        <<" send="<<std::chrono::duration<double,std::milli>(writtenAt-checksumAt).count()
+                        <<" ack="<<std::chrono::duration<double,std::milli>(Clock::now()-writtenAt).count()<<"\n";
                     scale*=2; overruns=0; ema=0;
                     adaptedAt=sent; dropsAtAdaptation=dropped;
                     std::cerr<<"reducing_resolution scale="<<scale<<" source_fps="<<fps<<"\n";
