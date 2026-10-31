@@ -1,0 +1,142 @@
+{
+  "date": "2026-10-31",
+  "timezone": "Asia/Shanghai",
+  "direction": "RK3588 -> macOS",
+  "path": "FunctionFS Linux native AIO -> USB SuperSpeed Bulk IN -> libusb 1.0.30 (IOKit)",
+  "device_request_bytes": 262144,
+  "device_queue_depth": 32,
+  "descriptor_max_packet_size": 1024,
+  "descriptor_bMaxBurst": 15,
+  "vendor_product": "2207:0012",
+  "interface": 3,
+  "endpoint": "0x84",
+  "warmup_seconds": 3,
+  "payload": "Preallocated repeating byte pattern (i*13+7) mod 256; first host buffer verified during warmup. No CRC or per-buffer verification in measured window.",
+  "cnb_build": "cnb-pt3-1k68lqqhb",
+  "artifact": "docker.cnb.cool/fu1fan/vibrareveal/image-transport@sha256:6edb7834fb731ce64e2e822b864caeeb9b994aded66e28cdb0bc2c1c92ec1ff4",
+  "build_info": {
+    "application_commit": "406c1e05d428c8619466ce6a17889738112f72fd",
+    "dirty": false,
+    "sdk": {
+      "image": "docker.cnb.cool/fu1fan/rk3588-ov9281/app-sdk@sha256:d2a21493198e25881cb03144bf4dd45b76e773e6cbbad1b62d6debbd4aa73cef",
+      "system_commit": "ac7c05413b3882f578cb94be4b2edfe3958d84c6"
+    },
+    "sha256": "5c9b55daa3b31425b0439aba959d3a5223c8b9de2afe4c5ed14108b4fad38f08",
+    "bulk_benchmark_sha256": "467f68991c2a011554fed1d79ba6c8bc0ce8407102ddaa78f1976cc51422ca30"
+  },
+  "results": [
+    {
+      "name": "smoke",
+      "command": "/tmp/vr-bulk-receive 262144 8 5",
+      "result": {
+        "requestBytes": 262144,
+        "queueDepth": 8,
+        "seconds": 5.00063,
+        "bytes": 2093219840,
+        "MBps": 418.591,
+        "Gbps": 3.34873,
+        "completions": 7985,
+        "shortReads": 0,
+        "errors": 0,
+        "samplePatternVerified": true,
+        "usbSpeed": 4
+      }
+    },
+    {
+      "name": "256KiB-q1",
+      "command": "/tmp/vr-bulk-receive 262144 1 15",
+      "result": {
+        "requestBytes": 262144,
+        "queueDepth": 1,
+        "seconds": 15.0004,
+        "bytes": 5090574336,
+        "MBps": 339.362,
+        "Gbps": 2.71489,
+        "completions": 19419,
+        "shortReads": 0,
+        "errors": 0,
+        "samplePatternVerified": true,
+        "usbSpeed": 4
+      }
+    },
+    {
+      "name": "64KiB-q16",
+      "command": "/tmp/vr-bulk-receive 65536 16 20",
+      "result": {
+        "requestBytes": 65536,
+        "queueDepth": 16,
+        "seconds": 20.0001,
+        "bytes": 7864385536,
+        "MBps": 393.217,
+        "Gbps": 3.14574,
+        "completions": 120001,
+        "shortReads": 0,
+        "errors": 0,
+        "samplePatternVerified": true,
+        "usbSpeed": 4
+      }
+    },
+    {
+      "name": "256KiB-q16",
+      "command": "/tmp/vr-bulk-receive 262144 16 20",
+      "result": {
+        "requestBytes": 262144,
+        "queueDepth": 16,
+        "seconds": 20.0005,
+        "bytes": 8388870144,
+        "MBps": 419.432,
+        "Gbps": 3.35546,
+        "completions": 32001,
+        "shortReads": 0,
+        "errors": 0,
+        "samplePatternVerified": true,
+        "usbSpeed": 4
+      }
+    },
+    {
+      "name": "1MiB-q16",
+      "command": "/tmp/vr-bulk-receive 1048576 16 20",
+      "result": {
+        "requestBytes": 1048576,
+        "queueDepth": 16,
+        "seconds": 20.0015,
+        "bytes": 8286896128,
+        "MBps": 414.315,
+        "Gbps": 3.31452,
+        "completions": 7903,
+        "shortReads": 0,
+        "errors": 0,
+        "samplePatternVerified": true,
+        "usbSpeed": 4
+      }
+    },
+    {
+      "name": "256KiB-q16-60s",
+      "command": "/tmp/vr-bulk-receive 262144 16 60",
+      "result": {
+        "requestBytes": 262144,
+        "queueDepth": 16,
+        "seconds": 60.0001,
+        "bytes": 25162153984,
+        "MBps": 419.368,
+        "Gbps": 3.35495,
+        "completions": 95986,
+        "shortReads": 0,
+        "errors": 0,
+        "samplePatternVerified": true,
+        "usbSpeed": 4
+      }
+    }
+  ],
+  "restored": {
+    "usb_functions": [
+      "ffs.adb",
+      "ncm.0"
+    ],
+    "ncm_interface": "en7",
+    "mac_address": "192.168.77.2",
+    "board_address": "192.168.77.1",
+    "management": "Wi-Fi 192.168.8.204",
+    "persistent_config_changed": false
+  }
+}
