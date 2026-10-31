@@ -29,6 +29,8 @@ cnb build start-build --repo fu1fan/VibraReveal --branch codex/image-transport \
 系统子模块需启用 `CONFIG_USB_CONFIGFS_NCM=y`，并包含 NCM gadget、USB 专用 DHCP 配置。
 板端 `vrusb0=192.168.77.1/24`；Mac 自动获取 `192.168.77.2`，没有 USB 默认路由或 DNS。
 若本地网络已使用 192.168.77.0/24，先为 USB 选择不冲突的网段并同步两端配置。
+Mac 首次注册新网卡时需解锁屏幕。测试前运行 `python3 09-tools/check-usb-link.py`，
+确认路由实际经过 Apple NCM 网卡，不能只凭 ping 结果判断。
 USB 热插拔应重新获得 DHCP，Wi-Fi 管理地址不变；链路中断会终止当前图像会话。
 板端 `cat /sys/class/udc/*/current_speed` 应为 `super-speed`。
 
@@ -91,3 +93,5 @@ python3 06-tests/image_transport.py /tmp/vr-stream-host /path/vr-receive /path/v
 
 `--source synthetic --frames N --fps F` 用于受控负载：实时按 F 生产，离线连续生产。
 统计的 payloadMBps 是应用有效字节数/秒，不包含协议头，也不是 USB PHY 速率。
+
+硬件验收与构建身份见 [2026-10-31 记录](../../08-docs/validation/image-transport-2026-10-31.md)。

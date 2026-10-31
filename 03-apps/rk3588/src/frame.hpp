@@ -19,6 +19,7 @@ public:
     Camera(const Camera&) = delete;
     Camera& operator=(const Camera&) = delete;
     Frame read();
+    Frame format() const;
 private:
     struct Impl;
     std::unique_ptr<Impl> impl;

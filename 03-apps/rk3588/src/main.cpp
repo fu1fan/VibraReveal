@@ -190,7 +190,11 @@ static void serve(Options o) {
     int buffer=o.realtime?256*1024:4*1024*1024;
     setsockopt(client.value,SOL_SOCKET,SO_SNDBUF,&buffer,sizeof(buffer));
     std::unique_ptr<Camera> camera;
-    if(o.source=="camera") { cameraRate(o); camera=std::make_unique<Camera>(o.device,o.width,o.height,o.bits); }
+    if(o.source=="camera") {
+        camera=std::make_unique<Camera>(o.device,o.width,o.height,o.bits);
+        cameraRate(o);
+        o.stride=camera->format().stride;
+    }
     double fps=double(o.fpsNum)/o.fpsDen;
     if(!std::isfinite(fps) || fps<=0 || fps>10000) throw std::runtime_error("Invalid sensor rate");
     if(o.realtime && o.timeout <= 2/fps) throw std::runtime_error("Timeout must exceed two source frame periods");

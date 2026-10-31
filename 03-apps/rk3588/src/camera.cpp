@@ -75,6 +75,11 @@ Camera::Camera(const std::string& device, uint32_t width, uint32_t height, uint3
     c.streaming = true;
 }
 Camera::~Camera() = default;
+Frame Camera::format() const {
+    Frame f;
+    f.width=impl->width; f.height=impl->height; f.stride=impl->stride; f.bits=impl->bits;
+    return f;
+}
 Frame Camera::read() {
     auto& c = *impl;
     pollfd p{c.fd, POLLIN, 0};
@@ -114,4 +119,5 @@ struct Camera::Impl {};
 Camera::Camera(const std::string&, uint32_t, uint32_t, uint32_t) { throw std::runtime_error("V4L2 requires Linux"); }
 Camera::~Camera() = default;
 Frame Camera::read() { throw std::runtime_error("V4L2 requires Linux"); }
+Frame Camera::format() const { throw std::runtime_error("V4L2 requires Linux"); }
 #endif
