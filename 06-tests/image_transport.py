@@ -25,7 +25,7 @@ def port():
 
 def start(*args):
     p = port()
-    process = subprocess.Popen([SENDER, '--port', str(p), *map(str, args)],
+    process = subprocess.Popen([SENDER, '--transport', 'tcp', '--port', str(p), *map(str, args)],
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     # Read the readiness line without opening the single-client listening socket.
     line = process.stderr.readline()

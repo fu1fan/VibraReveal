@@ -12,10 +12,13 @@ let package = Package(
     ],
     targets: [
         .target(name: "VibraRevealBackend", resources: [.copy("Resources/Motion.metal")]),
-        .target(name: "VibraRevealTransport", dependencies: ["VibraRevealBackend"]),
+        .systemLibrary(name: "CLibUSB", pkgConfig: "libusb-1.0", providers: [.brew(["libusb"])]),
+        .target(name: "CVRBulk", dependencies: ["CLibUSB"], publicHeadersPath: "include"),
+        .target(name: "VibraRevealTransport", dependencies: ["VibraRevealBackend", "CVRBulk"]),
         .executableTarget(name: "vr-receive", dependencies: ["VibraRevealTransport"]),
         .executableTarget(name: "vibrareveal", dependencies: ["VibraRevealBackend", "VibraRevealTransport"]),
         .testTarget(name: "VibraRevealTransportTests", dependencies: ["VibraRevealTransport"]),
         .testTarget(name: "VibraRevealBackendTests", dependencies: ["VibraRevealBackend"])
-    ]
+    ],
+    cxxLanguageStandard: .cxx17
 )

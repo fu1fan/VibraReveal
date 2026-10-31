@@ -57,7 +57,7 @@ Camera::Camera(const std::string& device, uint32_t width, uint32_t height, uint3
     if (c.stride < width * (bits == 8 ? 1u : 2u) || uint64_t(c.stride)*height > 256*1024*1024)
         throw std::runtime_error("Packed/oversized capture unsupported: disable RKCIF compact mode before Y10 capture");
     v4l2_requestbuffers req{};
-    req.count = 4; req.type = c.type; req.memory = V4L2_MEMORY_MMAP;
+    req.count = 16; req.type = c.type; req.memory = V4L2_MEMORY_MMAP;
     checkedIoctl(c.fd, VIDIOC_REQBUFS, &req);
     if (req.count < 2 || req.count > 32) throw std::runtime_error("Invalid capture buffer count");
     for (uint32_t i = 0; i < req.count; ++i) {

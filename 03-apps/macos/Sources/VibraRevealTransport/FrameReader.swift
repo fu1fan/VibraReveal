@@ -1,6 +1,7 @@
 import Foundation
 import Darwin
 import zlib
+import CVRBulk
 import VibraRevealBackend
 
 public enum TransportError: Error, CustomStringConvertible {
@@ -18,6 +19,7 @@ public struct FrameHeader {
     public let fpsNumerator: UInt64, fpsDenominator: UInt64, checksum: UInt64
     public let sourceWidth: Int, sourceHeight: Int
     public var realtime: Bool { flags & 1 != 0 }
+    public var pipelined: Bool { flags & 4 != 0 }
     public var syntheticTimestamps: Bool { flags & 2 != 0 }
     public var fps: Double { Double(fpsNumerator) / Double(fpsDenominator) }
 
@@ -36,7 +38,7 @@ public struct FrameHeader {
         sequence=value(32,8); timestampNS=value(40,8)
         fpsNumerator=value(48,4); fpsDenominator=value(52,4); dropped=value(56,8); checksum=value(64,4)
         sourceWidth=Int(value(68,4)); sourceHeight=Int(value(72,4))
-        guard (1...3).contains(kind), flags & ~3 == 0, fpsNumerator > 0, fpsDenominator > 0,
+        guard (1...3).contains(kind), flags & ~7 == 0, fpsNumerator > 0, fpsDenominator > 0,
               fps > 0, fps <= 10000, (1...65535).contains(width), (1...65535).contains(height),
               (1...16).contains(bits), (width...65535).contains(sourceWidth), (height...65535).contains(sourceHeight),
               stride >= width * (bits == 8 ? 1 : 2), maxFrameBytes > 0,
@@ -48,6 +50,10 @@ public struct FrameHeader {
 }
 
 public struct TransportStatistics: Codable {
+    public var firstSequence: UInt64?
+    public var lastSequence: UInt64?
+    public var firstTimestampNS: UInt64?
+    public var lastTimestampNS: UInt64?
     public var frames: UInt64 = 0
     public var payloadBytes: UInt64 = 0
     public var sequenceGaps: UInt64 = 0
@@ -132,6 +138,27 @@ private final class Connection {
     }
 }
 
+private final class USBConnection {
+    private let handle: OpaquePointer
+    init(timeout: Double) throws {
+        guard timeout.isFinite, timeout >= 1, timeout <= 3600 else { throw TransportError.invalid("Invalid USB timeout") }
+        var error = [CChar](repeating: 0, count: 512)
+        guard let h = vr_usb_open(timeout, &error, error.count) else { throw TransportError.io(String(cString: error)) }
+        handle=h
+    }
+    deinit { vr_usb_close(handle) }
+    func read(_ count: Int) throws -> Data {
+        var data=Data(count: count)
+        let result=data.withUnsafeMutableBytes { vr_usb_read(handle, $0.baseAddress, count) }
+        guard result == 0 else { throw TransportError.io(String(cString: vr_usb_error(handle))) }
+        return data
+    }
+    func write(_ data: Data) throws {
+        let result=data.withUnsafeBytes { vr_usb_send(handle, $0.baseAddress, data.count) }
+        guard result == 0 else { throw TransportError.io(String(cString: vr_usb_error(handle))) }
+    }
+}
+
 /// Serial reader. CRC, lengths and end totals are checked before success.
 /// Real-time ACKs precede downstream processing; the magnifier supplies its own
 /// bounded queue. Offline reads apply natural TCP backpressure, without drops.
@@ -150,6 +177,12 @@ public final class FrameReader {
     private var packetSink: ((Data) throws -> Void)?
     private var finishSink: (() throws -> Void)?
 
+    public convenience init(usbTimeout: Double = 30, maxFrameBytes: Int = 256 * 1024 * 1024) throws {
+        let connection=try USBConnection(timeout: usbTimeout)
+        try self.init(read: { try connection.read($0) }, ack: { try connection.write($0) },
+                      archive: false, maxFrameBytes: maxFrameBytes)
+        guard info.pipelined else { throw TransportError.invalid("USB sender did not negotiate pipelined transport") }
+    }
     public convenience init(host: String, port: UInt16 = 5910, timeout: Double = 15,
                             maxFrameBytes: Int = 256 * 1024 * 1024) throws {
         let connection = try Connection(host: host, port: port, timeout: timeout)
@@ -193,7 +226,7 @@ public final class FrameReader {
             guard h.sequence == statistics.frames, h.timestampNS == statistics.payloadBytes else {
                 throw TransportError.invalid("End frame/byte totals mismatch")
             }
-            if !info.realtime && h.dropped != 0 { throw TransportError.invalid("Offline sender dropped frames") }
+            if (!info.realtime || info.pipelined) && h.dropped != 0 { throw TransportError.invalid("Lossless sender dropped frames") }
             if try archive && !readBytes(1).isEmpty { throw TransportError.invalid("Trailing bytes after archive end") }
             try packetSink?(raw)
             try finishSink?()
@@ -202,7 +235,7 @@ public final class FrameReader {
             statistics.seconds=ProcessInfo.processInfo.systemUptime-started
             return nil
         }
-        if !info.realtime && (h.width != info.width || h.height != info.height || h.stride != info.stride || h.dropped != 0) {
+        if (!info.realtime || info.pipelined) && (h.width != info.width || h.height != info.height || h.stride != info.stride || h.dropped != 0) {
             throw TransportError.invalid("Offline dimensions/drop counter changed")
         }
         if let p = previous {
@@ -210,7 +243,7 @@ public final class FrameReader {
                 throw TransportError.invalid("Non-increasing capture sequence/time")
             }
             let gap=h.sequence-p.sequence-1
-            if !info.realtime && gap != 0 { throw TransportError.invalid("Offline sequence gap") }
+            if (!info.realtime || info.pipelined) && gap != 0 { throw TransportError.invalid("Lossless sequence gap") }
             statistics.sequenceGaps += gap
         }
         let data = try readBytes(h.payloadBytes)
@@ -218,10 +251,12 @@ public final class FrameReader {
         let checksum = data.withUnsafeBytes { crc32(0, $0.bindMemory(to: Bytef.self).baseAddress, uInt(data.count)) }
         guard UInt64(checksum) == h.checksum else { throw TransportError.invalid("Frame CRC32 mismatch") }
         try packetSink?(raw); try packetSink?(data)
-        if info.realtime {
+        if info.realtime && !info.pipelined {
             var seq = h.sequence.littleEndian
             try withUnsafeBytes(of: &seq) { try acknowledge(Data($0)) }
         }
+        if statistics.firstSequence == nil { statistics.firstSequence=h.sequence; statistics.firstTimestampNS=h.timestampNS }
+        statistics.lastSequence=h.sequence; statistics.lastTimestampNS=h.timestampNS
         statistics.frames += 1; statistics.payloadBytes += UInt64(data.count)
         statistics.senderQueueDropped=h.dropped; previous=h
         return InputFrame(data: data, width: h.width, height: h.height, bytesPerRow: h.stride,

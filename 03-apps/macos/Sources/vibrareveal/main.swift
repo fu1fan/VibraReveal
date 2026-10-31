@@ -24,6 +24,7 @@ Options: --bits 8|10|12|16 (default 8; >8 uses right-aligned uint16 LE)
          --filter auto|causal|zero-phase (auto: realtime causal, offline zero-phase)
          --spectrum report.json --probe x,y --spectrum-level 0 (offline only)
          --scratch-dir PATH (offline scratch storage; default system temporary directory)
+         --usb true (native USB Bulk image stream)
          --connect IPv4 --port 5910 (USB NCM stream; dimensions/rate/time from protocol)
          --archive capture.vri (verified transport archive; dimensions/rate/time from protocol)
 """
@@ -54,7 +55,7 @@ func run() throws {
     guard ["stream", "offline", "benchmark"].contains(mode) else { throw BackendError.invalid(usage) }
     var options: [String: String] = [:]
     var i = 1
-    let allowed: Set<String> = ["width","height","fps","low","high","alpha","levels","max-pixels","min-pixels","frames","bits","stride","roi","adaptive","mode","filter","spectrum","probe","spectrum-level","scratch-dir","connect","port","archive"]
+    let allowed: Set<String> = ["width","height","fps","low","high","alpha","levels","max-pixels","min-pixels","frames","bits","stride","roi","adaptive","mode","filter","spectrum","probe","spectrum-level","scratch-dir","usb","connect","port","archive"]
     while i < arguments.count {
         let key = String(arguments[i].dropFirst(2))
         guard arguments[i].hasPrefix("--"), allowed.contains(key), i+1 < arguments.count, options[key] == nil else {
@@ -72,16 +73,20 @@ func run() throws {
         guard let value = Double(text), value.isFinite else { throw BackendError.invalid("Invalid number: --\(key)") }
         return value
     }
-    guard options["connect"] == nil || options["archive"] == nil else {
+    guard ["usb", "connect", "archive"].filter({ options[$0] != nil }).count <= 1 else {
         throw BackendError.invalid("Choose --connect or --archive")
     }
-    let networkInput = options["connect"] != nil || options["archive"] != nil
+    let networkInput = options["usb"] != nil || options["connect"] != nil || options["archive"] != nil
     guard options["port"] == nil || options["connect"] != nil else { throw BackendError.invalid("--port requires --connect") }
     if networkInput && (mode == "benchmark" || ["width", "height", "bits", "fps", "stride"].contains(where: { options[$0] != nil })) {
         throw BackendError.invalid("Transport input supplies dimensions, format and FPS; do not override them")
     }
     var transport: FrameReader?
-    if let host = options["connect"] {
+    if let usb=options["usb"] {
+        guard usb == "true" else { throw BackendError.invalid("Use --usb true") }
+        transport=try FrameReader(usbTimeout: 30)
+        guard transport!.info.realtime == (mode == "stream") else { throw BackendError.invalid("Sender/processor mode mismatch") }
+    } else if let host = options["connect"] {
         let port = try integer("port", 5910)
         guard (1...65535).contains(port) else { throw BackendError.invalid("Invalid port") }
         transport = try FrameReader(host: host, port: UInt16(port))

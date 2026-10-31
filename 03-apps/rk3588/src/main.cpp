@@ -1,5 +1,7 @@
 #include "frame.hpp"
 #include "crc32.hpp"
+#include "bulk_transport.hpp"
+#include <vector>
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
 #include <sys/socket.h>
@@ -64,7 +66,8 @@ static void transfer(int fd, uint8_t* p, size_t size, bool sending, double timeo
 struct Options {
     bool realtime=true, adaptive=true;
     std::string source="synthetic", device="/dev/video11", sensor="/dev/v4l-subdev2", input, index;
-    std::string bind="127.0.0.1";
+    std::string bind="127.0.0.1", transport="bulk", ffs="/dev/ffs-vri";
+    uint32_t ringFrames=32, usbQueue=32;
     uint32_t port=5910, width=1280, height=800, bits=10, stride=0;
     uint32_t fpsNum=30000, fpsDen=1000;
     uint64_t frames=300;
@@ -77,6 +80,7 @@ static Options parse(int argc,char** argv) {
         "  --bind ADDRESS --port 5910 --frames 300 --width 1280 --height 800 --bits 10\n"
         "  --fps 30 --stride BYTES --input recording.raw [--index timestamps.idx]\n"
         "  --device /dev/video11 --sensor /dev/v4l-subdev2 --adaptive true|false --timeout 15\n"
+        "  --transport bulk|tcp --ffs /dev/ffs-vri --ring-frames 32 --usb-queue 32\n"
         "Single client/session. Camera rate is read from sensor (never guessed).\n"
         "File index: one LE uint64 sequence + uint64 monotonic-ns per frame.\n"
         "frames=0: camera unlimited, file until EOF; synthetic requires finite count.\n";
@@ -95,9 +99,14 @@ static Options parse(int argc,char** argv) {
         auto n=std::stoull(s); if(n>max) throw std::runtime_error("Out of range "+k); return uint64_t(n);
     };
     std::string mode="realtime",adaptive="true",fps="30",timeout="15";
+    bool explicitAdaptive=args.count("--adaptive");
     stringValue("--mode",mode); stringValue("--adaptive",adaptive);
     stringValue("--source",o.source); stringValue("--device",o.device); stringValue("--sensor",o.sensor);
     stringValue("--input",o.input); stringValue("--index",o.index); stringValue("--bind",o.bind);
+    stringValue("--transport",o.transport); stringValue("--ffs",o.ffs);
+    o.ringFrames=integer("--ring-frames",32,128); o.usbQueue=integer("--usb-queue",32,64);
+    if(o.transport!="bulk" && o.transport!="tcp") throw std::runtime_error("Invalid transport");
+    if(o.transport=="bulk" && !explicitAdaptive) adaptive="false";
     stringValue("--fps",fps); stringValue("--timeout",timeout);
     auto number=[](const std::string& s) { size_t n; double v=std::stod(s,&n);
         if(n!=s.size() || !std::isfinite(v)) throw std::runtime_error("Invalid number");
@@ -112,6 +121,8 @@ static Options parse(int argc,char** argv) {
     if(mode!="realtime" && mode!="offline") throw std::runtime_error("Invalid mode");
     if(adaptive!="true" && adaptive!="false") throw std::runtime_error("Invalid adaptive flag");
     o.realtime=mode=="realtime"; o.adaptive=adaptive=="true";
+    if(!o.ringFrames || !o.usbQueue || (o.transport=="bulk" && o.adaptive))
+        throw std::runtime_error("Bulk requires fixed resolution and nonzero ring/USB queues");
     if(o.source!="camera" && o.source!="file" && o.source!="synthetic") throw std::runtime_error("Invalid source");
     if(o.source=="camera" && !o.realtime) throw std::runtime_error("Offline transfers recorded files; camera requires realtime");
     if(o.source=="synthetic" && !o.frames) throw std::runtime_error("Synthetic source requires finite frames");
@@ -139,7 +150,7 @@ static void cameraRate(Options& o) {
 static std::array<uint8_t,headerSize> header(const Options& o,const Frame& f,uint16_t kind,uint64_t dropped) {
     std::array<uint8_t,headerSize> h{};
     memcpy(h.data(),"VRI1",4); put(h.data()+4,1,2); put(h.data()+6,kind,2);
-    put(h.data()+8,(o.realtime?1:0) | ((o.source=="camera" || !o.index.empty())?0:2),4);
+    put(h.data()+8,(o.realtime?1:0) | ((o.source=="camera" || !o.index.empty())?0:2) | (o.transport=="bulk"?4:0),4);
     put(h.data()+12,kind==2?f.data.size():0,4);
     put(h.data()+16,f.width,4); put(h.data()+20,f.height,4); put(h.data()+24,f.stride,4); put(h.data()+28,f.bits,4);
     put(h.data()+32,f.sequence,8); put(h.data()+40,f.timestamp,8);
@@ -230,34 +241,25 @@ struct Queue {
     uint64_t dropped=0;
 };
 
-static void serve(Options o) {
-    FD listener(socket(AF_INET,SOCK_STREAM,0));
-    int yes=1; setsockopt(listener.value,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(yes));
-    sockaddr_in address{}; address.sin_family=AF_INET; address.sin_port=htons(o.port);
-    if(inet_pton(AF_INET,o.bind.c_str(),&address.sin_addr)!=1) throw std::runtime_error("Bind must be numeric IPv4");
-    if(bind(listener.value,reinterpret_cast<sockaddr*>(&address),sizeof(address)) || listen(listener.value,1))
-        throw std::runtime_error(std::string("Listen: ")+strerror(errno));
-    std::cerr<<"listening="<<o.bind<<":"<<o.port<<" mode="<<(o.realtime?"realtime":"offline")<<"\n";
-    pollfd ready{listener.value,POLLIN,0};
-    if(poll(&ready,1,int(o.timeout*1000))<=0) throw std::runtime_error("Timed out waiting for receiver");
-    FD client(accept(listener.value,nullptr,nullptr));
-    setsockopt(client.value,IPPROTO_TCP,TCP_NODELAY,&yes,sizeof(yes));
-    int buffer=o.realtime?256*1024:4*1024*1024;
-    setsockopt(client.value,SOL_SOCKET,SO_SNDBUF,&buffer,sizeof(buffer));
+struct Source {
+    Options& o;
     std::unique_ptr<Camera> camera;
+    std::ifstream input,index;
+    double fps=0;
+    uint64_t produced=0;
+    explicit Source(Options& options):o(options) {
     if(o.source=="camera") {
         camera=std::make_unique<Camera>(o.device,o.width,o.height,o.bits);
         cameraRate(o);
         o.stride=camera->format().stride;
     }
-    double fps=double(o.fpsNum)/o.fpsDen;
+    fps=double(o.fpsNum)/o.fpsDen;
     if(!std::isfinite(fps) || fps<=0 || fps>10000) throw std::runtime_error("Invalid sensor rate");
     if(o.realtime && o.timeout <= 2/fps) throw std::runtime_error("Timeout must exceed two source frame periods");
-    std::ifstream input,index;
     if(o.source=="file") { input.open(o.input,std::ios::binary); if(!input) throw std::runtime_error("Cannot open input"); }
     if(!o.index.empty()) { index.open(o.index,std::ios::binary); if(!index) throw std::runtime_error("Cannot open index"); }
-    uint64_t produced=0;
-    auto next=[&]() -> std::optional<Frame> {
+    }
+    std::optional<Frame> next() {
         if(o.frames && produced>=o.frames) return {};
         if(camera) { ++produced; return camera->read(); }
         Frame f;
@@ -284,7 +286,26 @@ static void serve(Options o) {
                 put(f.data.data()+size_t(y)*o.stride+x*bpp,(x*13+y*7+produced*3)&mask,bpp);
         }
         ++produced; return f;
-    };
+    }
+};
+static void serveTCP(Options o) {
+    FD listener(socket(AF_INET,SOCK_STREAM,0));
+    int yes=1; setsockopt(listener.value,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(yes));
+    sockaddr_in address{}; address.sin_family=AF_INET; address.sin_port=htons(o.port);
+    if(inet_pton(AF_INET,o.bind.c_str(),&address.sin_addr)!=1) throw std::runtime_error("Bind must be numeric IPv4");
+    if(bind(listener.value,reinterpret_cast<sockaddr*>(&address),sizeof(address)) || listen(listener.value,1))
+        throw std::runtime_error(std::string("Listen: ")+strerror(errno));
+    std::cerr<<"listening="<<o.bind<<":"<<o.port<<" mode="<<(o.realtime?"realtime":"offline")<<"\n";
+    pollfd ready{listener.value,POLLIN,0};
+    if(poll(&ready,1,int(o.timeout*1000))<=0) throw std::runtime_error("Timed out waiting for receiver");
+    FD client(accept(listener.value,nullptr,nullptr));
+    setsockopt(client.value,IPPROTO_TCP,TCP_NODELAY,&yes,sizeof(yes));
+    int buffer=o.realtime?256*1024:4*1024*1024;
+    setsockopt(client.value,SOL_SOCKET,SO_SNDBUF,&buffer,sizeof(buffer));
+    Source source(o);
+    auto next=[&] { return source.next(); };
+    auto& camera=source.camera;
+    double fps=source.fps;
     Frame info; info.width=o.width; info.height=o.height; info.stride=o.stride; info.bits=o.bits;
     auto hello=header(o,info,1,0);
     transfer(client.value,hello.data(),hello.size(),true,o.timeout);
@@ -369,8 +390,76 @@ static void serve(Options o) {
         <<",\"sourceFPS\":"<<fps<<",\"seconds\":"<<seconds<<",\"payloadMBps\":"<<bytes/seconds/1e6
         <<",\"scale\":"<<scale<<",\"overloaded\":"<<(o.realtime && ema>1/fps?"true":"false")<<"}\n";
 }
+
+// Real-time capture and USB transmission are independent. The ring is bounded;
+// an overrun is an explicit failed session, never an overwritten source frame.
+static void serveBulk(Options o) {
+    BulkTransport usb(o.ffs,o.usbQueue,o.timeout);
+    usb.waitStart();
+    Source source(o);
+    if(uint64_t(o.stride)*o.height*o.ringFrames>256ull*1024*1024)
+        throw std::runtime_error("Capture ring exceeds 256 MiB limit");
+    Frame info; info.width=o.width; info.height=o.height; info.stride=o.stride; info.bits=o.bits;
+    auto hello=header(o,info,1,0); usb.write(hello.data(),hello.size()); usb.flush();
+    std::mutex mutex; std::condition_variable changed;
+    std::vector<std::optional<Frame>> ring(o.ringFrames);
+    size_t readIndex=0,writeIndex=0,queued=0;
+    std::atomic<bool> stop{false}; bool done=false;
+    std::exception_ptr error;
+    size_t highWater=0;
+    std::thread producer;
+    if(o.realtime) producer=std::thread([&] {
+        try {
+            auto due=Clock::now(); std::optional<uint64_t> previous;
+            while(!stop) {
+                if(!source.camera) {
+                    std::unique_lock<std::mutex> lock(mutex);
+                    changed.wait_until(lock,due,[&] { return bool(stop); });
+                    due+=std::chrono::duration_cast<Clock::duration>(std::chrono::duration<double>(1/source.fps));
+                }
+                if(stop) break;
+                auto frame=source.next(); if(!frame) break;
+                if(previous && frame->sequence!=*previous+1)
+                    throw std::runtime_error("Capture sequence gap: refusing incomplete Bulk session");
+                previous=frame->sequence;
+                std::lock_guard<std::mutex> lock(mutex);
+                if(queued==o.ringFrames) throw std::runtime_error("Capture ring overrun: receiver cannot sustain source rate");
+                ring[writeIndex]=std::move(*frame); writeIndex=(writeIndex+1)%ring.size();
+                ++queued; highWater=std::max(highWater,queued); changed.notify_one();
+            }
+        } catch(...) { std::lock_guard<std::mutex> lock(mutex); error=std::current_exception(); }
+        std::lock_guard<std::mutex> lock(mutex); done=true; changed.notify_all();
+    });
+    auto join=[&] { stop=true; changed.notify_all(); if(producer.joinable()) producer.join(); };
+    uint64_t sent=0,bytes=0; auto started=Clock::now();
+    try {
+        while(true) {
+            std::optional<Frame> frame;
+            if(o.realtime) {
+                std::unique_lock<std::mutex> lock(mutex);
+                changed.wait(lock,[&] { return queued || done; });
+                if(error) std::rethrow_exception(error);
+                if(queued) { frame=std::move(ring[readIndex]); ring[readIndex].reset();
+                    readIndex=(readIndex+1)%ring.size(); --queued; }
+            } else frame=source.next();
+            if(!frame) break;
+            auto h=header(o,*frame,2,0);
+            usb.write(h.data(),h.size()); usb.write(frame->data.data(),frame->data.size());
+            if(o.realtime) usb.flush(); // terminate a partial USB request without delaying this frame
+            ++sent; bytes+=frame->data.size();
+        }
+        join();
+        info.sequence=sent; info.timestamp=bytes;
+        auto end=header(o,info,3,0); usb.write(end.data(),end.size()); usb.finish();
+    } catch(...) { join(); throw; }
+    double seconds=std::chrono::duration<double>(Clock::now()-started).count();
+    std::cerr<<"{\"transport\":\"bulk\",\"sent\":"<<sent<<",\"payloadBytes\":"<<bytes
+        <<",\"queueDropped\":0,\"ringHighWater\":"<<highWater<<",\"ringCapacity\":"<<o.ringFrames
+        <<",\"sourceFPS\":"<<source.fps<<",\"seconds\":"<<seconds<<",\"payloadMBps\":"<<bytes/seconds/1e6<<"}\n";
+}
+
 int main(int argc,char** argv) {
     signal(SIGPIPE,SIG_IGN);
-    try { serve(parse(argc,argv)); return 0; }
+    try { auto o=parse(argc,argv); if(o.transport=="bulk") serveBulk(o); else serveTCP(o); return 0; }
     catch(const std::exception& e) { std::cerr<<"error: "<<e.what()<<"\n"; return 1; }
 }
