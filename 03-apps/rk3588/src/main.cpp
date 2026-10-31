@@ -277,6 +277,7 @@ static void serve(Options o) {
     auto join=[&] { queue.stop=true; queue.changed.notify_all(); if(producer.joinable()) producer.join(); };
     uint64_t sent=0,bytes=0,dropped=0;
     uint32_t scale=1,overruns=0;
+    uint64_t adaptedAt=0, dropsAtAdaptation=0;
     double ema=0;
     auto started=Clock::now();
     try {
@@ -307,10 +308,13 @@ static void serve(Options o) {
                 // Short USB/scheduler bursts must not repeatedly halve resolution.
                 // Require a sustained missed frame budget, not merely low headroom.
                 overruns=ema>1/fps ? overruns+1:0;
-                if(overruns>=std::max(3u,uint32_t(std::ceil(fps/10))) &&
+                bool queuePressure=dropped-dropsAtAdaptation>=3 &&
+                    sent-adaptedAt>=uint64_t(std::ceil(fps/4));
+                if((overruns>=std::max(3u,uint32_t(std::ceil(fps/10))) || queuePressure) &&
                    (output.width>32 || output.height>32)) {
                     std::cerr<<"adaptation_service_ms="<<ema*1000<<"\n";
                     scale*=2; overruns=0; ema=0;
+                    adaptedAt=sent; dropsAtAdaptation=dropped;
                     std::cerr<<"reducing_resolution scale="<<scale<<" source_fps="<<fps<<"\n";
                 }
             }
