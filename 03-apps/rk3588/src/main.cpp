@@ -195,9 +195,26 @@ static Frame reduced(const Frame& f,uint32_t scale) {
         uint32_t x0=uint64_t(x)*f.width/r.width,x1=uint64_t(x+1)*f.width/r.width;
         uint32_t y0=uint64_t(y)*f.height/r.height,y1=uint64_t(y+1)*f.height/r.height;
         uint64_t sum=0;
-        for(uint32_t sy=y0;sy<y1;++sy) for(uint32_t sx=x0;sx<x1;++sx) {
-            size_t p=size_t(sy)*f.stride+sx*bpp;
-            sum+=f.data[p]+(bpp==2 ? uint32_t(f.data[p+1])<<8:0);
+        for(uint32_t sy=y0;sy<y1;++sy) {
+            uint32_t sx=x0;
+#if defined(__aarch64__)
+            uint32x4_t rowSum=vdupq_n_u32(0);
+            if(bpp==2) {
+                for(;sx+4<=x1;sx+=4)
+                    rowSum=vaddw_u16(rowSum,vld1_u16(reinterpret_cast<const uint16_t*>(
+                        f.data.data()+size_t(sy)*f.stride+2*sx)));
+            } else {
+                for(;sx+16<=x1;sx+=16)
+                    rowSum=vaddq_u32(rowSum,vpaddlq_u16(vpaddlq_u8(vld1q_u8(
+                        f.data.data()+size_t(sy)*f.stride+sx))));
+            }
+            // W<=65535, so one row fits u32 even for 16-bit samples.
+            sum+=vaddvq_u32(rowSum);
+#endif
+            for(;sx<x1;++sx) {
+                size_t p=size_t(sy)*f.stride+sx*bpp;
+                sum+=f.data[p]+(bpp==2 ? uint32_t(f.data[p+1])<<8:0);
+            }
         }
         put(r.data.data()+size_t(y)*r.stride+x*bpp,sum/((x1-x0)*(y1-y0)),bpp);
     }
