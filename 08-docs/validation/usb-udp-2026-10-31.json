@@ -1,0 +1,678 @@
+{
+  "date": "2026-10-31",
+  "timezone": "Asia/Shanghai",
+  "protocol": "IPv4 UDP",
+  "payload_bytes": 1472,
+  "mtu": 1500,
+  "warmup_seconds": 3,
+  "iperf_versions": {
+    "mac": "3.22",
+    "rk3588": "3.10.1"
+  },
+  "results": [
+    {
+      "name": "rk-to-mac-2G",
+      "label": "RK → Mac，单流，目标 2 Gbit/s",
+      "command": "iperf3 -c 192.168.77.1 -B 192.168.77.2 -p 5201 -u -l 1472 -R -b 2G -t 15 -O 3 -J",
+      "receiver_gbps": 1.9930710832338252,
+      "receiver_MBps": 249.13388540422815,
+      "end": {
+        "streams": [
+          {
+            "udp": {
+              "socket": 4,
+              "start": 0,
+              "end": 15.003446,
+              "seconds": 15.003446,
+              "bytes": 3751043136,
+              "bits_per_second": 2000096850.2835948,
+              "jitter_ms": 0.01537022007731021,
+              "lost_packets": 9092,
+              "packets": 2547531,
+              "lost_percent": 0,
+              "out_of_order": 0,
+              "sender": false
+            }
+          }
+        ],
+        "sum": {
+          "start": 0,
+          "end": 14.997953,
+          "seconds": 14.997953,
+          "bytes": 3751043136,
+          "bits_per_second": 2000096850.2835948,
+          "jitter_ms": 0.01537022007731021,
+          "lost_packets": 9092,
+          "packets": 2547531,
+          "lost_percent": 0.3568945775340909,
+          "sender": false
+        },
+        "sum_sent": {
+          "start": 0,
+          "end": 15.003446,
+          "seconds": 15.003446,
+          "bytes": 3751043136,
+          "bits_per_second": 2000096850.2835948,
+          "jitter_ms": 0,
+          "lost_packets": 0,
+          "packets": 0,
+          "lost_percent": 0,
+          "sender": true
+        },
+        "sum_received": {
+          "start": 0,
+          "end": 14.997953,
+          "seconds": 14.997953,
+          "bytes": 3736498304,
+          "bits_per_second": 1993071083.2338252,
+          "jitter_ms": 0.01537022007731021,
+          "lost_packets": 9092,
+          "packets": 2547474,
+          "lost_percent": 0.3568945775340909,
+          "sender": false
+        },
+        "cpu_utilization_percent": {
+          "host_total": 11.285954130941276,
+          "host_user": 2.3559763054370726,
+          "host_system": 8.92998337968109,
+          "remote_total": 74.78377933122034,
+          "remote_user": 9.72592811725745,
+          "remote_system": 65.0578512139629
+        }
+      }
+    },
+    {
+      "name": "rk-to-mac-3G",
+      "label": "RK → Mac，单流，目标 3 Gbit/s",
+      "command": "iperf3 -c 192.168.77.1 -B 192.168.77.2 -p 5201 -u -l 1472 -R -b 3G -t 15 -O 3 -J",
+      "receiver_gbps": 2.659362584446687,
+      "receiver_MBps": 332.42032305583587,
+      "end": {
+        "streams": [
+          {
+            "udp": {
+              "socket": 4,
+              "start": 0,
+              "end": 15.002961,
+              "seconds": 15.002961,
+              "bytes": 5066952256,
+              "bits_per_second": 2701841193.081819,
+              "jitter_ms": 0.00540789513781744,
+              "lost_packets": 54210,
+              "packets": 3441622,
+              "lost_percent": 0,
+              "out_of_order": 0,
+              "sender": false
+            }
+          }
+        ],
+        "sum": {
+          "start": 0,
+          "end": 14.997036,
+          "seconds": 14.997036,
+          "bytes": 5066952256,
+          "bits_per_second": 2701841193.081819,
+          "jitter_ms": 0.00540789513781744,
+          "lost_packets": 54210,
+          "packets": 3441622,
+          "lost_percent": 1.5751294011951342,
+          "sender": false
+        },
+        "sum_sent": {
+          "start": 0,
+          "end": 15.002961,
+          "seconds": 15.002961,
+          "bytes": 5066952256,
+          "bits_per_second": 2701841193.081819,
+          "jitter_ms": 0,
+          "lost_packets": 0,
+          "packets": 0,
+          "lost_percent": 0,
+          "sender": true
+        },
+        "sum_received": {
+          "start": 0,
+          "end": 14.997036,
+          "seconds": 14.997036,
+          "bytes": 4985319552,
+          "bits_per_second": 2659362584.4466867,
+          "jitter_ms": 0.00540789513781744,
+          "lost_packets": 54210,
+          "packets": 3440976,
+          "lost_percent": 1.5751294011951342,
+          "sender": false
+        },
+        "cpu_utilization_percent": {
+          "host_total": 15.9047054829612,
+          "host_user": 3.217845429488185,
+          "host_system": 12.686860053473012,
+          "remote_total": 86.6492199961862,
+          "remote_user": 10.283622450036669,
+          "remote_system": 76.36558643692267
+        }
+      }
+    },
+    {
+      "name": "rk-to-mac-4G",
+      "label": "RK → Mac，单流，目标 4 Gbit/s",
+      "command": "iperf3 -c 192.168.77.1 -B 192.168.77.2 -p 5201 -u -l 1472 -R -b 4G -t 15 -O 3 -J",
+      "receiver_gbps": 2.492686069242593,
+      "receiver_MBps": 311.5857586553241,
+      "end": {
+        "streams": [
+          {
+            "udp": {
+              "socket": 4,
+              "start": 0,
+              "end": 15.005261,
+              "seconds": 15.005261,
+              "bytes": 4675435584,
+              "bits_per_second": 2492691374.845129,
+              "jitter_ms": 0.004842287449790808,
+              "lost_packets": 167,
+              "packets": 3175584,
+              "lost_percent": 0,
+              "out_of_order": 0,
+              "sender": false
+            }
+          }
+        ],
+        "sum": {
+          "start": 0,
+          "end": 14.999005,
+          "seconds": 14.999005,
+          "bytes": 4675435584,
+          "bits_per_second": 2492691374.845129,
+          "jitter_ms": 0.004842287449790808,
+          "lost_packets": 167,
+          "packets": 3175584,
+          "lost_percent": 0.005258875217912674,
+          "sender": false
+        },
+        "sum_sent": {
+          "start": 0,
+          "end": 15.005261,
+          "seconds": 15.005261,
+          "bytes": 4675435584,
+          "bits_per_second": 2492691374.845129,
+          "jitter_ms": 0,
+          "lost_packets": 0,
+          "packets": 0,
+          "lost_percent": 0,
+          "sender": true
+        },
+        "sum_received": {
+          "start": 0,
+          "end": 14.999005,
+          "seconds": 14.999005,
+          "bytes": 4673476352,
+          "bits_per_second": 2492686069.242593,
+          "jitter_ms": 0.004842287449790808,
+          "lost_packets": 167,
+          "packets": 3175083,
+          "lost_percent": 0.005258875217912674,
+          "sender": false
+        },
+        "cpu_utilization_percent": {
+          "host_total": 14.148202684697717,
+          "host_user": 2.924008760724665,
+          "host_system": 11.224182816732812,
+          "remote_total": 88.65413564067896,
+          "remote_user": 11.934095537011917,
+          "remote_system": 76.72002344193966
+        }
+      }
+    },
+    {
+      "name": "rk-to-mac-unlimited-1stream",
+      "label": "RK → Mac，单流，不限速",
+      "command": "iperf3 -c 192.168.77.1 -B 192.168.77.2 -p 5201 -u -l 1472 -R -b 0 -t 15 -O 3 -J",
+      "receiver_gbps": 2.73619217720922,
+      "receiver_MBps": 342.0240221511525,
+      "end": {
+        "streams": [
+          {
+            "udp": {
+              "socket": 4,
+              "start": 0,
+              "end": 15.004631,
+              "seconds": 15.004631,
+              "bytes": 5132996480,
+              "bits_per_second": 2736753195.730038,
+              "jitter_ms": 0.0061907223008258044,
+              "lost_packets": 830,
+              "packets": 3486467,
+              "lost_percent": 0,
+              "out_of_order": 0,
+              "sender": false
+            }
+          }
+        ],
+        "sum": {
+          "start": 0,
+          "end": 14.998407,
+          "seconds": 14.998407,
+          "bytes": 5132996480,
+          "bits_per_second": 2736753195.730038,
+          "jitter_ms": 0.0061907223008258044,
+          "lost_packets": 830,
+          "packets": 3486467,
+          "lost_percent": 0.023806334607498078,
+          "sender": false
+        },
+        "sum_sent": {
+          "start": 0,
+          "end": 15.004631,
+          "seconds": 15.004631,
+          "bytes": 5132996480,
+          "bits_per_second": 2736753195.730038,
+          "jitter_ms": 0,
+          "lost_packets": 0,
+          "packets": 0,
+          "lost_percent": 0,
+          "sender": true
+        },
+        "sum_received": {
+          "start": 0,
+          "end": 14.998407,
+          "seconds": 14.998407,
+          "bytes": 5129815488,
+          "bits_per_second": 2736192177.20922,
+          "jitter_ms": 0.0061907223008258044,
+          "lost_packets": 830,
+          "packets": 3485759,
+          "lost_percent": 0.023806334607498078,
+          "sender": false
+        },
+        "cpu_utilization_percent": {
+          "host_total": 16.144801575006145,
+          "host_user": 3.2643478582505576,
+          "host_system": 12.88044260920568,
+          "remote_total": 42.56504428224266,
+          "remote_user": 4.24072913268255,
+          "remote_system": 38.32430404137045
+        }
+      }
+    },
+    {
+      "name": "rk-to-mac-unlimited-4streams",
+      "label": "RK → Mac，四流，不限速",
+      "command": "iperf3 -c 192.168.77.1 -B 192.168.77.2 -p 5201 -u -l 1472 -R -b 0 -P 4 -t 15 -O 3 -J",
+      "receiver_gbps": 2.7246485197328503,
+      "receiver_MBps": 340.5810649666063,
+      "end": {
+        "streams": [
+          {
+            "udp": {
+              "socket": 4,
+              "start": 0,
+              "end": 15.003745,
+              "seconds": 15.003745,
+              "bytes": 1277710720,
+              "bits_per_second": 681275625.5188287,
+              "jitter_ms": 0.012930239447930803,
+              "lost_packets": 0,
+              "packets": 867890,
+              "lost_percent": 0,
+              "out_of_order": 0,
+              "sender": false
+            }
+          },
+          {
+            "udp": {
+              "socket": 6,
+              "start": 0,
+              "end": 15.003745,
+              "seconds": 15.003745,
+              "bytes": 1277651840,
+              "bits_per_second": 681244230.6904043,
+              "jitter_ms": 0.01069614044532676,
+              "lost_packets": 0,
+              "packets": 867850,
+              "lost_percent": 0,
+              "out_of_order": 0,
+              "sender": false
+            }
+          },
+          {
+            "udp": {
+              "socket": 8,
+              "start": 0,
+              "end": 15.003745,
+              "seconds": 15.003745,
+              "bytes": 1277269120,
+              "bits_per_second": 681040164.305645,
+              "jitter_ms": 0.011541557804075474,
+              "lost_packets": 0,
+              "packets": 867580,
+              "lost_percent": 0,
+              "out_of_order": 0,
+              "sender": false
+            }
+          },
+          {
+            "udp": {
+              "socket": 10,
+              "start": 0,
+              "end": 15.003745,
+              "seconds": 15.003745,
+              "bytes": 1277210240,
+              "bits_per_second": 681008769.4772205,
+              "jitter_ms": 0.0102230221842972,
+              "lost_packets": 0,
+              "packets": 867540,
+              "lost_percent": 0,
+              "out_of_order": 0,
+              "sender": false
+            }
+          }
+        ],
+        "sum": {
+          "start": 0,
+          "end": 14.997428,
+          "seconds": 14.997428,
+          "bytes": 5109841920,
+          "bits_per_second": 2724568789.992099,
+          "jitter_ms": 0.011347739970407559,
+          "lost_packets": 0,
+          "packets": 3470860,
+          "lost_percent": 0,
+          "sender": false
+        },
+        "sum_sent": {
+          "start": 0,
+          "end": 15.003745,
+          "seconds": 15.003745,
+          "bytes": 5109841920,
+          "bits_per_second": 2724568789.992099,
+          "jitter_ms": 0,
+          "lost_packets": 0,
+          "packets": 0,
+          "lost_percent": 0,
+          "sender": true
+        },
+        "sum_received": {
+          "start": 0,
+          "end": 14.997428,
+          "seconds": 14.997428,
+          "bytes": 5107840000,
+          "bits_per_second": 2724648519.73285,
+          "jitter_ms": 0.011347739970407559,
+          "lost_packets": 0,
+          "packets": 3470000,
+          "lost_percent": 0,
+          "sender": false
+        },
+        "cpu_utilization_percent": {
+          "host_total": 38.82576171959816,
+          "host_user": 5.7978396180931515,
+          "host_system": 33.02793320783916,
+          "remote_total": 43.37911724895927,
+          "remote_user": 3.498610108320293,
+          "remote_system": 39.8805126949846
+        }
+      }
+    },
+    {
+      "name": "rk-to-mac-2G-100us",
+      "label": "RK → Mac，2 Gbit/s，100 μs pacing",
+      "command": "iperf3 -c 192.168.77.1 -B 192.168.77.2 -p 5201 -u -l 1472 -R -b 2G --pacing-timer 100 -t 15 -O 3 -J",
+      "receiver_gbps": 1.999532131005196,
+      "receiver_MBps": 249.94151637564948,
+      "end": {
+        "streams": [
+          {
+            "udp": {
+              "socket": 4,
+              "start": 0,
+              "end": 15.005048,
+              "seconds": 15.005048,
+              "bytes": 3751281600,
+              "bits_per_second": 2000010449.8166218,
+              "jitter_ms": 0.004361767188426924,
+              "lost_packets": 87,
+              "packets": 2547585,
+              "lost_percent": 0,
+              "out_of_order": 0,
+              "sender": false
+            }
+          }
+        ],
+        "sum": {
+          "start": 0,
+          "end": 14.999344,
+          "seconds": 14.999344,
+          "bytes": 3751281600,
+          "bits_per_second": 2000010449.8166218,
+          "jitter_ms": 0.004361767188426924,
+          "lost_packets": 87,
+          "packets": 2547585,
+          "lost_percent": 0.003414998910733106,
+          "sender": false
+        },
+        "sum_sent": {
+          "start": 0,
+          "end": 15.005048,
+          "seconds": 15.005048,
+          "bytes": 3751281600,
+          "bits_per_second": 2000010449.8166218,
+          "jitter_ms": 0,
+          "lost_packets": 0,
+          "packets": 0,
+          "lost_percent": 0,
+          "sender": true
+        },
+        "sum_received": {
+          "start": 0,
+          "end": 14.999344,
+          "seconds": 14.999344,
+          "bytes": 3748958784,
+          "bits_per_second": 1999532131.0051959,
+          "jitter_ms": 0.004361767188426924,
+          "lost_packets": 87,
+          "packets": 2546934,
+          "lost_percent": 0.003414998910733106,
+          "sender": false
+        },
+        "cpu_utilization_percent": {
+          "host_total": 11.038504840401592,
+          "host_user": 2.325981909085133,
+          "host_system": 8.71252848503805,
+          "remote_total": 82.14107709777896,
+          "remote_user": 11.392249622636,
+          "remote_system": 70.74881636721736
+        }
+      }
+    },
+    {
+      "name": "rk-to-mac-unlimited-4streams-60s",
+      "label": "RK → Mac，四流，不限速，长测",
+      "command": "iperf3 -c 192.168.77.1 -B 192.168.77.2 -p 5201 -u -l 1472 -R -b 0 -P 4 -t 60 -O 3 -J",
+      "receiver_gbps": 2.7011517051616103,
+      "receiver_MBps": 337.64396314520127,
+      "end": {
+        "streams": [
+          {
+            "udp": {
+              "socket": 4,
+              "start": 0,
+              "end": 60.007791,
+              "seconds": 60.007791,
+              "bytes": 5065829120,
+              "bits_per_second": 675356187.6656983,
+              "jitter_ms": 0.00907435406279635,
+              "lost_packets": 0,
+              "packets": 3441190,
+              "lost_percent": 0,
+              "out_of_order": 0,
+              "sender": false
+            }
+          },
+          {
+            "udp": {
+              "socket": 6,
+              "start": 0,
+              "end": 60.007791,
+              "seconds": 60.007791,
+              "bytes": 5065755520,
+              "bits_per_second": 675346375.6064608,
+              "jitter_ms": 0.022713328487602345,
+              "lost_packets": 0,
+              "packets": 3441140,
+              "lost_percent": 0,
+              "out_of_order": 0,
+              "sender": false
+            }
+          },
+          {
+            "udp": {
+              "socket": 8,
+              "start": 0,
+              "end": 60.007791,
+              "seconds": 60.007791,
+              "bytes": 5064975360,
+              "bits_per_second": 675242367.778544,
+              "jitter_ms": 0.022057092499507207,
+              "lost_packets": 0,
+              "packets": 3440610,
+              "lost_percent": 0,
+              "out_of_order": 0,
+              "sender": false
+            }
+          },
+          {
+            "udp": {
+              "socket": 10,
+              "start": 0,
+              "end": 60.007791,
+              "seconds": 60.007791,
+              "bytes": 5064945920,
+              "bits_per_second": 675238442.954849,
+              "jitter_ms": 0.015638083707178424,
+              "lost_packets": 0,
+              "packets": 3440590,
+              "lost_percent": 0,
+              "out_of_order": 0,
+              "sender": false
+            }
+          }
+        ],
+        "sum": {
+          "start": 0,
+          "end": 60.000002,
+          "seconds": 60.000002,
+          "bytes": 20261505920,
+          "bits_per_second": 2701183374.0055523,
+          "jitter_ms": 0.01737071468927108,
+          "lost_packets": 0,
+          "packets": 13763530,
+          "lost_percent": 0,
+          "sender": false
+        },
+        "sum_sent": {
+          "start": 0,
+          "end": 60.007791,
+          "seconds": 60.007791,
+          "bytes": 20261505920,
+          "bits_per_second": 2701183374.0055523,
+          "jitter_ms": 0,
+          "lost_packets": 0,
+          "packets": 0,
+          "lost_percent": 0,
+          "sender": true
+        },
+        "sum_received": {
+          "start": 0,
+          "end": 60.000002,
+          "seconds": 60.000002,
+          "bytes": 20258638464,
+          "bits_per_second": 2701151705.16161,
+          "jitter_ms": 0.01737071468927108,
+          "lost_packets": 0,
+          "packets": 13762662,
+          "lost_percent": 0,
+          "sender": false
+        },
+        "cpu_utilization_percent": {
+          "host_total": 42.27790159858048,
+          "host_user": 6.031407889212445,
+          "host_system": 36.24649529641859,
+          "remote_total": 46.34235280918588,
+          "remote_user": 4.0755865848843245,
+          "remote_system": 42.26676146300587
+        }
+      }
+    },
+    {
+      "name": "mac-to-rk-unlimited-1stream",
+      "label": "Mac → RK，单流，不限速",
+      "command": "iperf3 -c 192.168.77.1 -B 192.168.77.2 -p 5201 -u -l 1472 -b 0 -t 30 -O 3 -J",
+      "receiver_gbps": 1.863999832036224,
+      "receiver_MBps": 232.99997900452803,
+      "end": {
+        "streams": [
+          {
+            "udp": {
+              "socket": 4,
+              "start": 0,
+              "end": 29.999964,
+              "seconds": 29.999964,
+              "bytes": 9997101248,
+              "bits_per_second": 2665896865.209572,
+              "jitter_ms": 0.0027206718418643625,
+              "lost_packets": 2517434,
+              "packets": 6791508,
+              "lost_percent": 37.067378850175835,
+              "out_of_order": 0,
+              "sender": true
+            }
+          }
+        ],
+        "sum": {
+          "start": 0,
+          "end": 30.00647,
+          "seconds": 30.00647,
+          "bytes": 9997101248,
+          "bits_per_second": 2665896865.209572,
+          "jitter_ms": 0.0027206718418643625,
+          "lost_packets": 2517433,
+          "packets": 6791508,
+          "lost_percent": 37.06736412590547,
+          "sender": true
+        },
+        "sum_sent": {
+          "start": 0,
+          "end": 29.999964,
+          "seconds": 29.999964,
+          "bytes": 9997101248,
+          "bits_per_second": 2665896865.209572,
+          "jitter_ms": 0,
+          "lost_packets": 0,
+          "packets": 6791508,
+          "lost_percent": 0,
+          "sender": true
+        },
+        "sum_received": {
+          "start": 0,
+          "end": 30.00647,
+          "seconds": 30.00647,
+          "bytes": 6991506880,
+          "bits_per_second": 1863999832.0362241,
+          "jitter_ms": 0.0027206718418643625,
+          "lost_packets": 2517433,
+          "packets": 6789670,
+          "lost_percent": 37.06736412590547,
+          "sender": false
+        },
+        "cpu_utilization_percent": {
+          "host_total": 98.4171797003038,
+          "host_user": 14.914805438042942,
+          "host_system": 83.50237123260924,
+          "remote_total": 47.53208405403041,
+          "remote_user": 9.10528573536794,
+          "remote_system": 38.42679831866248
+        }
+      }
+    }
+  ]
+}
