@@ -47,6 +47,35 @@ class StreamTests(unittest.TestCase):
         self.assertEqual(frames[-1]["sequence"], 99)
         self.assertIn(b"failed=0", process.stderr)
 
+    def test_stream_telemetry_accounts_for_every_frame_and_preserves_existing_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            report = pathlib.Path(directory) / "frames.jsonl"
+            process = self.run_backend(bytes(17 * 13 * 100), "--telemetry", str(report),
+                                       "--discard-output", "true", "--adaptive", "false")
+            self.assertEqual(process.returncode, 0, process.stderr.decode())
+            self.assertEqual(process.stdout, b"")
+            original = report.read_bytes()
+            events = [json.loads(line) for line in original.splitlines()]
+            received = [e for e in events if e["event"] == "received"]
+            completed = [e for e in events if e["event"] == "processed"]
+            dropped = [e for e in events if e["event"] == "dropped"]
+            summary = events[-1]
+            self.assertEqual(summary["event"], "summary")
+            self.assertEqual(summary["submitted"], 100)
+            self.assertEqual(summary["completed"], len(completed))
+            self.assertEqual(summary["dropped"], len(dropped))
+            self.assertEqual(summary["failed"], 0)
+            self.assertEqual(len(completed) + len(dropped), 100)
+            self.assertEqual({e["sequence"] for e in received}, set(range(100)))
+            self.assertEqual({e["sequence"] for e in completed + dropped}, set(range(100)))
+            for frame in completed:
+                self.assertGreaterEqual(frame["completed"], frame["received"])
+                self.assertGreater(frame["processingSeconds"], 0)
+                self.assertEqual((frame["width"], frame["height"]), (17, 13))
+            again = self.run_backend(b"", "--telemetry", str(report))
+            self.assertNotEqual(again.returncode, 0)
+            self.assertEqual(report.read_bytes(), original)
+
     def test_offline_never_drops_or_downscales(self):
         width, height, count = 37, 29, 50
         source = bytes((x * 7) % 256 for x in range(width * height))

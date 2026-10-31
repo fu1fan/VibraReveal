@@ -202,3 +202,30 @@ FrameReader 是串行对象；实时数据读取应持续提交给 `RealtimeMagn
 Bulk 接收通过异步请求环形缓冲持续读取，没有逐帧确认。图像通道保持全尺寸且遇缺帧报错；
 Metal 实时算法仍有独立负载控制，不能将传输无丢帧等同于算法全帧处理。
 需要 TCP 兼容模式时使用 `--connect ADDRESS` / `vr-receive --host ADDRESS`，板端显式 `--transport tcp`。
+
+## Bulk → Metal 实时遥测
+
+```sh
+vibrareveal stream --usb true --adaptive false --alpha 10 --levels 3 \
+  --low 3 --high 12 --telemetry /tmp/frames.jsonl --discard-output true
+```
+
+`--adaptive false` 禁止算法按负载缩小尺寸；默认 max-pixels=1048576 足够容纳 1280×800。
+`--discard-output true` 仍执行输入上传、Metal 计算、等待 GPU 和 Float32 读回，仅省略 stdout 序列化。
+不传该选项时仍输出正常的 Float32 帧；可重定向 `/dev/null` 测试序列化开销，不能将其视为屏幕显示延迟。
+
+`--telemetry` 只用于 stream，采用新建、不覆盖已有文件的 JSONL：
+
+- `received`：通过传输层 CRC 后的主机单调时间、采集时间、序号与尺寸。
+- `processed`：结果回调入口时间（在输出/日志 I/O 之前取样）、处理耗时、输出 sink 耗时、实际尺寸和滤波历史重置标志。
+- `dropped`：实时算法的最新帧队列替换了哪个待处理序号。
+- `summary`：submitted/completed/dropped/failed，及独立的 USB 接收统计。无 summary 的文件表示会话未正常完成。
+
+日志在线写入，内存只保存尚未完成的少量帧；算法仍使用“一帧处理中 + 一帧最新待处理”的既有策略。
+因此 USB 全帧接收不等于算法全帧处理，短时调度/处理抖动仍可能替换待处理帧。
+
+`completed - received` 可直接计算主机侧延迟。采集时间来自板端另一时钟，**不可直接相减**。
+完整硬件测量使用 [metal_acceptance.py](../../06-tests/usb-bulk/metal_acceptance.py)：
+经 Wi-Fi 调用 CNB 编译的 `vr-clock-probe`，测试前后及每约 20 秒做时钟探测，以最小 RTT 样本估算偏移并插值。
+RTT/2 表示校准时的不确定度，不能作为两次校准之间非线性漂移的严格保证。
+端到端边界是 V4L2 单调采集时间戳到处理结果可用，不含显示扫描、曝光起点或算法频带的相位延迟。

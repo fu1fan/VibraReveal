@@ -1,0 +1,614 @@
+{
+  "long": {
+    "framesRequested": 36000,
+    "settings": {
+      "width": 1280,
+      "height": 800,
+      "fps": 120,
+      "alpha": 10,
+      "levels": 3,
+      "lowHz": 3,
+      "highHz": 12,
+      "adaptive": false,
+      "sink": "discard after Float32 readback"
+    },
+    "summary": {
+      "completed": 35934,
+      "dropped": 66,
+      "event": "summary",
+      "failed": 0,
+      "submitted": 36000,
+      "transport": {
+        "firstSequence": 0,
+        "firstTimestampNS": 11915552932000,
+        "frames": 36000,
+        "lastSequence": 35999,
+        "lastTimestampNS": 12213997867000,
+        "payloadBytes": 73728000000,
+        "seconds": 298.51238662499236,
+        "senderQueueDropped": 0,
+        "sequenceGaps": 0,
+        "sourceFPS": 120,
+        "syntheticTimestamps": false
+      }
+    },
+    "captureFPS": 120.62191640142949,
+    "completedPerCaptureSecond": 120.4007588882105,
+    "outputCadenceFPS": 120.43047939040503,
+    "algorithmDropPercent": 0.18333333333333332,
+    "dropsInFirst120SourceFrames": 3,
+    "dropsAfterFirst120SourceFrames": 63,
+    "historyResets": 61,
+    "allFrames": {
+      "estimatedCaptureToResultMS": {
+        "min": 15.159049535213853,
+        "p50": 17.864501431176905,
+        "p95": 20.004814027652174,
+        "p99": 24.738499142513316,
+        "max": 104.40050018223701,
+        "mean": 18.12745436162835
+      },
+      "estimatedCaptureToReceiveMS": {
+        "min": 13.302161905812682,
+        "p50": 14.530498439853545,
+        "p95": 15.533935359417228,
+        "p99": 18.20828810810777,
+        "max": 86.85996373424132,
+        "mean": 14.662909917864651
+      },
+      "receiveToResultMS": {
+        "min": 1.7599583370611072,
+        "p50": 3.340020834002644,
+        "p95": 5.046249988663476,
+        "p99": 7.131080414983439,
+        "max": 67.10337501135655,
+        "mean": 3.464544443763697
+      },
+      "processingMS": {
+        "min": 1.6344999894499779,
+        "p50": 3.167104165186174,
+        "p95": 4.73374165885616,
+        "p99": 6.024310404900459,
+        "max": 64.7707499738317,
+        "mean": 3.256589576171413
+      },
+      "queueAndDispatchMS": {
+        "min": 0.015666650142520666,
+        "p50": 0.14662498142570257,
+        "p95": 0.28347291518002743,
+        "p99": 2.3637804359896095,
+        "max": 59.212041669525206,
+        "mean": 0.2079548675922838
+      },
+      "sinkMS": {
+        "min": 0,
+        "p50": 0.00016667763702571392,
+        "p95": 0.0004166504368185997,
+        "p99": 0.0005695843719876575,
+        "max": 0.2567916817497462,
+        "mean": 0.0002258016676858931
+      },
+      "clockHalfRTTMS": {
+        "min": 1.7822594920004018,
+        "p50": 1.954192610624469,
+        "p95": 2.3095393623718046,
+        "p99": 2.468046072687744,
+        "max": 2.5076985066421105,
+        "mean": 1.9692277520570705
+      },
+      "estimatedCaptureToSinkMS": {
+        "min": 15.159216212850879,
+        "p50": 17.864688932604622,
+        "p95": 20.004999439424864,
+        "p99": 24.73867954435263,
+        "max": 104.40075018414063,
+        "mean": 18.127680163296034
+      }
+    },
+    "steadyAfterFirst120SourceFrames": {
+      "estimatedCaptureToResultMS": {
+        "min": 15.159049535213853,
+        "p50": 17.86529085075017,
+        "p95": 19.99911526327196,
+        "p99": 24.641647196331157,
+        "max": 104.40050018223701,
+        "mean": 18.122447327636475
+      },
+      "estimatedCaptureToReceiveMS": {
+        "min": 13.311341357621131,
+        "p50": 14.530745978845516,
+        "p95": 15.532785935283755,
+        "p99": 18.08243507635777,
+        "max": 86.85996373424132,
+        "mean": 14.657351087241436
+      },
+      "receiveToResultMS": {
+        "min": 1.7599583370611072,
+        "p50": 3.3404583227820694,
+        "p95": 5.0466333341319105,
+        "p99": 7.131640004226926,
+        "max": 67.10337501135655,
+        "mean": 3.46509624039504
+      },
+      "processingMS": {
+        "min": 1.6344999894499779,
+        "p50": 3.167541668517515,
+        "p95": 4.733966669300571,
+        "p99": 5.997659984277561,
+        "max": 64.7707499738317,
+        "mean": 3.256934307177514
+      },
+      "queueAndDispatchMS": {
+        "min": 0.015666650142520666,
+        "p50": 0.14666668721474707,
+        "p95": 0.28364998288452586,
+        "p99": 2.3664916690904545,
+        "max": 59.212041669525206,
+        "mean": 0.20816193321752607
+      },
+      "sinkMS": {
+        "min": 0,
+        "p50": 0.00016667763702571392,
+        "p95": 0.0004166504368185997,
+        "p99": 0.0005833280738443136,
+        "max": 0.2567916817497462,
+        "mean": 0.00022593783243810822
+      },
+      "clockHalfRTTMS": {
+        "min": 1.785575248367487,
+        "p50": 1.9546522564400908,
+        "p95": 2.3101491923310413,
+        "p99": 2.468170869963725,
+        "max": 2.5076985066421105,
+        "mean": 1.9698333520411766
+      },
+      "estimatedCaptureToSinkMS": {
+        "min": 15.159216212850879,
+        "p50": 17.865597210402484,
+        "p95": 19.999281929267454,
+        "p99": 24.64181662806366,
+        "max": 104.40075018414063,
+        "mean": 18.122673265468915
+      }
+    },
+    "clockNote": "Piecewise linear offset estimate using minimum RTT samples over Wi-Fi; half RTT is calibration uncertainty, not a proven bound between samples. Excludes exposure and display timing.",
+    "clockOffsetChangeMS": 9.981067996704951,
+    "droppedSequences": [
+      1,
+      2,
+      3,
+      574,
+      1933,
+      2507,
+      2910,
+      3163,
+      4005,
+      4007,
+      4487,
+      4488,
+      6730,
+      7653,
+      7776,
+      11012,
+      13818,
+      18981,
+      18983,
+      19884,
+      20063,
+      20366,
+      22552,
+      23333,
+      23378,
+      23381,
+      23387,
+      23390,
+      23687,
+      23712,
+      23976,
+      24323,
+      24324,
+      24413,
+      24842,
+      25879,
+      25880,
+      25884,
+      25890,
+      25988,
+      26264,
+      26279,
+      26510,
+      26750,
+      26832,
+      28172,
+      28173,
+      28510,
+      30214,
+      30222,
+      30245,
+      30248,
+      30271,
+      30275,
+      30373,
+      30378,
+      30924,
+      31528,
+      32132,
+      32779,
+      32966,
+      33763,
+      34241,
+      35157,
+      35165,
+      35167
+    ],
+    "telemetrySHA256": "87c8b4001a2f1cfa0c67a3bec6d6faf2b371ad9f42c2eec0496a4b5b8bc7b7ae",
+    "senderLog": "Note: --set-subdev-fps is only for testing.\nNormally media-ctl is used to configure the video pipeline.\nioctl: VIDIOC_SUBDEV_S_FRAME_INTERVAL (pad=0)\n\tFrames per second: 120.000 (120000/1000)\nbulk_ready mount=/dev/ffs-vri requestBytes=262144 queue=32\n{\"transport\":\"bulk\",\"sent\":36000,\"payloadBytes\":73728000000,\"queueDropped\":0,\"ringHighWater\":4,\"ringCapacity\":32,\"sourceFPS\":120,\"seconds\":298.468,\"payloadMBps\":247.022}\n",
+    "calibrations": [
+      {
+        "host": 173890.3318091035,
+        "offset": -161976.4677188905,
+        "halfRTT": 0.001775937489583157,
+        "offsetLower": -161976.469494828,
+        "offsetUpper": -161976.46594295301
+      },
+      {
+        "host": 173910.7863119995,
+        "offset": -161976.4672234405,
+        "halfRTT": 0.001848916508606635,
+        "offsetLower": -161976.46907235702,
+        "offsetUpper": -161976.465374524
+      },
+      {
+        "host": 173931.0791905415,
+        "offset": -161976.4664164845,
+        "halfRTT": 0.001883791497675702,
+        "offsetLower": -161976.468300276,
+        "offsetUpper": -161976.464532693
+      },
+      {
+        "host": 173951.313103208,
+        "offset": -161976.465869785,
+        "halfRTT": 0.002032332995440811,
+        "offsetLower": -161976.467902118,
+        "offsetUpper": -161976.463837452
+      },
+      {
+        "host": 173971.409614354,
+        "offset": -161976.465241328,
+        "halfRTT": 0.0019704790029209107,
+        "offsetLower": -161976.467211807,
+        "offsetUpper": -161976.463270849
+      },
+      {
+        "host": 173991.972110812,
+        "offset": -161976.464750303,
+        "halfRTT": 0.0025077709869947284,
+        "offsetLower": -161976.46725807397,
+        "offsetUpper": -161976.462242532
+      },
+      {
+        "host": 174012.1735651245,
+        "offset": -161976.46377204452,
+        "halfRTT": 0.0019600835075834766,
+        "offsetLower": -161976.465732128,
+        "offsetUpper": -161976.461811961
+      },
+      {
+        "host": 174032.369924916,
+        "offset": -161976.46306676502,
+        "halfRTT": 0.001849500011303462,
+        "offsetLower": -161976.46491626502,
+        "offsetUpper": -161976.461217265
+      },
+      {
+        "host": 174052.6611802705,
+        "offset": -161976.46251824748,
+        "halfRTT": 0.0018206455133622512,
+        "offsetLower": -161976.464338893,
+        "offsetUpper": -161976.460697602
+      },
+      {
+        "host": 174073.048404375,
+        "offset": -161976.46176972002,
+        "halfRTT": 0.0020345000084489584,
+        "offsetLower": -161976.46380422002,
+        "offsetUpper": -161976.45973522
+      },
+      {
+        "host": 174093.2992230205,
+        "offset": -161976.4612585805,
+        "halfRTT": 0.0018117295112460852,
+        "offsetLower": -161976.46307031,
+        "offsetUpper": -161976.459446851
+      },
+      {
+        "host": 174113.598902583,
+        "offset": -161976.460429603,
+        "halfRTT": 0.002019749997998588,
+        "offsetLower": -161976.46244935298,
+        "offsetUpper": -161976.458409853
+      },
+      {
+        "host": 174134.051692958,
+        "offset": -161976.45957859,
+        "halfRTT": 0.001904749995446764,
+        "offsetLower": -161976.46148334,
+        "offsetUpper": -161976.45767384002
+      },
+      {
+        "host": 174154.670330354,
+        "offset": -161976.45884928902,
+        "halfRTT": 0.001983854002901353,
+        "offsetLower": -161976.460833143,
+        "offsetUpper": -161976.456865435
+      },
+      {
+        "host": 174174.9766323745,
+        "offset": -161976.4584104355,
+        "halfRTT": 0.001986791510717012,
+        "offsetLower": -161976.460397227,
+        "offsetUpper": -161976.45642364398
+      },
+      {
+        "host": 174191.6582076875,
+        "offset": -161976.4577378225,
+        "halfRTT": 0.002067312496365048,
+        "offsetLower": -161976.459805135,
+        "offsetUpper": -161976.45567051
+      }
+    ],
+    "hostClockCheck": {
+      "offset": -2.9164948500692844e-06,
+      "halfRTT": 4.9165100790560246e-06
+    },
+    "buildIdentity": {
+      "application_commit": "5c8c77badf6a1ba776d2d10722f6ef00bca57df6",
+      "dirty": false,
+      "scripts_sha256": {
+        "S91vrstream": "1abab54c9b8f59317437581d0cd380791bdfd0eda907209eed566e8a5dc20f09",
+        "vr-usb-stream": "db7b7aa8ad0a0f9c8259f2744717d87485eba5a812fae643a50d4adbd4866fd5",
+        "vr-usb-stream-daemon": "51f2a31115daebee67a4f1ff3ae595406a772689ba2b46ebe588ab1f717640f0"
+      },
+      "sdk": {
+        "image": "docker.cnb.cool/fu1fan/rk3588-ov9281/app-sdk@sha256:d2a21493198e25881cb03144bf4dd45b76e773e6cbbad1b62d6debbd4aa73cef",
+        "system_commit": "ac7c05413b3882f578cb94be4b2edfe3958d84c6"
+      },
+      "sha256": "24f278cbcdc430178174750ad13bb2ccb178fd2117418d8e5474f5bf0ba569b2",
+      "clock_probe_sha256": "2e70fbd4133356305952b6556c331de84301c4aa92c12b2276e0f30cbe490850",
+      "bulk_benchmark_sha256": "467f68991c2a011554fed1d79ba6c8bc0ce8407102ddaa78f1976cc51422ca30"
+    },
+    "probeCNB": "cnb-jmi-1k68ns3jr",
+    "artifactDigest": "sha256:4aea95369414b49d49912fe92d36c3f1c6ca79901866ea25d1f2960732ef6d6d"
+  },
+  "serialized": {
+    "framesRequested": 7200,
+    "settings": {
+      "width": 1280,
+      "height": 800,
+      "fps": 120,
+      "alpha": 10,
+      "levels": 3,
+      "lowHz": 3,
+      "highHz": 12,
+      "adaptive": false,
+      "sink": "Float32 serialization to /dev/null"
+    },
+    "summary": {
+      "completed": 7185,
+      "dropped": 15,
+      "event": "summary",
+      "failed": 0,
+      "submitted": 7200,
+      "transport": {
+        "firstSequence": 0,
+        "firstTimestampNS": 12218118261000,
+        "frames": 7200,
+        "lastSequence": 7199,
+        "lastTimestampNS": 12277800649000,
+        "payloadBytes": 14745600000,
+        "seconds": 59.76398824999342,
+        "senderQueueDropped": 0,
+        "sequenceGaps": 0,
+        "sourceFPS": 120,
+        "syntheticTimestamps": false
+      }
+    },
+    "captureFPS": 120.62184911233561,
+    "completedPerCaptureSecond": 120.3704669587821,
+    "outputCadenceFPS": 120.45764759423429,
+    "algorithmDropPercent": 0.20833333333333334,
+    "droppedSequences": [
+      1,
+      2,
+      305,
+      2121,
+      2343,
+      2353,
+      2992,
+      3100,
+      4658,
+      4784,
+      6124,
+      6126,
+      6501,
+      6742,
+      6959
+    ],
+    "dropsInFirst120SourceFrames": 2,
+    "dropsAfterFirst120SourceFrames": 13,
+    "historyResets": 15,
+    "allFrames": {
+      "estimatedCaptureToResultMS": {
+        "min": 15.471824450287386,
+        "p50": 17.75297415588284,
+        "p95": 19.886555113771465,
+        "p99": 24.26512068661393,
+        "max": 79.18754561796959,
+        "mean": 18.029410142891262
+      },
+      "estimatedCaptureToReceiveMS": {
+        "min": 13.376458666243707,
+        "p50": 14.560666035322356,
+        "p95": 15.550491139219956,
+        "p99": 17.61358152129104,
+        "max": 70.8527956285252,
+        "mean": 14.68117832303486
+      },
+      "receiveToResultMS": {
+        "min": 1.785458327503875,
+        "p50": 3.220666665583849,
+        "p95": 4.843241680646314,
+        "p99": 6.855693331453946,
+        "max": 30.675249989144504,
+        "mean": 3.3482318198564025
+      },
+      "processingMS": {
+        "min": 1.7212500097230077,
+        "p50": 3.088583325734362,
+        "p95": 4.641133337281644,
+        "p99": 6.2983949913177595,
+        "max": 30.535875004716218,
+        "mean": 3.209326704934877
+      },
+      "queueAndDispatchMS": {
+        "min": 0.01604165299795568,
+        "p50": 0.10599999222904444,
+        "p95": 0.20361667848192153,
+        "p99": 0.673925003502516,
+        "max": 21.82712499052286,
+        "mean": 0.13890511492152538
+      },
+      "sinkMS": {
+        "min": 0.08604166214354336,
+        "p50": 0.2622083411552012,
+        "p95": 0.5983083159662778,
+        "p99": 0.8076783560682074,
+        "max": 31.66179166873917,
+        "mean": 0.30606492693832815
+      },
+      "clockHalfRTTMS": {
+        "min": 1.793356264091925,
+        "p50": 1.8700954261451903,
+        "p95": 1.9335679186457582,
+        "p99": 1.939220910656377,
+        "max": 1.9406646543664536,
+        "mean": 1.869700019070759
+      },
+      "estimatedCaptureToSinkMS": {
+        "min": 15.586657804306014,
+        "p50": 18.06621290052135,
+        "p95": 20.33580403440282,
+        "p99": 24.908239914584552,
+        "max": 80.67604563075292,
+        "mean": 18.33547506982959
+      }
+    },
+    "steadyAfterFirst120SourceFrames": {
+      "estimatedCaptureToResultMS": {
+        "min": 15.471824450287386,
+        "p50": 17.759453279722948,
+        "p95": 19.87459496176598,
+        "p99": 24.062100234623365,
+        "max": 79.18754561796959,
+        "mean": 18.026411852573553
+      },
+      "estimatedCaptureToReceiveMS": {
+        "min": 13.419399170743418,
+        "p50": 14.565593755833106,
+        "p95": 15.548495169241505,
+        "p99": 17.346500283747453,
+        "max": 70.8527956285252,
+        "mean": 14.67549351137106
+      },
+      "receiveToResultMS": {
+        "min": 1.785458327503875,
+        "p50": 3.2247499912045896,
+        "p95": 4.841904173372313,
+        "p99": 6.832891677040607,
+        "max": 30.675249989144504,
+        "mean": 3.350918341202492
+      },
+      "processingMS": {
+        "min": 1.7212500097230077,
+        "p50": 3.092625003773719,
+        "p95": 4.6407458547037095,
+        "p99": 6.212138331611642,
+        "max": 30.535875004716218,
+        "mean": 3.211298900976738
+      },
+      "queueAndDispatchMS": {
+        "min": 0.01604165299795568,
+        "p50": 0.10633334750309587,
+        "p95": 0.20362500799819827,
+        "p99": 0.6717091688187793,
+        "max": 21.82712499052286,
+        "mean": 0.13961944022575412
+      },
+      "sinkMS": {
+        "min": 0.08604166214354336,
+        "p50": 0.2625833440106362,
+        "p95": 0.5987916665617377,
+        "p99": 0.8094258519122391,
+        "max": 31.66179166873917,
+        "mean": 0.30682664732996984
+      },
+      "clockHalfRTTMS": {
+        "min": 1.79702384538913,
+        "p50": 1.871243887558538,
+        "p95": 1.933689415372773,
+        "p99": 1.939247994526166,
+        "max": 1.9406646543664536,
+        "mean": 1.8709451208155208
+      },
+      "estimatedCaptureToSinkMS": {
+        "min": 15.586657804306014,
+        "p50": 18.072821212626877,
+        "p95": 20.324220739348675,
+        "p99": 24.692504483209643,
+        "max": 80.67604563075292,
+        "mean": 18.333238499903523
+      }
+    },
+    "clockNote": "Piecewise linear offset estimate using minimum RTT samples over Wi-Fi; half RTT is calibration uncertainty, not a proven bound between samples. Excludes exposure and display timing.",
+    "clockOffsetChangeMS": 2.2012199624441564,
+    "telemetrySHA256": "9d2232415a4e98f3d0d9769383a3e00f305bab64bba1eb5775d833a676548e61",
+    "senderLog": "Note: --set-subdev-fps is only for testing.\nNormally media-ctl is used to configure the video pipeline.\nioctl: VIDIOC_SUBDEV_S_FRAME_INTERVAL (pad=0)\n\tFrames per second: 120.000 (120000/1000)\nbulk_ready mount=/dev/ffs-vri requestBytes=262144 queue=32\n{\"transport\":\"bulk\",\"sent\":7200,\"payloadBytes\":14745600000,\"queueDropped\":0,\"ringHighWater\":1,\"ringCapacity\":32,\"sourceFPS\":120,\"seconds\":59.7055,\"payloadMBps\":246.972}\n",
+    "calibrations": [
+      {
+        "host": 174192.7031803125,
+        "offset": -161976.4577083425,
+        "halfRTT": 0.0017859374929685146,
+        "offsetLower": -161976.45949428,
+        "offsetUpper": -161976.455922405
+      },
+      {
+        "host": 174213.1306041035,
+        "offset": -161976.4570587475,
+        "halfRTT": 0.001864437508629635,
+        "offsetLower": -161976.458923185,
+        "offsetUpper": -161976.45519431
+      },
+      {
+        "host": 174233.5586507915,
+        "offset": -161976.4561374245,
+        "halfRTT": 0.0019406664941925555,
+        "offsetLower": -161976.458078091,
+        "offsetUpper": -161976.45419675802
+      },
+      {
+        "host": 174253.6405344995,
+        "offset": -161976.4559609065,
+        "halfRTT": 0.0018106665083905682,
+        "offsetLower": -161976.457771573,
+        "offsetUpper": -161976.45415024
+      },
+      {
+        "host": 174254.60562172852,
+        "offset": -161976.45550712253,
+        "halfRTT": 0.0018266874976688996,
+        "offsetLower": -161976.45733381002,
+        "offsetUpper": -161976.45368043502
+      }
+    ]
+  }
+}
