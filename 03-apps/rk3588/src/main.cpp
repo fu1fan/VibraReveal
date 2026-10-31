@@ -20,6 +20,9 @@
 #include <optional>
 #include <stdexcept>
 #include <thread>
+#if defined(__aarch64__)
+#include <arm_neon.h>
+#endif
 #ifdef __linux__
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -159,11 +162,25 @@ static Frame reduced(const Frame& f,uint32_t scale) {
             const auto* a=f.data.data()+size_t(2*y)*f.stride;
             const auto* b=a+f.stride;
             auto* out=r.data.data()+size_t(y)*r.stride;
+            uint32_t x=0;
             if(bpp==1) {
-                for(uint32_t x=0;x<r.width;++x)
+#if defined(__aarch64__)
+                for(;x+8<=r.width;x+=8) {
+                    auto sum=vaddq_u16(vpaddlq_u8(vld1q_u8(a+2*x)),vpaddlq_u8(vld1q_u8(b+2*x)));
+                    vst1_u8(out+x,vshrn_n_u16(sum,2));
+                }
+#endif
+                for(;x<r.width;++x)
                     out[x]=(uint32_t(a[2*x])+a[2*x+1]+b[2*x]+b[2*x+1])/4;
             } else {
-                for(uint32_t x=0;x<r.width;++x) {
+#if defined(__aarch64__)
+                for(;x+4<=r.width;x+=4) {
+                    auto top=vpaddlq_u16(vld1q_u16(reinterpret_cast<const uint16_t*>(a+4*x)));
+                    auto bottom=vpaddlq_u16(vld1q_u16(reinterpret_cast<const uint16_t*>(b+4*x)));
+                    vst1_u16(reinterpret_cast<uint16_t*>(out+2*x),vshrn_n_u32(vaddq_u32(top,bottom),2));
+                }
+#endif
+                for(;x<r.width;++x) {
                     size_t p=4*x;
                     uint32_t sum=uint32_t(a[p])+a[p+2]+b[p]+b[p+2]+
                         ((uint32_t(a[p+1])+a[p+3]+b[p+1]+b[p+3])<<8);
