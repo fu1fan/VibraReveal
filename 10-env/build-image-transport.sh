@@ -19,6 +19,7 @@ metadata = {
     'dirty': bool(subprocess.check_output(['git', '-C', str(root), 'status', '--porcelain', '--', '03-apps/rk3588', '10-env/sdk.lock.json'], text=True).strip()),
     'sdk': json.loads((root / '10-env/sdk.lock.json').read_text()),
     'sha256': hashlib.sha256(binary.read_bytes()).hexdigest(),
+    'bulk_benchmark_sha256': hashlib.sha256((build / 'vr-bulk-source').read_bytes()).hexdigest(),
 }
 (build / 'build-info.json').write_text(json.dumps(metadata, indent=2) + '\n')
 print(json.dumps(metadata, indent=2))
