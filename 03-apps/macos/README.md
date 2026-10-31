@@ -1,6 +1,6 @@
 # macOS 运动放大后端
 
-Swift Package + Metal 的逐帧相位运动放大基线，macOS 13+，无第三方依赖、无前端。提供库 `VibraRevealBackend` 和命令行 `vibrareveal`。已在 Apple Silicon 上编译、执行 Metal 测试；真实相机、RK3588 网络传输和视频容器编解码由调用方适配。
+Swift Package + Metal 的逐帧相位运动放大基线，macOS 13+，无第三方依赖、无前端。提供库 `VibraRevealBackend` 和命令行 `vibrareveal`。已在 Apple Silicon 上编译、执行 Metal 测试；RK3588 USB 图像接收由 `VibraRevealTransport` 提供，视频容器编解码由调用方适配。
 
 ## 两种工作模式
 
@@ -174,3 +174,27 @@ stdout 的每帧布局：`UInt32 小端 JSON 字节数` + `UTF-8 JSON` + `width 
 设原始每帧 B 字节、所有相位层共 P 字节、N 帧、每端延拓 K 帧，零相位临时文件峰值约 `N*B + (3*N + 2*K)*P`。RAM 不随完整图像栈增长，但需容纳若干空间帧、每像素滤波状态和 O(N) 的时间元数据/可选探针信号。
 
 `OfflineReport.processingSeconds` 记录完整任务耗时（读取、暂存、两遍滤波、重建、输出及可选频谱）；每个 `OutputFrame.performance` 只计最后重建阶段，不可据此推算离线整体吞吐。离线 benchmark 同样报告完整任务时间，包含合成数据生成。
+
+## RK3588 USB 输入
+
+图像走 USB NCM，SSH 和文件部署走 Wi-Fi。使用方式、CNB 编译与线路配置见
+[RK3588 发送端](../rk3588/README.md)，字节格式见 [VRI1](../../05-protocol/README.md)。
+
+```sh
+# 独立接收，尽可能释放 USB/磁盘吞吐；输出保留逐帧采集元数据
+vr-receive --host 192.168.77.1 --output capture.vri
+# 协议校验和吞吐测试，不写盘
+vr-receive --host 192.168.77.1
+# 按 sender HELLO 使用真实 FPS、尺寸、位深和时间，不能另传 --fps/--width 等覆盖
+vibrareveal stream --connect 192.168.77.1 --low 3 --high 12 > amplified.vrm
+vibrareveal offline --archive capture.vri --low 3 --high 12 > amplified.vrm
+```
+
+网络实时输入必须匹配实时发送模式，网络离线输入必须匹配离线发送模式。
+录像可送入任一算法入口，但离线算法仍要求固定尺寸、连续序号和等间隔采样；
+带丢帧/尺寸变化的实时录像不会被静默当作完整离线片段。实时 ROI 坐标相对传输图像，
+链路自适应缩小时调用方需相应调整；默认全帧处理不需要 ROI 坐标重映射。
+
+库的 `FrameReader.readNext()` 直接返回后端 `InputFrame`，使用采集时间而非到达时间。
+`info` 保存源尺寸/FPS/时间来源标志，`statistics` 保存接收帧数、有效字节数、序号缺口和发送队列丢弃数。
+FrameReader 是串行对象；实时数据读取应持续提交给 `RealtimeMagnifier`，避免处理阻塞网络读取。

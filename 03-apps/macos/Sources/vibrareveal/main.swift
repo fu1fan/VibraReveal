@@ -1,5 +1,6 @@
 import Foundation
 import VibraRevealBackend
+import VibraRevealTransport
 
 let usage = """
 VibraReveal Metal backend (no GUI)
@@ -23,6 +24,8 @@ Options: --bits 8|10|12|16 (default 8; >8 uses right-aligned uint16 LE)
          --filter auto|causal|zero-phase (auto: realtime causal, offline zero-phase)
          --spectrum report.json --probe x,y --spectrum-level 0 (offline only)
          --scratch-dir PATH (offline scratch storage; default system temporary directory)
+         --connect IPv4 --port 5910 (USB NCM stream; dimensions/rate/time from protocol)
+         --archive capture.vri (verified transport archive; dimensions/rate/time from protocol)
 """
 
 func stderr(_ message: String) { FileHandle.standardError.write(Data((message + "\n").utf8)) }
@@ -51,7 +54,7 @@ func run() throws {
     guard ["stream", "offline", "benchmark"].contains(mode) else { throw BackendError.invalid(usage) }
     var options: [String: String] = [:]
     var i = 1
-    let allowed: Set<String> = ["width","height","fps","low","high","alpha","levels","max-pixels","min-pixels","frames","bits","stride","roi","adaptive","mode","filter","spectrum","probe","spectrum-level","scratch-dir"]
+    let allowed: Set<String> = ["width","height","fps","low","high","alpha","levels","max-pixels","min-pixels","frames","bits","stride","roi","adaptive","mode","filter","spectrum","probe","spectrum-level","scratch-dir","connect","port","archive"]
     while i < arguments.count {
         let key = String(arguments[i].dropFirst(2))
         guard arguments[i].hasPrefix("--"), allowed.contains(key), i+1 < arguments.count, options[key] == nil else {
@@ -69,12 +72,31 @@ func run() throws {
         guard let value = Double(text), value.isFinite else { throw BackendError.invalid("Invalid number: --\(key)") }
         return value
     }
-    let width = try integer("width", 1280), height = try integer("height", 800)
-    let bits = try integer("bits", 8), fps = try number("fps", 120)
+    guard options["connect"] == nil || options["archive"] == nil else {
+        throw BackendError.invalid("Choose --connect or --archive")
+    }
+    let networkInput = options["connect"] != nil || options["archive"] != nil
+    guard options["port"] == nil || options["connect"] != nil else { throw BackendError.invalid("--port requires --connect") }
+    if networkInput && (mode == "benchmark" || ["width", "height", "bits", "fps", "stride"].contains(where: { options[$0] != nil })) {
+        throw BackendError.invalid("Transport input supplies dimensions, format and FPS; do not override them")
+    }
+    var transport: FrameReader?
+    if let host = options["connect"] {
+        let port = try integer("port", 5910)
+        guard (1...65535).contains(port) else { throw BackendError.invalid("Invalid port") }
+        transport = try FrameReader(host: host, port: UInt16(port))
+        guard transport!.info.realtime == (mode == "stream") else { throw BackendError.invalid("Sender/processor mode mismatch") }
+    } else if let path = options["archive"] {
+        transport = try FrameReader(archiveURL: URL(fileURLWithPath: path))
+    }
+    let width = try transport?.info.width ?? integer("width", 1280)
+    let height = try transport?.info.height ?? integer("height", 800)
+    let bits = try transport?.info.bits ?? integer("bits", 8)
+    let fps = try transport?.info.fps ?? number("fps", 120)
     guard width > 0, height > 0, width <= 65535, height <= 65535, [8,10,12,16].contains(bits) else {
         throw BackendError.invalid("Invalid source dimensions or bit depth")
     }
-    let stride = try integer("stride", width * (bits == 8 ? 1 : 2))
+    let stride = try transport?.info.stride ?? integer("stride", width * (bits == 8 ? 1 : 2))
     var roi: Region?
     if let text = options["roi"] {
         let fields = text.split(separator: ",", omittingEmptySubsequences: false)
@@ -118,6 +140,7 @@ func run() throws {
     let byteCount = stride * height
     let format: PixelFormat = bits == 8 ? .gray8 : .gray16LE(validBits: bits)
     func readFrame(sequence: UInt64) throws -> InputFrame? {
+        if let transport { return try transport.readNext() }
         var data = Data()
         while data.count < byteCount {
             guard let chunk = try FileHandle.standardInput.read(upToCount: byteCount-data.count), !chunk.isEmpty else { break }

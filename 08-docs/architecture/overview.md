@@ -17,7 +17,7 @@ IMU ─┤ V4L2 capture / frame timestamps      │
      │ RKNN inference / ROI tracking        │
      │ buffering / transport / control      │
      └──────────────────┬───────────────────┘
-                        │ High-speed link (under development)
+                        │ USB 3 NCM / TCP (VRI1)
                         │ RAW frames + timestamps + metadata
                         ▼
      ┌──────────────────────────────────────┐
@@ -37,7 +37,7 @@ IMU ─┤ V4L2 capture / frame timestamps      │
 | 边缘运动分析   | RK3588 Mali-G610 / Vulkan | 局部相位代理、连续时域特征、Tile 热点扫描 | Vulkan 环境已调通；算法待实现 |
 | 场景感知       | RK3588 NPU / RKNN         | 目标检测、ROI、可选深度与学习式特征       | 规划中                        |
 | IMU采集及对齐  | RK3588 / SPI              | 自振频谱、时间基准与同步                  | 规划中                        |
-| 高速传输       | RK3588 ↔ MacBook          | RAW数据、时间戳、ROI与控制                | 待联调及压力测试              |
+| 高速传输       | RK3588 ↔ MacBook          | VRI1 RAW 帧、时间戳、序号、CRC；USB NCM | 实时有界/自适应与离线连续传输；见验收记录 |
 | 相位运动放大   | MacBook / Metal           | 时域滤波、金字塔、放大和重建              | 已有无界面实时/离线后端基线；待相机链路验收 |
 | 测量与可视化   | MacBook                   | 频谱、时频图、热力图、选区操作            | 规划中                        |
 
@@ -47,4 +47,4 @@ IMU ─┤ V4L2 capture / frame timestamps      │
 
 实现及调用方式见 [macOS 后端](../../03-apps/macos/README.md)。实时模式优先保留时间采样率，按处理耗时降低空间分辨率；异步队列最多保留一帧处理中、一帧待处理，替换待处理帧时明确计数，后续因序号间断重置滤波历史。离线模式通过磁盘暂存完整片段，默认前向—反向零相位滤波，再按序逐帧重建，保留原始或 ROI 分辨率及每一帧，不受实时性能预算限制；资源不足直接报错。可导出指定空间位置/金字塔层的局部相位幅度谱与 PSD，增益范围为 0～200。
 
-两个模式使用原始采集时间与源 FPS，输出携带原始序号、时间、ROI、实际工作尺寸及滤波重置标记。后端不包括 GUI、相机驱动、网络传输和视频容器编解码。现有 CLI 的无头 RAW 输入及 JSON/Float32 输出仅用于适配和验证，不替代尚待定义的设备通信协议。
+两个模式使用原始采集时间与源 FPS，输出携带原始序号、时间、ROI、实际工作尺寸及滤波重置标记。后端不包括 GUI、相机驱动和视频容器编解码。`VibraRevealTransport` 负责 VRI1 接收及原始录像；CLI 支持 `--connect` 和 `--archive`，保留真实采集元数据。无头 RAW 输入仍使用合成时间。

@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.16)
+project(vr_stream LANGUAGES CXX)
+find_package(Threads REQUIRED)
+add_executable(vr-stream src/main.cpp src/camera.cpp)
+target_compile_features(vr-stream PRIVATE cxx_std_17)
+target_compile_options(vr-stream PRIVATE -Wall -Wextra -Wpedantic)
+target_link_libraries(vr-stream PRIVATE Threads::Threads)
+install(TARGETS vr-stream RUNTIME DESTINATION bin)
