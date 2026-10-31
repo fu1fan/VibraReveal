@@ -304,8 +304,12 @@ static void serve(Options o) {
             double elapsed=std::chrono::duration<double>(Clock::now()-begin).count();
             ema=sent==1?elapsed:0.8*ema+0.2*elapsed;
             if(o.realtime && o.adaptive) {
-                overruns=ema>0.8/fps ? overruns+1:0;
-                if(overruns>=3 && (output.width>32 || output.height>32)) {
+                // Short USB/scheduler bursts must not repeatedly halve resolution.
+                // Require a sustained missed frame budget, not merely low headroom.
+                overruns=ema>1/fps ? overruns+1:0;
+                if(overruns>=std::max(3u,uint32_t(std::ceil(fps/10))) &&
+                   (output.width>32 || output.height>32)) {
+                    std::cerr<<"adaptation_service_ms="<<ema*1000<<"\n";
                     scale*=2; overruns=0; ema=0;
                     std::cerr<<"reducing_resolution scale="<<scale<<" source_fps="<<fps<<"\n";
                 }
