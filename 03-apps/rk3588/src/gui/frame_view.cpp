@@ -116,6 +116,33 @@ void FrameView::paint(QPainter *p) {
         auto overlay = controller_->overlay();
         if (overlay.size() == image.size())
             p->drawImage(r, overlay);
+        const auto state = controller_->state();
+        const auto tool = state["tool"].toString();
+        if (state["edgeReady"].toBool() &&
+            (tool == "select" || tool == "preview" || tool == "magnify" ||
+             tool == "replay" || tool == "offline")) {
+            const QRect roi = state["roi"].toRect();
+            const QRectF box(toView(roi.x(), roi.y()),
+                             toView(roi.x()+roi.width(), roi.y()+roi.height()));
+            p->save();
+            p->setClipRect(r.intersected(boundingRect()));
+            p->setBrush(Qt::NoBrush);
+            p->setPen(QPen(QColor("#101720"), 4));
+            p->drawRect(box);
+            p->setPen(QPen(QColor("#ff453a"), 2));
+            p->drawRect(box);
+            QFont font = p->font();
+            font.setPixelSize(14);
+            p->setFont(font);
+            const QString label = QString("视频放大 · %1 × %2 px").arg(roi.width()).arg(roi.height());
+            const qreal labelWidth = p->fontMetrics().horizontalAdvance(label)+16;
+            const QRectF badge(std::clamp(box.left(), r.left(), std::max(r.left(), r.right()-labelWidth)),
+                               std::max(r.top(), box.top()-26), labelWidth, 24);
+            p->fillRect(badge, QColor("#a51d18"));
+            p->setPen(Qt::white);
+            p->drawText(badge, Qt::AlignCenter, label);
+            p->restore();
+        }
     }
 }
 } // namespace vr::touch

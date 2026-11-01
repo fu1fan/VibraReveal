@@ -129,7 +129,7 @@ ApplicationWindow {
     Rectangle {
         x: 18; y: 148; width: hint.width+24; height: 38; radius: 9; color: "#101720"; visible: hint.text.length > 0
         Text { id: hint; anchors.centerIn: parent; color: "#f4f7fc"; font.pixelSize: 14
-            text: s.mode === "direct" || s.tool === "focus" ? "峰值对焦 · 1:1 · "+Number(s.previewFps).toFixed(0)+" fps · 拖动画面" : s.tool === "select" ? "冻结参考帧 · "+(s.step === 1 ? (s.selectionBusy?"NPU 正在识别…":s.useNpu?"轻触物品 · NPU 自动识别":"拖动框选 · 手动模式") : "轻触对象边缘") : s.tool === "magnify" ? "本机实时计算 · 参考位置固定" : s.tool === "replay" || s.tool === "offline" ? "本地 RAW 回放与分析" : s.native ? "点对点显示 · 拖动画面" : ""
+            text: s.mode === "direct" || s.tool === "focus" ? "峰值对焦 · 1:1 · "+Number(s.previewFps).toFixed(0)+" fps · 拖动画面" : s.tool === "select" ? "冻结参考帧 · "+(s.step === 1 ? (s.selectionBusy?s.message:s.useNpu?"轻触物品 · NPU 自动识别":"拖动框选 · 手动模式") : "轻触对象边缘") : s.tool === "magnify" ? "本机实时计算 · 参考位置固定" : s.tool === "replay" || s.tool === "offline" ? "本地 RAW 回放与分析" : s.native ? "点对点显示 · 拖动画面" : ""
         }
     }
     Loader {
@@ -163,7 +163,7 @@ ApplicationWindow {
                 text: s.selectionBusy ? s.message : s.objectReady ? s.selectionMethod+" · "+Math.round(s.selectionMs)+" ms" : s.useNpu ? "轻触物品或拖动框选，提取对象轮廓。" : s.hasSam ? "拖动框选测量区域。" : "NPU 模型未配置，请手动框选。"
             }
             TouchButton { objectName: "centerSelection"; visible: s.step === 1 && !s.useNpu; width: parent.width; text: "使用中心 256 × 128 区域"; enabled: !s.selectionBusy; onClicked: backend.selectObject(s.width/2-128,s.height/2-64,256,128,false) }
-            Text { width: parent.width; text: s.step === 2 ? "轻触蓝色轮廓上的清晰边缘。" : "冻结参考帧；重新点选可更换对象。"; wrapMode: Text.Wrap; color: "#414e60"; font.pixelSize: 14 }
+            Text { width: parent.width; text: s.step === 2 ? "轻触红色轮廓；红框标出视频放大区域。" : "冻结参考帧；重新点选可更换对象。"; wrapMode: Text.Wrap; color: "#414e60"; font.pixelSize: 14 }
             TouchButton { objectName: "confirmSelection"; primary: true; width: parent.width; text: s.step === 1 ? "确认对象 · 选择边缘" : "完成选择"; enabled: !s.selectionBusy && (s.step === 1 ? s.objectReady : s.edgeReady); onClicked: s.step === 1 ? backend.confirmObject() : backend.confirmEdge() }
         }
     }

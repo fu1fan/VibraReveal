@@ -228,10 +228,15 @@ void Engine::setSelectionNpu(bool enabled) {
 }
 void Engine::chooseEdge(const QPointF &point) {
     std::lock_guard<std::mutex> l(mutex_);
-    if (state_.tool != "select" || !state_.objectReady || state_.selectionStep != 2)
+    if (state_.tool != "select" || !state_.objectReady || state_.selectionStep != 2 || state_.selectionBusy)
         return;
     command_ = {};
     command_.kind = Command::Edge;
+    state_.edgeReady = false;
+    state_.selectionBusy = true;
+    state_.error.clear();
+    state_.message = "正在选择边缘与视频放大区域…";
+    ++state_.displayRevision;
     command_.rect = QRectF(point, QSizeF());
     ++generation_;
     cv_.notify_all();
@@ -535,7 +540,7 @@ void Engine::computeLoop() {
                     std::count_if(edges.begin(), edges.end(), [](uint8_t v) { return v != 0; }) < 4)
                     throw std::runtime_error("选区内没有足够的清晰边缘，请重新选择");
                 QImage overlay =
-                    overlayImage(reference->width, reference->height, edges, qRgb(128, 205, 255));
+                    overlayImage(reference->width, reference->height, edges, qRgb(255, 69, 58));
                 if (config.useNpu) {
                     // A translucent fill makes the actual segmented object
                     // visible; this is not just the rectangular bounding box.
@@ -566,10 +571,24 @@ void Engine::computeLoop() {
                 if (!selectedFrame)
                     continue;
                 signal.setReference(*selectedFrame, edges, command.rect.x(), command.rect.y());
+                // Use the actual selected samples, not the whole object's box.
+                // Keep context on both sides of the edge for the motion pyramid.
+                int left = selectedFrame->width, top = selectedFrame->height, right = 0, bottom = 0;
+                for (const auto &point : signal.points()) {
+                    left = std::min(left, int(point.x));
+                    top = std::min(top, int(point.y));
+                    right = std::max(right, int(point.x));
+                    bottom = std::max(bottom, int(point.y));
+                }
+                const int width = std::min(int(selectedFrame->width), std::max(64, right-left+33));
+                const int height = std::min(int(selectedFrame->height), std::max(64, bottom-top+33));
+                const QRect region(std::clamp((left+right+1-width)/2, 0, int(selectedFrame->width)-width),
+                                   std::clamp((top+bottom+1-height)/2, 0, int(selectedFrame->height)-height),
+                                   width, height);
                 QImage overlay =
-                    overlayImage(selectedFrame->width, selectedFrame->height, edges, qRgb(120, 157, 180));
+                    overlayImage(selectedFrame->width, selectedFrame->height, edges, qRgb(255, 69, 58));
                 QPainter p(&overlay);
-                p.setPen(QPen(QColor("#91c5ff"), 3));
+                p.setPen(QPen(QColor("#ff453a"), 3));
                 for (const auto &point : signal.points())
                     p.drawPoint(point.x, point.y);
                 p.end();
@@ -577,8 +596,11 @@ void Engine::computeLoop() {
                 if (generation != generation_)
                     continue;
                 state_.edgeReady = true;
+                state_.selectionBusy = false;
+                state_.roi = region;
+                state_.error.clear();
                 state_.overlay = overlay;
-                state_.message = "边缘已选定；测量单位为原图像素";
+                state_.message = "边缘已选定；红框为视频放大区域";
                 ++state_.displayRevision;
                 continue;
             }
@@ -742,7 +764,7 @@ void Engine::computeLoop() {
                 overlay = QImage(frame->width, frame->height, QImage::Format_ARGB32_Premultiplied);
                 overlay.fill(Qt::transparent);
                 QPainter painter(&overlay);
-                painter.setPen(QPen(QColor("#91c5ff"), 3));
+                painter.setPen(QPen(QColor("#ff453a"), 3));
                 for (const auto &point : signal.points())
                     painter.drawPoint(point.x, point.y);
             }

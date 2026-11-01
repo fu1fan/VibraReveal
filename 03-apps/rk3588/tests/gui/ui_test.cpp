@@ -127,7 +127,7 @@ class UiTest : public QObject {
             for (int x=1; x<overlay.width()-1; ++x) {
                 const auto pixel = overlay.pixel(x,y);
                 if (qAlpha(pixel)==45) ++filled;
-                if (pixel==qRgb(128,205,255) && edge.x()<0) edge=QPoint(x,y);
+                if (pixel==qRgb(255,69,58) && edge.x()<0) edge=QPoint(x,y);
             }
         QVERIFY(filled>100);
         QVERIFY(edge.x()>=0);
@@ -145,9 +145,33 @@ class UiTest : public QObject {
         QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["selectionBusy"].toBool(), 10000);
         QVERIFY2(controller.state()["objectReady"].toBool(), qPrintable(controller.state()["error"].toString()));
         qInfo() << "BOARD_NPU_CACHED_BOX" << controller.state()["selectionMs"] << "ms";
+        const QRect objectRoi = controller.state()["roi"].toRect();
         controller.confirmObject();
         controller.selectEdge(370,210);
         QTRY_VERIFY_WITH_TIMEOUT(controller.state()["edgeReady"].toBool(), 5000);
+        const QRect edgeRoi = controller.state()["roi"].toRect();
+        QVERIFY(edgeRoi.contains(QPoint(370,210)));
+        QVERIFY(edgeRoi.width()*edgeRoi.height() < objectRoi.width()*objectRoi.height());
+        QVERIFY(QRect(QPoint(0,0), controller.image(0).size()).contains(edgeRoi));
+        QVERIFY(!controller.state()["selectionBusy"].toBool());
+        qInfo() << "EDGE_MAGNIFICATION_ROI" << edgeRoi;
+        if (!captures.isEmpty()) {
+            QTest::qWait(100);
+            auto grab=window->contentItem()->grabToImage();
+            QVERIFY(grab);
+            QSignalSpy ready(grab.data(), &QQuickItemGrabResult::ready);
+            QVERIFY(ready.wait(5000) || !grab->image().isNull());
+            QVERIFY(grab->image().save(captures+"/npu-edge-region.png"));
+        }
+        // A failed re-selection must not keep a stale ready region.
+        controller.selectEdge(-1000,-1000);
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["selectionBusy"].toBool(), 5000);
+        QVERIFY(!controller.state()["edgeReady"].toBool());
+        QVERIFY(!controller.state()["error"].toString().isEmpty());
+        controller.selectEdge(370,210);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["edgeReady"].toBool(), 5000);
+        QCOMPARE(controller.state()["roi"].toRect(), edgeRoi);
+        QVERIFY(controller.state()["error"].toString().isEmpty());
         controller.confirmEdge();
         QCOMPARE(controller.state()["tool"].toString(), QString("replay"));
         controller.tool("select");
@@ -451,6 +475,7 @@ class UiTest : public QObject {
         QVERIFY2(controller.state()["spectrumReady"].toBool(),
                  qPrintable(controller.state()["error"].toString()));
         QVERIFY(std::abs(controller.state()["peak"].toDouble() - 12) < 0.5);
+        QCOMPARE(controller.image(1).size(), controller.state()["roi"].toRect().size());
         capture("magnify");
         controller.tool("preview");
         controller.mode("direct");
