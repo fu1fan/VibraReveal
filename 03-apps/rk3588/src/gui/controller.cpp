@@ -3,6 +3,7 @@
 #include <QDateTime>
 #include <QDir>
 #include <QFileInfo>
+#include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSaveFile>
@@ -177,7 +178,7 @@ void Controller::stopRecording() {
 void Controller::refreshFiles() {
     files_.clear();
     QDir dir(QString::fromStdString(engine_.options().storage));
-    for (const auto &entry : dir.entryInfoList({"*.vri"}, QDir::Files, QDir::Time)) {
+    for (const auto &entry : dir.entryInfoList({"*.vri"}, QDir::Files | QDir::NoSymLinks, QDir::Time)) {
         try {
             ArchiveReader reader(entry.absoluteFilePath().toStdString());
             const uint64_t frameBytes = uint64_t(reader.stride) * reader.height;
@@ -218,6 +219,37 @@ void Controller::openFile(int index) {
         playing_ = false;
         tool_ = "replay";
         engine_.replay(currentFile_.toStdString(), 0);
+    });
+}
+void Controller::deleteFile(const QString &path) {
+    handle([&] {
+        fileMessage_.clear();
+        if (mode_ != "local" || tool_ != "files" || recordingBusy() ||
+            engine_.snapshot().offlineBusy || engine_.streaming.status().busy)
+            throw std::runtime_error("请先结束录制、分析或传输，再从文件菜单删除");
+        // Use the confirmed path, never a row index that can change after refresh.
+        const auto listed = std::any_of(files_.cbegin(), files_.cend(), [&](const QVariant &item) {
+            return item.toMap()["path"].toString() == path;
+        });
+        const QFileInfo entry(path);
+        const QDir storage(QString::fromStdString(engine_.options().storage));
+        if (!listed || !entry.isFile() || entry.isSymLink() || entry.suffix() != "vri" ||
+            entry.canonicalPath() != storage.canonicalPath())
+            throw std::runtime_error("录像不存在或不属于当前录制目录，请刷新文件列表");
+        QFile recording(path);
+        if (!recording.remove())
+            throw std::runtime_error(("删除失败：" + recording.errorString()).toStdString());
+        if (currentFile_ == path) {
+            playing_ = false;
+            currentFile_.clear();
+            fileFps_ = fileDuration_ = position_ = 0;
+            engine_.setTool("preview");
+        }
+        fileMessage_ = "已删除 " + entry.fileName();
+        const QString metadata = path + ".json";
+        if (QFileInfo::exists(metadata) && !QFile::remove(metadata))
+            fileMessage_ += "；附属说明删除失败";
+        refreshFiles();
     });
 }
 void Controller::seek(double seconds) {
@@ -417,6 +449,7 @@ void Controller::poll() {
               {"replayReady", view_.replayReady},
               {"offlineOutput", view_.offlineOutput},
               {"fileName", QFileInfo(currentFile_).fileName()},
+              {"fileMessage", fileMessage_},
               {"fileDuration", fileDuration_},
               {"position", position_},
               {"playing", playing_},

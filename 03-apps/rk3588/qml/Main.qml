@@ -19,6 +19,9 @@ ApplicationWindow {
     palette.highlight: "#075ac5"
     palette.highlightedText: "#ffffff"
     property var s: backend.state
+    property string deletePath: ""
+    property string deleteName: ""
+    property real deleteBytes: 0
     property point exposurePoint: Qt.point(0,0)
     property bool selectionPan: false
     property var panelPositions: ({})
@@ -323,17 +326,18 @@ ApplicationWindow {
     }
     Rectangle {
         id: filesPanel; x: 18; y: 86; width: parent.width-36; height: 398; radius: 18; color: "#f7f8fa"; visible: s.tool === "files"
-        Text { x: 20; y: 18; text: "录制文件"; color: "#151a22"; font.pixelSize: 22 }
+        Text { x: 20; y: 18; text: "录制文件 · "+backend.files.length; color: "#151a22"; font.pixelSize: 22 }
         TouchButton { anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 10; text: "返回预览"; onClicked: backend.tool("preview") }
+        Text { x: 20; y: 50; width: parent.width-200; text: s.fileMessage.length ? s.fileMessage : "保存在本机 · 支持回放、分析和删除"; elide: Text.ElideMiddle; color: "#414e60"; font.pixelSize: 14 }
         ListView { id: fileList; objectName: "fileList"; x: 20; y: 78; width: parent.width-40; height: parent.height-96; clip: true; model: backend.files; spacing: 8
             delegate: Rectangle { width: fileList.width; height: 86; radius: 12; color: "#e9edf2"
-                Column { x: 14; anchors.verticalCenter: parent.verticalCenter; spacing: 7; width: parent.width-390
+                Column { x: 14; anchors.verticalCenter: parent.verticalCenter; spacing: 7; width: parent.width-320
                     Text { text: modelData.name; color: "#151a22"; font.pixelSize: 16; width: parent.width; elide: Text.ElideMiddle }
                     Text { text: clock(modelData.duration)+" · "+bytes(modelData.bytes)+(modelData.synthetic?" · 合成源":" · 原始帧"); color: "#414e60"; font.pixelSize: 14 }
                 }
                 Row { anchors.right: parent.right; anchors.rightMargin: 12; anchors.verticalCenter: parent.verticalCenter; spacing: 10
-                    TouchButton { glyph: "chart-no-axes-combined"; text: "回放 / 分析"; onClicked: backend.openFile(index) }
-                    TouchButton { glyph: "send"; text: "传入电脑"; enabled: !s.streamBusy; onClicked: backend.transferFile(index) }
+                    TouchButton { glyph: "chart-no-axes-combined"; text: "回放 / 分析"; enabled: !s.streamBusy && !s.offlineBusy; onClicked: backend.openFile(index) }
+                    TouchButton { objectName: "deleteFile_"+index; text: "删除"; danger: true; enabled: !recording && !s.streamBusy && !s.offlineBusy; onClicked: { deletePath=modelData.path; deleteName=modelData.name; deleteBytes=modelData.bytes; deleteDialog.open() } }
                 }
             }
             Text { anchors.centerIn: parent; visible: fileList.count === 0; text: "尚无已完成的 RAW 录像"; color: "#414e60"; font.pixelSize: 18 }
@@ -371,6 +375,20 @@ ApplicationWindow {
     Rectangle {
         objectName: "errorBanner"; x: 18; anchors.bottom: parent.bottom; anchors.bottomMargin: 108; width: parent.width-36; height: errorText.implicitHeight+24; color: "#702c32"; radius: 12; visible: s.error.length > 0
         Text { id: errorText; x: 14; y: 12; width: parent.width-28; text: s.error; color: "#fff2f1"; wrapMode: Text.Wrap; font.pixelSize: 16 }
+    }
+    Dialog {
+        id: deleteDialog; objectName: "deleteDialog"; anchors.centerIn: parent; width: 480
+        modal: true; title: "删除这段录像？"; standardButtons: Dialog.NoButton
+        background: Rectangle { color: "#f7f8fa"; radius: 18 }
+        header: Text { padding: 20; text: deleteDialog.title; font.pixelSize: 22; font.bold: true; color: "#151a22" }
+        contentItem: Text { text: deleteName+"\n"+bytes(deleteBytes)+"\n\n将永久删除 RAW 录像及附属说明，无法撤销。"; wrapMode: Text.Wrap; color: "#151a22"; font.pixelSize: 18 }
+        footer: Row {
+            padding: 12; spacing: 12
+            TouchButton { objectName: "cancelDelete"; width: 216; text: "取消"; onClicked: deleteDialog.reject() }
+            TouchButton { objectName: "confirmDelete"; width: 216; text: "删除录像"; danger: true; onClicked: deleteDialog.accept() }
+        }
+        onAccepted: { backend.deleteFile(deletePath); deletePath = "" }
+        onRejected: deletePath = ""
     }
     Dialog {
         id: switchDialog; anchors.centerIn: parent; width: 440; modal: true; title: "停止录制并切换？"

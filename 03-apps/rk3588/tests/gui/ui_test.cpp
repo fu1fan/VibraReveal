@@ -22,6 +22,67 @@ using namespace vr::touch;
 class UiTest : public QObject {
     Q_OBJECT
   private slots:
+    void recordingDeletion() {
+        QTemporaryDir dir, outside;
+        EngineOptions options; options.demo=true; options.width=320; options.height=200;
+        options.bits=8; options.demoFps=30; options.storage=dir.path().toStdString();
+        options.shader=qEnvironmentVariable("VR_TEST_SHADER_PATH",VR_TEST_SHADER).toStdString();
+        Controller controller(options);
+        QQmlApplicationEngine engine; engine.rootContext()->setContextProperty("backend",&controller);
+        engine.load(QUrl("qrc:/qml/Main.qml")); QVERIFY(!engine.rootObjects().isEmpty());
+        auto window=qobject_cast<QQuickWindow *>(engine.rootObjects().first()); QVERIFY(window);
+        window->showFullScreen();
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["ready"].toBool(),5000);
+        controller.record();
+        QTRY_VERIFY_WITH_TIMEOUT(controller.engine().recorder.status().frames>=3,5000);
+        controller.stopRecording();
+        QTRY_COMPARE_WITH_TIMEOUT(controller.state()["recordState"].toString(),QString("saved"),5000);
+        controller.tool("files"); QCOMPARE(controller.files().size(),1);
+        const auto path=controller.files()[0].toMap()["path"].toString();
+        QVERIFY(QFileInfo::exists(path+".json"));
+        const auto other=outside.path()+"/outside.vri";
+        QVERIFY(QFile::copy(path,other));
+        QVERIFY(QFile::link(other,dir.path()+"/link.vri"));
+        controller.refreshFiles(); QCOMPARE(controller.files().size(),1);
+        controller.deleteFile(other); QVERIFY(QFileInfo::exists(other));
+        controller.deleteFile(dir.path()+"/link.vri"); QVERIFY(QFileInfo::exists(other));
+        controller.clearError();
+        std::function<QQuickItem *(QQuickItem *,const QString &)> find = [&](QQuickItem *parent,const QString &name) -> QQuickItem * {
+            if(parent->objectName()==name) return parent;
+            for(auto child:parent->childItems()) if(auto found=find(child,name)) return found;
+            return nullptr;
+        };
+        auto click=[&](const QString &name) {
+            auto item=find(window->contentItem(),name); QVERIFY2(item,qPrintable(name));
+            QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,item->mapToScene(QPointF(item->width()/2,item->height()/2)).toPoint());
+        };
+        auto capture=[&](const QString &name) {
+            const auto output=qEnvironmentVariable("VR_UI_CAPTURE_DIR"); if(output.isEmpty()) return;
+            QDir().mkpath(output); QTest::qWait(150);
+            auto grab=window->contentItem()->grabToImage(); QVERIFY(grab);
+            QSignalSpy ready(grab.data(),&QQuickItemGrabResult::ready);
+            QVERIFY(ready.wait(5000)||!grab->image().isNull()); QVERIFY(grab->image().save(output+"/"+name+".png"));
+        };
+        QTest::qWait(150); capture("files-delete-menu");
+        click("deleteFile_0"); QTest::qWait(250); capture("files-delete-confirm");
+        click("cancelDelete"); QTest::qWait(250); QVERIFY(QFileInfo::exists(path));
+        click("deleteFile_0"); QTest::qWait(250);
+        // Refresh/reorder while confirming must not delete whichever file moves into row zero.
+        const auto copy=dir.path()+"/copy.vri"; QVERIFY(QFile::copy(path,copy));
+        controller.refreshFiles(); QCOMPARE(controller.files().size(),2);
+        click("confirmDelete"); QTRY_VERIFY(!QFileInfo::exists(path));
+        QVERIFY(!QFileInfo::exists(path+".json")); QVERIFY(QFileInfo::exists(copy));
+        QCOMPARE(controller.files().size(),1);
+        controller.openFile(0); QTRY_COMPARE(controller.state()["tool"].toString(),QString("replay"));
+        controller.tool("files"); controller.deleteFile(copy);
+        QVERIFY(!QFileInfo::exists(copy)); QCOMPARE(controller.state()["fileName"].toString(),QString());
+        QCOMPARE(controller.files().size(),0); capture("files-delete-empty");
+        QVERIFY(QFile::copy(other,copy)); controller.refreshFiles();
+        controller.record(); QTRY_VERIFY_WITH_TIMEOUT(controller.engine().recorder.status().frames>=3,5000);
+        controller.deleteFile(copy); QVERIFY(QFileInfo::exists(copy));
+        controller.stopRecording();
+        QTRY_COMPARE_WITH_TIMEOUT(controller.state()["recordState"].toString(),QString("saved"),5000);
+    }
     void exposureInteraction() {
         SensorSettings limits;
         QCOMPARE(boundedExposure(limits,1e20),limits.maximum);

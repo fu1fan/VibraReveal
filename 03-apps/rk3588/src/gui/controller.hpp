@@ -32,6 +32,7 @@ class Controller : public QObject {
     Q_INVOKABLE void stopRecording();
     Q_INVOKABLE void refreshFiles();
     Q_INVOKABLE void openFile(int index);
+    Q_INVOKABLE void deleteFile(const QString &path);
     Q_INVOKABLE void seek(double seconds);
     Q_INVOKABLE void playPause();
     Q_INVOKABLE void analyze();
@@ -57,6 +58,7 @@ class Controller : public QObject {
     bool native_ = false, previousNative_ = false, playing_ = false;
     uint64_t displayRevision_ = UINT64_MAX, lastWritten_ = 0;
     QString lastSaved_;
+    QString fileMessage_;
     QString currentFile_;
     double fileFps_ = 0, fileDuration_ = 0, position_ = 0, playOrigin_ = 0;
     QElapsedTimer playback_, writeClock_, previewClock_;
