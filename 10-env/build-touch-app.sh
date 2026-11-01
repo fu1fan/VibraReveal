@@ -15,7 +15,7 @@ import hashlib, json, pathlib, subprocess, sys
 root, build = map(pathlib.Path, sys.argv[1:])
 metadata = {
     'application_commit': subprocess.check_output(['git', '-C', str(root), 'rev-parse', 'HEAD'], text=True).strip(),
-    'dirty': bool(subprocess.check_output(['git', '-C', str(root), 'status', '--porcelain', '--', '03-apps/rk3588'], text=True).strip()),
+    'dirty': bool(subprocess.check_output(['git', '-C', str(root), 'status', '--porcelain', '--', '03-apps/rk3588', '03-apps/raw-codec'], text=True).strip()),
     'required_qt': '5.15.10',
     'sdk': json.loads((root / '10-env/sdk.lock.json').read_text()),
     'sha256': hashlib.sha256((build / 'vr-touch').read_bytes()).hexdigest(),

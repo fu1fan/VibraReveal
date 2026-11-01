@@ -2,6 +2,7 @@ import Foundation
 import Darwin
 import zlib
 import CVRBulk
+import CVRRawCodec
 import VibraRevealBackend
 
 public enum TransportError: Error, CustomStringConvertible {
@@ -14,6 +15,8 @@ public enum TransportError: Error, CustomStringConvertible {
 public struct FrameHeader {
     public static let size = 80
     public let kind: UInt64, flags: UInt64, payloadBytes: Int
+    public let codec: UInt64
+    public var compressedArchive: Bool { flags & 8 != 0 }
     public let width: Int, height: Int, stride: Int, bits: Int
     public let sequence: UInt64, timestampNS: UInt64, dropped: UInt64
     public let fpsNumerator: UInt64, fpsDenominator: UInt64, checksum: UInt64
@@ -32,18 +35,22 @@ public struct FrameHeader {
             for i in 0..<count { n |= UInt64(data[data.startIndex + offset + i]) << (8 * i) }
             return n
         }
-        guard value(4, 2) == 1, value(76, 4) == 0 else { throw TransportError.invalid("Unsupported VRI version/reserved fields") }
+        guard value(4, 2) == 1 else { throw TransportError.invalid("Unsupported VRI version") }
+        codec=value(76,4)
         kind=value(6,2); flags=value(8,4); payloadBytes=Int(value(12,4))
         width=Int(value(16,4)); height=Int(value(20,4)); stride=Int(value(24,4)); bits=Int(value(28,4))
         sequence=value(32,8); timestampNS=value(40,8)
         fpsNumerator=value(48,4); fpsDenominator=value(52,4); dropped=value(56,8); checksum=value(64,4)
         sourceWidth=Int(value(68,4)); sourceHeight=Int(value(72,4))
-        guard (1...3).contains(kind), flags & ~7 == 0, fpsNumerator > 0, fpsDenominator > 0,
+        guard (1...3).contains(kind), flags & ~15 == 0, !(flags & 8 != 0 && flags & 5 != 0), fpsNumerator > 0, fpsDenominator > 0,
               fps > 0, fps <= 10000, (1...65535).contains(width), (1...65535).contains(height),
-              (1...16).contains(bits), (width...65535).contains(sourceWidth), (height...65535).contains(sourceHeight),
+              [8, 10, 12, 16].contains(bits), (width...65535).contains(sourceWidth), (height...65535).contains(sourceHeight),
               stride >= width * (bits == 8 ? 1 : 2), maxFrameBytes > 0,
               stride <= maxFrameBytes / height else { throw TransportError.invalid("Invalid VRI dimensions, rate or memory limit") }
-        guard kind == 2 ? payloadBytes == stride * height : (payloadBytes == 0 && checksum == 0) else {
+        let validFrame = codec == 0 ? payloadBytes == stride * height :
+            (codec == 1 && compressedArchive && payloadBytes > 0 && payloadBytes < stride * height &&
+             (bits == 8 || stride * height % 2 == 0))
+        guard kind == 2 ? validFrame : (payloadBytes == 0 && checksum == 0 && codec == 0) else {
             throw TransportError.invalid("Invalid VRI payload length")
         }
     }
@@ -205,7 +212,8 @@ public final class FrameReader {
         readBytes=read; acknowledge=ack; self.maxFrameBytes=maxFrameBytes; self.archive=archive
         hello=try read(FrameHeader.size)
         info=try FrameHeader(data: hello, maxFrameBytes: maxFrameBytes)
-        guard info.kind == 1, info.sequence == 0, info.timestampNS == 0, info.dropped == 0 else {
+        guard info.kind == 1, info.sequence == 0, info.timestampNS == 0, info.dropped == 0,
+              archive || !info.compressedArchive else {
             throw TransportError.invalid("Missing/invalid session hello")
         }
         statistics.sourceFPS=info.fps; statistics.syntheticTimestamps=info.syntheticTimestamps
@@ -246,11 +254,25 @@ public final class FrameReader {
             if (!info.realtime || info.pipelined) && gap != 0 { throw TransportError.invalid("Lossless sequence gap") }
             statistics.sequenceGaps += gap
         }
-        let data = try readBytes(h.payloadBytes)
-        guard data.count == h.payloadBytes else { throw TransportError.invalid("Truncated payload") }
+        let encoded = try readBytes(h.payloadBytes)
+        guard encoded.count == h.payloadBytes else { throw TransportError.invalid("Truncated payload") }
+        var data = encoded
+        if h.codec == 1 {
+            let size = h.stride * h.height
+            var scratch = Data(count: size)
+            data = Data(count: size)
+            let result = encoded.withUnsafeBytes { input in
+                scratch.withUnsafeMutableBytes { temporary in
+                    data.withUnsafeMutableBytes { output in
+                        vr_raw_decode(input.baseAddress, encoded.count, size, UInt32(h.bits), temporary.baseAddress, output.baseAddress)
+                    }
+                }
+            }
+            guard result == 0 else { throw TransportError.invalid("Invalid Bitshuffle/LZ4 frame") }
+        }
         let checksum = data.withUnsafeBytes { crc32(0, $0.bindMemory(to: Bytef.self).baseAddress, uInt(data.count)) }
         guard UInt64(checksum) == h.checksum else { throw TransportError.invalid("Frame CRC32 mismatch") }
-        try packetSink?(raw); try packetSink?(data)
+        try packetSink?(raw); try packetSink?(encoded)
         if info.realtime && !info.pipelined {
             var seq = h.sequence.littleEndian
             try withUnsafeBytes(of: &seq) { try acknowledge(Data($0)) }

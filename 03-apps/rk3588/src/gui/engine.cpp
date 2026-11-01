@@ -157,18 +157,7 @@ uint64_t Engine::admitMotion(bool offline, double fps, double low, double high, 
         ArchiveReader reader(archive);
         width=reader.width; height=reader.height; stride=reader.stride;
         c.fps=reader.fps();
-        const uint64_t rawBytes=uint64_t(stride)*height;
-        const auto fileSize=QFileInfo(QString::fromStdString(archive)).size();
-        if (fileSize<160 || (uint64_t(fileSize)-160)%(rawBytes+80))
-            throw std::runtime_error("无法预估：录像长度无效");
-        frames=(uint64_t(fileSize)-160)/(rawBytes+80);
-        std::ifstream file(archive,std::ios::binary);
-        file.seekg(-80,std::ios::end);
-        std::array<uint8_t,80> end{};
-        if (!file.read(reinterpret_cast<char *>(end.data()),80) || std::memcmp(end.data(),"VRI1",4) ||
-            getLE(end.data()+6,2)!=3 || getLE(end.data()+32,8)!=frames ||
-            getLE(end.data()+40,8)!=loadMultiply(frames,rawBytes))
-            throw std::runtime_error("无法预估：录像尚未完整保存");
+        frames=reader.frameCount();
         if (start>=frames || !std::isfinite(seconds) || seconds<0)
             throw std::runtime_error("分析起点或时长无效");
         frames-=start;
@@ -703,6 +692,8 @@ void Engine::captureLoop() {
     }
 }
 void Engine::computeLoop() {
+    std::unique_ptr<ArchiveReader> playbackReader;
+    std::string playbackPath;
     FocusPeaking focusPeaking;
     std::unique_ptr<VulkanMotion> analyzer, motion;
     uint32_t analyzerW = 0, analyzerH = 0;
@@ -751,6 +742,12 @@ void Engine::computeLoop() {
             }
         }
         try {
+            // Release replay buffers/file handles on returning to live preview,
+            // so deleting the last viewed archive promptly frees its disk space.
+            if (command.kind != Command::Replay &&
+                (config.tool == "preview" || config.tool == "focus" || config.tool == "direct")) {
+                playbackReader.reset(); playbackPath.clear();
+            }
             if (activeGeneration != generation) {
                 motion.reset();
                 processingSequence = 0;
@@ -882,27 +879,12 @@ void Engine::computeLoop() {
                 continue;
             }
             if (command.kind == Command::Replay) {
-                ArchiveReader reader(command.path);
-                if (command.index > 1000000000ULL)
-                    throw std::runtime_error("回放位置无效");
+                if (!playbackReader || playbackPath!=command.path) {
+                    playbackReader=std::make_unique<ArchiveReader>(command.path); playbackPath=command.path;
+                }
+                auto &reader=*playbackReader;
                 auto playback = std::make_shared<Frame>();
-                const uint64_t bytes = uint64_t(reader.stride) * reader.height;
-                std::ifstream file(command.path, std::ios::binary);
-                file.seekg(std::streamoff(80 + command.index * (80 + bytes)));
-                std::array<uint8_t, 80> h{};
-                if (!file.read(reinterpret_cast<char *>(h.data()), 80) || getLE(h.data() + 6, 2) != 2 ||
-                    getLE(h.data() + 12, 4) != bytes)
-                    throw std::runtime_error("已到录像末尾或录像不完整");
-                playback->width = reader.width;
-                playback->height = reader.height;
-                playback->stride = reader.stride;
-                playback->bits = reader.bits;
-                playback->sequence = getLE(h.data() + 32, 8);
-                playback->timestamp = getLE(h.data() + 40, 8);
-                playback->data.resize(bytes);
-                if (!file.read(reinterpret_cast<char *>(playback->data.data()), bytes) ||
-                    frameCRC(playback->data.data(), bytes) != getLE(h.data() + 64, 4))
-                    throw std::runtime_error("回放帧校验失败");
+                reader.readAt(command.index,*playback);
                 std::lock_guard<std::mutex> l(mutex_);
                 if (generation != generation_)
                     continue;
@@ -1075,6 +1057,7 @@ void Engine::computeLoop() {
                 ++state_.displayRevision;
             }
         } catch (const std::exception &e) {
+            if(command.kind==Command::Replay) { playbackReader.reset(); playbackPath.clear(); }
             analyzer.reset();
             motion.reset();
 #ifdef VR_TOUCH_RKNN

@@ -208,25 +208,16 @@ void Controller::refreshFiles() {
     for (const auto &entry : dir.entryInfoList({"*.vri"}, QDir::Files | QDir::NoSymLinks, QDir::Time)) {
         try {
             ArchiveReader reader(entry.absoluteFilePath().toStdString());
-            const uint64_t frameBytes = uint64_t(reader.stride) * reader.height;
-            const uint64_t size = uint64_t(entry.size());
-            if (size < 240 || ((size - 160) % (80 + frameBytes)))
-                continue;
-            const uint64_t frames = (size - 160) / (80 + frameBytes);
-            std::ifstream file(entry.absoluteFilePath().toStdString(), std::ios::binary);
-            file.seekg(-80, std::ios::end);
-            std::array<uint8_t, 80> end{};
-            if (!file.read(reinterpret_cast<char *>(end.data()), 80) || std::memcmp(end.data(), "VRI1", 4) ||
-                getLE(end.data() + 6, 2) != 3 || getLE(end.data() + 32, 8) != frames ||
-                getLE(end.data() + 40, 8) != frames * frameBytes)
-                continue;
+            const uint64_t frames=reader.frameCount();
+            const uint64_t size=uint64_t(entry.size());
             files_.append(QVariantMap{{"name", entry.fileName()},
                                       {"path", entry.absoluteFilePath()},
                                       {"bytes", double(size)},
                                       {"duration", frames / reader.fps()},
                                       {"fps", reader.fps()},
                                       {"frames", double(frames)},
-                                      {"synthetic", bool(reader.flags & 2)}});
+                                      {"synthetic", bool(reader.flags & 2)},
+                                      {"compressed", bool(reader.flags & 8)}});
         } catch (const std::exception &) {
         }
     }
@@ -392,6 +383,8 @@ void Controller::poll() {
             QJsonObject data{{"version", 1},
                              {"frames", double(r.frames)},
                              {"bytes", double(r.payload)},
+                             {"storedPayloadBytes", double(r.written)},
+                             {"compression", r.compressed ? "bitshuffle-lz4-fast8" : "raw"},
                              {"seconds", r.seconds},
                              {"stopReason", QString::fromStdString(r.reason)},
                              {"bufferBudgetBytes", double(r.budget)},
@@ -470,6 +463,8 @@ void Controller::poll() {
               {"peak", view_.peak},
               {"displacement", view_.displacement},
               {"recordState", names[r.state]},
+              {"recordCompressed", r.compressed},
+              {"recordSaving", r.processed ? 100.*(1.-double(r.written)/r.processed) : 0.},
               {"bufferBytes", double(r.buffered)},
               {"bufferBudget", double(r.budget)},
               {"recordSeconds", r.seconds},

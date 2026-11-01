@@ -75,8 +75,8 @@ void Recording::start(const std::string &path, const Format &format, RecordingOp
         throw std::runtime_error("DDR 缓冲上限必须不超过 4 GiB");
     const auto available = options.memory();
     const auto unit = format.frameBytes() + sizeof(Frame) + 128;
-    if (available <= options.memoryReserve || available - options.memoryReserve < unit * 4 ||
-        options.maxBufferBytes < unit * 4)
+    if (available <= options.memoryReserve || available - options.memoryReserve < unit * (options.compression ? 6 : 4) ||
+        options.maxBufferBytes < unit * (options.compression ? 6 : 4))
         throw std::runtime_error("可用内存不足，无法开始录制");
     if (path.empty() || std::filesystem::exists(path) || std::filesystem::exists(path + ".partial"))
         throw std::runtime_error("录像路径已存在或无效");
@@ -94,6 +94,8 @@ void Recording::start(const std::string &path, const Format &format, RecordingOp
         state_.state = RecordingStatus::Recording;
         state_.path = path;
         state_.budget = std::min(options_.maxBufferBytes, available - options_.memoryReserve);
+        state_.compressed=options_.compression;
+        state_.buffered=options_.compression ? 2*format.frameBytes() : 0;
         lastSequence_ = lastTimestamp_ = firstTimestamp_ = 0;
     }
     try {
@@ -153,9 +155,12 @@ void Recording::stop(const std::string &why) {
 void Recording::writeLoop() {
     try {
         AtomicFile file(state_.path);
-        auto h = recordHeader(format_, 1);
+        const uint32_t flags=options_.compression ? 8 : 0;
+        std::vector<uint8_t> shuffled,encoded;
+        if(options_.compression) { shuffled.resize(format_.frameBytes()); encoded.resize(format_.frameBytes()); }
+        auto h = recordHeader(format_, 1,0,0,0,flags);
         file.write(h.data(), h.size());
-        uint64_t frames = 0, total = 0;
+        uint64_t frames = 0, total = 0, stored = 0;
         for (;;) {
             std::shared_ptr<const Frame> f;
             {
@@ -173,20 +178,26 @@ void Recording::writeLoop() {
                 throw std::runtime_error("eMMC 空间不足；保留 .partial，录像未完成");
             if (options_.beforeWrite)
                 options_.beforeWrite();
-            h = recordHeader(format_, 2, f->sequence, f->timestamp, frameCRC(f->data.data(), f->data.size()));
+            const int compressed=options_.compression ? vr_raw_encode(f->data.data(),f->data.size(),f->bits,shuffled.data(),encoded.data()) : 0;
+            if(compressed<0) throw std::runtime_error("RAW 无损压缩失败，保留未完成录像");
+            const size_t bytes=compressed>0 ? size_t(compressed) : f->data.size();
+            h = recordHeader(format_, 2, f->sequence, f->timestamp, frameCRC(f->data.data(), f->data.size()),flags);
+            putLE(h.data()+12,bytes,4); putLE(h.data()+76,compressed>0 ? 1 : 0,4);
             file.write(h.data(), h.size());
-            file.write(f->data.data(), f->data.size());
+            file.write(compressed>0 ? encoded.data() : f->data.data(),bytes);
+            stored+=bytes;
             ++frames;
             total += f->data.size();
             {
                 std::lock_guard<std::mutex> l(mutex_);
                 state_.buffered -= charge(*f);
-                state_.written = total;
+                state_.written = stored;
+                state_.processed = total;
             }
         }
         if (!frames)
             throw std::runtime_error("未采集到有效帧；未发布录像文件");
-        h = recordHeader(format_, 3, frames, total);
+        h = recordHeader(format_, 3, frames, total,0,flags);
         file.write(h.data(), h.size());
         file.publish();
         // Ensure the directory entry is durable before reporting Saved.
@@ -199,6 +210,7 @@ void Recording::writeLoop() {
         if (result)
             throw std::runtime_error("录制目录同步失败；请检查文件");
         std::lock_guard<std::mutex> l(mutex_);
+        state_.buffered=0;
         state_.state = RecordingStatus::Saved;
     } catch (const std::exception &e) {
         std::lock_guard<std::mutex> l(mutex_);

@@ -7,6 +7,7 @@
 #include <chrono>
 #include <filesystem>
 #include <iostream>
+#include <random>
 #include <sys/socket.h>
 #include <unistd.h>
 #define REQUIRE(x)                                                                                           \
@@ -133,6 +134,66 @@ static void recordingTests(const std::string &dir) {
     REQUIRE(r.status().state == RecordingStatus::Failed);
     REQUIRE(!std::filesystem::exists(dir + "/empty.vri"));
 }
+
+static void compressionTests(const std::string& dir) {
+    std::mt19937 random(6385);
+    for(unsigned bits : {8u,10u,12u,16u}) for(size_t size : {size_t(1),size_t(17),size_t(1024),size_t(16418)}) {
+        for(bool noise : {false,true}) {
+            std::vector<uint8_t> raw(size),scratch(size),encoded(size),decoded(size);
+            for(size_t i=0;i<size;++i) raw[i]=noise?uint8_t(random()):uint8_t((i/2)%9+(i%2?224:0));
+            const int n=vr_raw_encode(raw.data(),size,bits,scratch.data(),encoded.data());
+            REQUIRE(n>=0);
+            if(size>=1024 && !noise) REQUIRE(n>0); // also retains nonzero high bits and padding
+            if(n>0) {
+                REQUIRE(vr_raw_decode(encoded.data(),n,size,bits,scratch.data(),decoded.data())==0);
+                REQUIRE(decoded==raw);
+                REQUIRE(vr_raw_decode(encoded.data(),n-1,size,bits,scratch.data(),decoded.data())<0);
+            }
+            if(size%2 && bits!=8) REQUIRE(n==0);
+        }
+    }
+    auto sample=[](unsigned index) {
+        auto f=frame(index);
+        if(index%3==1) { std::mt19937 noise(index); for(auto &byte:f->data) byte=uint8_t(noise()); }
+        return f;
+    };
+    Recording recorder;
+    for(bool compressed : {false,true}) {
+        auto o=options(); o.compression=compressed; o.maxBufferBytes=16*1024*1024;
+        auto path=dir+(compressed?"/compressed.vri":"/legacy.vri");
+        recorder.start(path,format(),o);
+        for(unsigned i=0;i<520;++i) REQUIRE(recorder.submit(sample(i)));
+        recorder.stop(); recorder.wait(); REQUIRE(recorder.status().state==RecordingStatus::Saved);
+        REQUIRE(recorder.status().processed==520*2048);
+        if(!compressed) REQUIRE(recorder.status().written==520*2048);
+        if(compressed) REQUIRE(recorder.status().written<recorder.status().processed/2);
+        { vr::ArchiveReader full(path); Frame f; unsigned n=0;
+          while(full.read(f)) { REQUIRE(f.sequence==n); REQUIRE(f.data==sample(n)->data); ++n; }
+          REQUIRE(n==520); }
+        vr::ArchiveReader reader(path); REQUIRE(reader.frameCount()==520);
+        Frame decoded;
+        for(auto i : {519,0,255,256,257,518,7}) { reader.readAt(i,decoded); REQUIRE(decoded.data==sample(i)->data); REQUIRE(decoded.sequence==unsigned(i)); }
+        REQUIRE(reader.read(decoded)); REQUIRE(decoded.sequence==0); // random seek did not consume sequential cursor
+        REQUIRE(bool(reader.flags&8)==compressed);
+        if(compressed) {
+            std::ifstream input(path,std::ios::binary); std::vector<uint8_t> good((std::istreambuf_iterator<char>(input)),{});
+            auto rejected=[&](std::vector<uint8_t> bad) {
+                const auto badPath=dir+"/bad.vri";
+                { std::ofstream out(badPath,std::ios::binary); out.write(reinterpret_cast<const char*>(bad.data()),bad.size()); }
+                bool failed=false;
+                try { vr::ArchiveReader r(badPath); Frame f; while(r.read(f)) {} } catch(...) { failed=true; }
+                REQUIRE(failed);
+            };
+            auto bad=good; bad[156]=2; rejected(bad); // unknown codec
+            bad=good; bad[144]^=1; rejected(bad); // decoded CRC
+            bad=good; bad[92]=0; bad[93]=0; bad[94]=0; bad[95]=0; rejected(bad);
+            bad=good; bad.resize(bad.size()-80); rejected(bad); // missing END
+            bad=good; bad[bad.size()-48]^=1; rejected(bad); // END count
+            bad=good; bad.push_back(0); rejected(bad);
+        }
+    }
+}
+
 static void spectrumTests() {
     Spectrum spectrum(128, 512);
     for (size_t i = 0; i < 512; ++i)
@@ -245,6 +306,7 @@ int main() {
     try {
         std::filesystem::create_directory(dir);
         recordingTests(dir);
+        compressionTests(dir);
         spectrumTests();
         streamingTest(dir);
         std::filesystem::remove_all(dir);

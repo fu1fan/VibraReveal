@@ -277,6 +277,7 @@ ApplicationWindow {
     Component {
         id: recordingPanel
         Panel {
+            Text { width: parent.width; wrapMode: Text.Wrap; text: "Bitshuffle + LZ4 · 无损压缩"+(s.recordCompressed?" · 已写入节省 "+Number(s.recordSaving).toFixed(0)+"%":""); color: "#151a22"; font.pixelSize: 14 }
             title: s.recordState === "recording" ? "正在录制 RAW" : s.recordState === "draining" ? "正在完成写入" : s.recordState === "saved" ? "录制已保存" : s.recordState === "failed" ? "录制未完成" : "RAW 录制"
             subtitle: "本机 eMMC · DDR 缓冲上限 4 GiB"; onClosed: backend.tool("preview")
             Text { text: "DDR · "+bytes(s.bufferBytes)+" / "+bytes(s.bufferBudget || 4294967296); color: "#151a22"; font.pixelSize: 16 }
@@ -374,7 +375,7 @@ ApplicationWindow {
             delegate: Rectangle { width: fileList.width; height: 86; radius: 12; color: "#e9edf2"
                 Column { x: 14; anchors.verticalCenter: parent.verticalCenter; spacing: 7; width: parent.width-320
                     Text { text: modelData.name; color: "#151a22"; font.pixelSize: 16; width: parent.width; elide: Text.ElideMiddle }
-                    Text { text: clock(modelData.duration)+" · "+bytes(modelData.bytes)+(modelData.synthetic?" · 合成源":" · 原始帧"); color: "#414e60"; font.pixelSize: 14 }
+                    Text { text: clock(modelData.duration)+" · "+bytes(modelData.bytes)+(modelData.compressed?" · 无损压缩":" · 原始帧")+(modelData.synthetic?" · 合成源":""); color: "#414e60"; font.pixelSize: 14 }
                 }
                 Row { anchors.right: parent.right; anchors.rightMargin: 12; anchors.verticalCenter: parent.verticalCenter; spacing: 10
                     TouchButton { glyph: "chart-no-axes-combined"; text: "回放 / 分析"; enabled: !s.streamBusy && !s.offlineBusy; onClicked: backend.openFile(index) }

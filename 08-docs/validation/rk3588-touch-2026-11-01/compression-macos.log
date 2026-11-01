@@ -1,0 +1,31 @@
+Building for debugging...
+Build complete! (0.31秒)
+Test Suite 'Selected tests' started at 2026-11-01 21:44:51.237.
+Test Suite 'VibraRevealTransportTests.xctest' started at 2026-11-01 21:44:51.237.
+Test Suite 'TransportTests' started at 2026-11-01 21:44:51.237.
+Test Case '-[VibraRevealTransportTests.TransportTests testBoardCompressedFixtureWhenProvided]' started.
+Test Case '-[VibraRevealTransportTests.TransportTests testBoardCompressedFixtureWhenProvided]' passed (0.090 seconds).
+Test Case '-[VibraRevealTransportTests.TransportTests testCompressedArchiveLosslessAndCorruption]' started.
+Test Case '-[VibraRevealTransportTests.TransportTests testCompressedArchiveLosslessAndCorruption]' passed (0.019 seconds).
+Test Case '-[VibraRevealTransportTests.TransportTests testOfflineRejectsGapsRealtimeReportsThem]' started.
+Test Case '-[VibraRevealTransportTests.TransportTests testOfflineRejectsGapsRealtimeReportsThem]' passed (0.001 seconds).
+Test Case '-[VibraRevealTransportTests.TransportTests testPipelinedRealtimeRejectsResizeAndEndDrops]' started.
+Test Case '-[VibraRevealTransportTests.TransportTests testPipelinedRealtimeRejectsResizeAndEndDrops]' passed (0.001 seconds).
+Test Case '-[VibraRevealTransportTests.TransportTests testPreservesPaddingFractionalRateAndCaptureMetadata]' started.
+Test Case '-[VibraRevealTransportTests.TransportTests testPreservesPaddingFractionalRateAndCaptureMetadata]' passed (0.000 seconds).
+Test Case '-[VibraRevealTransportTests.TransportTests testRejectsCorruptionMissingEndWrongTotalsAndTrailingBytes]' started.
+Test Case '-[VibraRevealTransportTests.TransportTests testRejectsCorruptionMissingEndWrongTotalsAndTrailingBytes]' passed (0.001 seconds).
+Test Case '-[VibraRevealTransportTests.TransportTests testRejectsOversizedFrameBeforeAllocation]' started.
+Test Case '-[VibraRevealTransportTests.TransportTests testRejectsOversizedFrameBeforeAllocation]' passed (0.000 seconds).
+Test Suite 'TransportTests' passed at 2026-11-01 21:44:51.350.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.112 (0.113) seconds
+Test Suite 'VibraRevealTransportTests.xctest' passed at 2026-11-01 21:44:51.350.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.112 (0.113) seconds
+Test Suite 'Selected tests' passed at 2026-11-01 21:44:51.350.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.112 (0.113) seconds
+Test Suite 'Selected tests' started at 2026-11-01 21:44:51.408.
+Test Suite 'VibraRevealBackendTests.xctest' started at 2026-11-01 21:44:51.409.
+Test Suite 'VibraRevealBackendTests.xctest' passed at 2026-11-01 21:44:51.409.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-11-01 21:44:51.409.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds

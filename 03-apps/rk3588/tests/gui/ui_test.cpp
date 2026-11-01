@@ -115,8 +115,75 @@ class UiTest : public QObject {
         char value; QCOMPARE(corrupt.read(&value,1),qint64(1)); value^=1;
         QVERIFY(corrupt.seek(corrupt.size()-81)); QCOMPARE(corrupt.write(&value,1),qint64(1)); corrupt.close();
         controller.analyzeGlobal(); QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["offlineBusy"].toBool(),30000);
-        QVERIFY(controller.state()["offlineOutput"].toString().isEmpty()); QVERIFY(controller.state()["error"].toString().contains("CRC"));
+        QVERIFY(controller.state()["offlineOutput"].toString().isEmpty()); QVERIFY(controller.state()["error"].toString().contains("CRC") || controller.state()["error"].toString().contains("Bitshuffle"));
     }
+
+    void hardwareCompression() {
+        if(!qEnvironmentVariableIsSet("VR_TEST_CAMERA")) QSKIP("Requires exclusive camera access");
+        // Explicit eMMC directory: /tmp is tmpfs on the ELF 2 board.
+        const auto storage=qEnvironmentVariable("VR_TEST_STORAGE");
+        QVERIFY(!storage.isEmpty()); QVERIFY(QDir().mkpath(storage));
+        QTemporaryDir dir(storage+"/compression-XXXXXX"); QVERIFY(dir.isValid());
+        EngineOptions options; options.storage=dir.path().toStdString();
+        options.shader=qEnvironmentVariable("VR_TEST_SHADER_PATH",VR_TEST_SHADER).toStdString();
+        Controller controller(options);
+        QQmlApplicationEngine engine; engine.rootContext()->setContextProperty("backend",&controller);
+        engine.load(QUrl("qrc:/qml/Main.qml")); QVERIFY(!engine.rootObjects().isEmpty());
+        auto window=qobject_cast<QQuickWindow *>(engine.rootObjects().first()); QVERIFY(window); window->showFullScreen();
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["exposureEditable"].toBool(),10000);
+        const double originalFps=controller.state()["fps"].toDouble();
+        controller.captureFps(120);
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["cameraBusy"].toBool(),10000);
+        QVERIFY2(controller.state()["error"].toString().isEmpty(),qPrintable(controller.state()["error"].toString()));
+        QTest::qWait(500);
+        controller.tool("record"); controller.record();
+        uint64_t peakBuffer=0;
+        QElapsedTimer clock; clock.start();
+        while(clock.elapsed()<30000) {
+            QTest::qWait(200);
+            const auto status=controller.engine().recorder.status();
+            peakBuffer=std::max(peakBuffer,status.buffered);
+            if(status.state!=RecordingStatus::Recording) break;
+        }
+        const auto during=controller.engine().recorder.status();
+        controller.stopRecording();
+        QTRY_COMPARE_WITH_TIMEOUT(controller.state()["recordState"].toString(),QString("saved"),30000);
+        const auto result=controller.engine().recorder.status();
+        controller.captureFps(originalFps);
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["cameraBusy"].toBool(),10000);
+        QCOMPARE(during.state,RecordingStatus::Recording);
+        QVERIFY2(result.frames>=3500,result.reason.c_str());
+        QVERIFY(result.compressed); QCOMPARE(result.processed,result.payload);
+        vr::ArchiveReader reader(result.path); Frame frame; uint64_t count=0;
+        while(reader.read(frame)) ++count;
+        QCOMPARE(count,result.frames); QCOMPARE(reader.frameCount(),count);
+        const double measured=double(count)/result.seconds;
+        QVERIFY(std::abs(measured-120)<1);
+        qInfo()<<"BOARD_COMPRESSION"<<"frames"<<count<<"fps"<<measured<<"raw_bytes"<<result.payload
+               <<"stored_payload_bytes"<<result.written<<"saved_percent"<<100.*(1.-double(result.written)/result.payload)
+               <<"peak_buffer_bytes"<<peakBuffer<<"stop_reason"<<QString::fromStdString(result.reason);
+        const auto fixture=qEnvironmentVariable("VR_TEST_COMPRESSION_FIXTURE");
+        if(!fixture.isEmpty()) {
+            Recording subset; Format format{reader.width,reader.height,reader.stride,reader.bits,reader.fpsNum,reader.fpsDen,false};
+            subset.start(fixture.toStdString(),format);
+            for(unsigned i=0;i<8;++i) { auto f=std::make_shared<Frame>(); reader.readAt(i,*f); QVERIFY(subset.submit(f)); }
+            subset.stop(); subset.wait(); QCOMPARE(subset.status().state,RecordingStatus::Saved);
+        }
+        const auto output=qEnvironmentVariable("VR_UI_CAPTURE_DIR");
+        if(!output.isEmpty()) {
+            QDir().mkpath(output); QTest::qWait(200);
+            auto grab=window->contentItem()->grabToImage(); QVERIFY(grab);
+            QSignalSpy ready(grab.data(),&QQuickItemGrabResult::ready); QVERIFY(ready.wait(5000));
+            QVERIFY(grab->saveToFile(output+"/compression-saved.png"));
+        }
+        controller.tool("files"); controller.openFile(0);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["replayReady"].toBool(),5000);
+        controller.seek(20); QTRY_COMPARE_WITH_TIMEOUT(controller.engine().snapshot().replayIndex,uint64_t(2400),5000);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["replayReady"].toBool(),5000);
+        controller.seek(1); QTRY_COMPARE_WITH_TIMEOUT(controller.engine().snapshot().replayIndex,uint64_t(120),5000);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["replayReady"].toBool(),5000);
+    }
+
     void hardwareRegionClip() {
         if(!qEnvironmentVariableIsSet("VR_TEST_CAMERA")) QSKIP("Requires exclusive camera access");
         QTemporaryDir dir;

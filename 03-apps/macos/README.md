@@ -229,3 +229,7 @@ vibrareveal stream --usb true --adaptive false --alpha 10 --levels 3 \
 经 Wi-Fi 调用 CNB 编译的 `vr-clock-probe`，测试前后及每约 20 秒做时钟探测，以最小 RTT 样本估算偏移并插值。
 RTT/2 表示校准时的不确定度，不能作为两次校准之间非线性漂移的严格保证。
 端到端边界是 V4L2 单调采集时间戳到处理结果可用，不含显示扫描、曝光起点或算法频带的相位延迟。
+
+### 板端压缩录像兼容
+
+`FrameReader` / `vr-receive --archive` / `vibrareveal ... --archive` 支持板端 Bitshuffle + LZ4 无损 `.vri`，逐帧解压后校验完整原始 CRC，统计未压缩字节数。旧录像及 USB 原始视频不变。构建依赖仓库内相邻的 `03-apps/raw-codec`，无需安装额外压缩动态库。

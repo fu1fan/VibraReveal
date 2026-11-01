@@ -1,0 +1,18 @@
+Consolidate compiler generated dependencies of target vr-raw-codec
+[ 41%] Built target vr-raw-codec
+Consolidate compiler generated dependencies of target vr-touch-core
+[ 83%] Built target vr-touch-core
+Consolidate compiler generated dependencies of target vr-touch-core-test
+[ 91%] Building CXX object CMakeFiles/vr-touch-core-test.dir/tests/gui/core_test.cpp.o
+[100%] Linking CXX executable vr-touch-core-test
+[100%] Built target vr-touch-core-test
+Internal ctest changing into directory: /tmp/vr-compression-sanitize
+Test project /tmp/vr-compression-sanitize
+    Start 1: touch-core
+1/1 Test #1: touch-core .......................   Passed    0.26 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.26 sec
+[1/2] Building CXX object CMakeFiles/vr-touch-core-test.dir/tests/gui/core_test.cpp.o
+[2/2] Linking CXX executable vr-touch-core-test
