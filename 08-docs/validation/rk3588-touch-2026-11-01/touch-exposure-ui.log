@@ -1,0 +1,23 @@
+QStandardPaths: wrong permissions on runtime directory /run, 0755 instead of 0700
+********* Start testing of UiTest *********
+Config: Using QtTest library 5.15.10, Qt 5.15.10 (arm64-little_endian-lp64 shared (dynamic) release build; by GCC 12.3.0), buildroot 2021.11
+PASS   : UiTest::initTestCase()
+arm_release_ver: g13p0-01eac0, rk_so_ver: 10
+QWARN  : UiTest::exposureInteraction() qt.qpa.wayland: Wayland does not support QWindow::requestActivate()
+PASS   : UiTest::exposureInteraction()
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+PASS   : UiTest::workflow()
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+QINFO  : UiTest::motionAdmission() MOTION_REJECTED_BEFORE_START QVariant(QString, "未启动运动放大：预计超出 RK3588 实时计算能力，请缩小选区或降低处理帧率。预估 3.9 ms/帧 · 可用预算 2.9 ms · 1.63 M层像素/s")
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+PASS   : UiTest::motionAdmission()
+PASS   : UiTest::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 15056ms
+********* Finished testing of UiTest *********

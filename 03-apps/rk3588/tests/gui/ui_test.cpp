@@ -4,6 +4,7 @@
 #include "vulkan_motion.hpp"
 #include "backend_io.hpp"
 #include "motion_budget.hpp"
+#include "sensor_controls.hpp"
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -21,6 +22,108 @@ using namespace vr::touch;
 class UiTest : public QObject {
     Q_OBJECT
   private slots:
+    void exposureInteraction() {
+        SensorSettings limits;
+        QCOMPARE(boundedExposure(limits,1e20),limits.maximum);
+        QCOMPARE(boundedExposure(limits,-100),limits.minimum);
+        QVERIFY_EXCEPTION_THROWN(boundedExposure(limits,NAN),std::runtime_error);
+        Frame uniform; uniform.width=65; uniform.height=65; uniform.bits=10; uniform.stride=136;
+        uniform.data.resize(uniform.stride*uniform.height);
+        for(unsigned y=0;y<65;++y) for(unsigned x=0;x<65;++x) {
+            uniform.data[y*uniform.stride+x*2]=0; uniform.data[y*uniform.stride+x*2+1]=2;
+        }
+        QVERIFY(std::abs(meteredBrightness(uniform,0,0)-512./1023)<1e-6);
+        QTemporaryDir dir;
+        EngineOptions options; options.demo=true; options.width=320; options.height=200;
+        options.bits=8; options.demoFps=30; options.storage=dir.path().toStdString();
+        options.shader=qEnvironmentVariable("VR_TEST_SHADER_PATH",VR_TEST_SHADER).toStdString();
+        Controller controller(options);
+        QQmlApplicationEngine engine; engine.rootContext()->setContextProperty("backend",&controller);
+        engine.load(QUrl("qrc:/qml/Main.qml")); QVERIFY(!engine.rootObjects().isEmpty());
+        auto window=qobject_cast<QQuickWindow *>(engine.rootObjects().first()); QVERIFY(window);
+        window->showFullScreen();
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["exposureEditable"].toBool(),5000);
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.image(0).isNull(),5000);
+        auto camera=window->findChild<FrameView *>("cameraView"); QVERIFY(camera);
+        auto indicator=window->findChild<QQuickItem *>("exposureIndicator"); QVERIFY(indicator);
+        const double original=controller.state()["exposureMs"].toDouble();
+        QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,camera->toView(70,100).toPoint());
+        QTRY_VERIFY(indicator->isVisible());
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["cameraBusy"].toBool(),5000);
+        QVERIFY(controller.state()["exposureMs"].toDouble()<original);
+        const double metered=controller.state()["exposureMs"].toDouble();
+        QTest::mousePress(window,Qt::LeftButton,Qt::NoModifier,QPoint(500,350));
+        QTest::mouseMove(window,QPoint(500,270),80);
+        QTest::mouseRelease(window,Qt::LeftButton,Qt::NoModifier,QPoint(500,270));
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["cameraBusy"].toBool(),5000);
+        QVERIFY(controller.state()["exposureEV"].toDouble()>.5);
+        QVERIFY(controller.state()["exposureMs"].toDouble()>metered);
+        auto capture=[&](const QString &name) {
+            const auto dir=qEnvironmentVariable("VR_UI_CAPTURE_DIR"); if(dir.isEmpty()) return;
+            QDir().mkpath(dir); QTest::qWait(100);
+            auto grab=window->contentItem()->grabToImage(); QVERIFY(grab);
+            QSignalSpy ready(grab.data(),&QQuickItemGrabResult::ready);
+            QVERIFY(ready.wait(5000)||!grab->image().isNull()); QVERIFY(grab->image().save(dir+"/"+name+".png"));
+        };
+        capture("exposure-yellow");
+        QTRY_VERIFY_WITH_TIMEOUT(!indicator->isVisible(),6500);
+        controller.tool("settings");
+        QTest::qWait(100);
+        auto inspector=window->findChild<QQuickItem *>("inspector"); QVERIFY(inspector);
+        QVERIFY2(inspector->height()<=584,qPrintable(QString::number(inspector->height())));
+        for(double fps : {120.,60.,30.}) {
+            controller.captureFps(fps);
+            QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["cameraBusy"].toBool(),5000);
+            QCOMPARE(controller.state()["fps"].toDouble(),fps);
+            controller.exposureCompensation(3);
+            QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["cameraBusy"].toBool(),5000);
+            QVERIFY(controller.state()["exposureMs"].toDouble()<=1000/fps);
+            QVERIFY(controller.state()["exposureMs"].toDouble()<=controller.state()["exposureMaxMs"].toDouble());
+        }
+        capture("exposure-settings");
+        controller.record();
+        QTRY_COMPARE(controller.state()["recordState"].toString(),QString("recording"));
+        const double locked=controller.state()["exposureMs"].toDouble();
+        controller.captureFps(120); controller.meterExposure(70,100);
+        QVERIFY(!controller.state()["exposureEditable"].toBool());
+        QCOMPARE(controller.state()["exposureMs"].toDouble(),locked);
+        QCOMPARE(controller.state()["fps"].toDouble(),30.0);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.engine().recorder.status().frames>=3,3000);
+        controller.stopRecording();
+        QTRY_COMPARE_WITH_TIMEOUT(controller.state()["recordState"].toString(),QString("saved"),5000);
+        controller.tool("select");
+        controller.meterExposure(70,100);
+        QVERIFY(!controller.state()["exposureEditable"].toBool());
+        QCOMPARE(controller.state()["exposureMs"].toDouble(),locked);
+    }
+    void hardwareExposure() {
+        if(!qEnvironmentVariableIsSet("VR_TEST_CAMERA")) QSKIP("Requires exclusive camera access");
+        EngineOptions options; options.storage=qEnvironmentVariable("VR_TEST_STORAGE").toStdString();
+        options.shader=qEnvironmentVariable("VR_TEST_SHADER_PATH",VR_TEST_SHADER).toStdString();
+        Controller controller(options);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["exposureEditable"].toBool(),10000);
+        SensorControls sensor(options.sensor);
+        for(double fps : {30.,60.,120.}) {
+            controller.captureFps(fps);
+            QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["cameraBusy"].toBool(),10000);
+            QVERIFY2(controller.state()["error"].toString().isEmpty(),qPrintable(controller.state()["error"].toString()));
+            QVERIFY(std::abs(controller.state()["fps"].toDouble()-fps)<.01);
+            controller.exposureCompensation(3);
+            QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["cameraBusy"].toBool(),5000);
+            auto actual=sensor.read(800);
+            QVERIFY(actual.exposure<=actual.maximum);
+            QVERIFY(actual.exposureMs()<=1000/actual.fps());
+            QTest::qWait(150);
+            auto begin=controller.engine().snapshot(); QTest::qWait(1000); auto end=controller.engine().snapshot();
+            const double measured=double(end.sequence-begin.sequence)*1e9/(end.timestamp-begin.timestamp);
+            QVERIFY2(std::abs(measured-fps)<fps*.03,qPrintable(QString::number(measured)));
+            qInfo()<<"BOARD_EXPOSURE_FPS"<<fps<<"actual"<<measured<<"exposure_ms"<<actual.exposureMs()<<"limit_ms"<<1000/actual.fps();
+        }
+        controller.meterExposure(640,400);
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["cameraBusy"].toBool(),5000);
+        QVERIFY2(controller.state()["error"].toString().isEmpty(),qPrintable(controller.state()["error"].toString()));
+        qInfo()<<"BOARD_AUTO_EXPOSURE"<<controller.state()["exposureMs"]<<controller.state()["cameraStatus"];
+    }
     void motionAdmission() {
         using namespace vr;
         constexpr uint64_t ample=8ULL*1024*1024*1024;

@@ -1,0 +1,12 @@
+QStandardPaths: wrong permissions on runtime directory /run, 0755 instead of 0700
+********* Start testing of UiTest *********
+Config: Using QtTest library 5.15.10, Qt 5.15.10 (arm64-little_endian-lp64 shared (dynamic) release build; by GCC 12.3.0), buildroot 2021.11
+PASS   : UiTest::initTestCase()
+QINFO  : UiTest::hardwareExposure() BOARD_EXPOSURE_FPS 30 actual 30.1802 exposure_ms 33.2967 limit_ms 33.3333
+QINFO  : UiTest::hardwareExposure() BOARD_EXPOSURE_FPS 60 actual 60.3438 exposure_ms 16.63 limit_ms 16.6667
+QINFO  : UiTest::hardwareExposure() BOARD_EXPOSURE_FPS 120 actual 120.624 exposure_ms 8.2967 limit_ms 8.33333
+QINFO  : UiTest::hardwareExposure() BOARD_AUTO_EXPOSURE QVariant(double, 8.2967) QVariant(QString, "已达当前帧率曝光上限")
+PASS   : UiTest::hardwareExposure()
+PASS   : UiTest::cleanupTestCase()
+Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 5397ms
+********* Finished testing of UiTest *********

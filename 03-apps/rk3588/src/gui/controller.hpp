@@ -25,6 +25,9 @@ class Controller : public QObject {
     Q_INVOKABLE void confirmObject();
     Q_INVOKABLE void confirmEdge();
     Q_INVOKABLE void parameters(double alpha, double low, double high, double fps, double sensitivity);
+    Q_INVOKABLE void meterExposure(qreal x,qreal y);
+    Q_INVOKABLE void exposureCompensation(double ev);
+    Q_INVOKABLE void captureFps(double fps);
     Q_INVOKABLE void record();
     Q_INVOKABLE void stopRecording();
     Q_INVOKABLE void refreshFiles();

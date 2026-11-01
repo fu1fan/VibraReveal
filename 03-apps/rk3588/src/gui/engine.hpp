@@ -23,6 +23,9 @@ struct ViewState {
     bool ready = false, objectReady = false, edgeReady = false, offlineBusy = false, replayReady = false;
     bool useNpu = false, selectionBusy = false;
     double selectionMs = 0;
+    bool exposureSupported = false, cameraBusy = false, cameraChangingFps = false, exposureAuto = false;
+    double exposureMs = 0, exposureMinMs = 0, exposureMaxMs = 0, exposureEV = 0;
+    QString cameraStatus;
     QRect roi;
     double focus = .04, alpha = 20, low = 8, high = 25, processingFps = 60, displacement = 0, peak = 0;
     int selectionStep = 1, samples = 0;
@@ -47,6 +50,10 @@ class Engine {
     void confirmObject();
     void finishSelection();
     void setParameters(double alpha, double low, double high, double fps, double focus);
+    void meterExposure(const QPointF &);
+    void exposureCompensation(double ev);
+    void captureFps(double fps);
+    void ensureCameraStable() const;
     void startOffline(const std::string &archive);
     void cancelOffline();
     void replay(const std::string &archive, uint64_t frameIndex);
@@ -62,6 +69,13 @@ class Engine {
         std::string path;
         uint64_t index = 0;
     };
+    struct CameraCommand {
+        enum Kind { None, Meter, Compensation, Fps } kind = None;
+        QPointF point;
+        double value = 0;
+    } cameraCommand_;
+    void requireCameraEdit() const;
+    void invalidateMeasurement();
     EngineOptions options_;
     mutable std::mutex mutex_;
     std::condition_variable cv_;

@@ -1,6 +1,7 @@
 #include "engine.hpp"
 #include "focus_peaking.hpp"
 #include "motion_budget.hpp"
+#include "sensor_controls.hpp"
 #include <QFileInfo>
 #include <sstream>
 #include "backend_io.hpp"
@@ -203,10 +204,57 @@ void Engine::admitMotion(bool offline, double fps, double low, double high, doub
     if (state_.tool != "magnify") state_.motionEstimate=summary;
     throw std::runtime_error((prefix+reason+"。"+summary).toStdString());
 }
+void Engine::ensureCameraStable() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (state_.cameraBusy || state_.exposureAuto)
+        throw std::runtime_error("正在调整相机，请等待曝光或帧率稳定");
+}
+void Engine::requireCameraEdit() const {
+    const auto recording=recorder.status().state;
+    if (!state_.ready || !state_.exposureSupported || state_.cameraChangingFps ||
+        (state_.tool!="preview" && state_.tool!="focus") || streaming.status().busy ||
+        recording==RecordingStatus::Recording || recording==RecordingStatus::Draining)
+        throw std::runtime_error("当前状态锁定相机参数，请返回预览并结束录制或传输");
+}
+void Engine::invalidateMeasurement() {
+    state_.edgeReady=state_.objectReady=false; state_.roi={}; state_.overlay={};
+    state_.motionEstimate.clear(); reference_.reset(); work_.clear();
+    ++generation_; ++state_.displayRevision;
+}
+void Engine::meterExposure(const QPointF &point) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    requireCameraEdit();
+    if (!std::isfinite(point.x()) || !std::isfinite(point.y()) || point.x()<0 || point.y()<0 ||
+        point.x()>=state_.format.width || point.y()>=state_.format.height)
+        throw std::runtime_error("测光点不在相机图像内");
+    invalidateMeasurement();
+    cameraCommand_={CameraCommand::Meter,point,0};
+    state_.cameraBusy=true; state_.exposureAuto=true; state_.exposureEV=0;
+    state_.cameraStatus="正在对点选区域自动曝光…"; state_.error.clear();
+}
+void Engine::exposureCompensation(double ev) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    requireCameraEdit();
+    if (!std::isfinite(ev) || ev < -3 || ev > 3) throw std::runtime_error("曝光补偿范围为 -3 至 +3 EV");
+    invalidateMeasurement();
+    cameraCommand_={CameraCommand::Compensation,{},ev};
+    state_.cameraBusy=true; state_.error.clear();
+}
+void Engine::captureFps(double fps) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    requireCameraEdit();
+    if (fps!=30 && fps!=60 && fps!=120) throw std::runtime_error("当前相机支持 30、60、120 fps");
+    invalidateMeasurement();
+    cameraCommand_={CameraCommand::Fps,{},fps};
+    state_.cameraBusy=true; state_.cameraChangingFps=true; state_.exposureAuto=false;
+    state_.cameraStatus="正在切换采集帧率…"; state_.error.clear();
+}
 void Engine::setTool(const QString &tool) {
     std::lock_guard<std::mutex> l(mutex_);
     if (state_.offlineBusy)
         throw std::runtime_error("请先取消或完成离线分析");
+    if ((tool=="select" || tool=="magnify" || tool=="direct") && (state_.cameraBusy || state_.exposureAuto))
+        throw std::runtime_error("正在调整相机，请等待曝光或帧率稳定");
     if (tool == "magnify" && (!state_.edgeReady || !referenceArchive_.empty()))
         throw std::runtime_error("请先在实时画面选择对象及测量边缘");
     if (tool == "magnify")
@@ -417,8 +465,37 @@ void Engine::captureLoop() {
             format.stride = f.stride;
         }
         format.validate();
+        std::unique_ptr<SensorControls> sensor;
+        SensorSettings exposure;
+        exposure.fpsNum=format.fpsNum; exposure.fpsDen=format.fpsDen;
+        exposure.maximum=std::max(4,int(1000000./format.fps()/exposure.lineUs)-4);
+        exposure.exposure=boundedExposure(exposure,800);
+        bool controlsSupported=options_.demo;
+        QString controlsError;
+        if (!options_.demo) {
+            try {
+                sensor=std::make_unique<SensorControls>(options_.sensor);
+                exposure=sensor->read(format.height);
+                sensor->exposure(boundedExposure(exposure,exposure.exposure));
+                exposure=sensor->read(format.height);
+                format.fpsNum=exposure.fpsNum; format.fpsDen=exposure.fpsDen;
+                controlsSupported=true;
+            } catch (const std::exception &e) { sensor.reset(); controlsError=QString::fromUtf8(e.what()); }
+        }
+        double exposureBase=exposure.exposure;
+        bool autoExposure=false;
+        QPointF meterPoint;
+        unsigned meterWait=0, meterSteps=0, settling=0;
+        auto publishExposure=[&] {
+            state_.exposureMs=exposure.exposureMs();
+            state_.exposureMinMs=exposure.minimum*exposure.lineUs/1000.;
+            state_.exposureMaxMs=boundedExposure(exposure,exposure.maximum)*exposure.lineUs/1000.;
+        };
         {
             std::lock_guard<std::mutex> l(mutex_);
+            state_.exposureSupported=controlsSupported;
+            state_.cameraStatus=controlsSupported?"点按画面自动曝光":controlsError;
+            publishExposure();
             state_.format = format;
             state_.ready = true;
             state_.processingFps = format.fps() / std::max(1.0, std::ceil(format.fps() / 60));
@@ -432,6 +509,101 @@ void Engine::captureLoop() {
             auto frame = std::make_shared<Frame>(
                 camera ? camera->read()
                        : synthetic(format.width, format.height, format.bits, seq++, format.fps()));
+            if (options_.demo && exposure.exposure!=800) {
+                const double gain=exposure.exposure/800.;
+                const unsigned maximum=(1u<<frame->bits)-1;
+                for (uint32_t y=0;y<frame->height;++y)
+                    for (uint32_t x=0;x<frame->width;++x) {
+                        auto p=frame->data.data()+size_t(y)*frame->stride+x*(frame->bits==8?1:2);
+                        const unsigned v=frame->bits==8?p[0]:(p[0]|unsigned(p[1])<<8);
+                        const unsigned scaled=std::min(maximum,unsigned(std::llround(v*gain)));
+                        p[0]=scaled; if(frame->bits!=8) p[1]=scaled>>8;
+                    }
+            }
+            {
+                std::unique_lock<std::mutex> lock(mutex_);
+                auto request=cameraCommand_; cameraCommand_={};
+                try {
+                    if (request.kind==CameraCommand::Fps) {
+                        autoExposure=false;
+                        const auto previous=exposure;
+                        lock.unlock();
+                        try {
+                            if (sensor) {
+                                camera.reset();
+                                sensor->configureFps(request.value,previous.exposureMs(),format.height);
+                                camera=std::make_unique<Camera>(options_.device,options_.width,options_.height,options_.bits);
+                                exposure=sensor->read(format.height);
+                                if (std::abs(exposure.fps()-request.value)>request.value*.001)
+                                    throw std::runtime_error("驱动未接受请求的采集帧率");
+                            } else {
+                                exposure.fpsNum=uint32_t(request.value*1000); exposure.fpsDen=1000;
+                                exposure.maximum=int(1000000./exposure.fps()/exposure.lineUs)-4;
+                                exposure.exposure=boundedExposure(exposure,previous.exposureMs()*1000/exposure.lineUs);
+                            }
+                        } catch (...) {
+                            if (sensor) {
+                                camera.reset();
+                                sensor->configureFps(previous.fps(),previous.exposureMs(),format.height);
+                                camera=std::make_unique<Camera>(options_.device,options_.width,options_.height,options_.bits);
+                                exposure=sensor->read(format.height);
+                            } else exposure=previous;
+                            lock.lock();
+                            state_.cameraChangingFps=false; state_.cameraBusy=false;
+                            throw;
+                        }
+                        lock.lock();
+                        format.fpsNum=exposure.fpsNum; format.fpsDen=exposure.fpsDen;
+                        state_.format=format;
+                        state_.processingFps=format.fps()/std::max(1.,std::ceil(format.fps()/60));
+                        state_.high=std::min(state_.high,state_.processingFps*.4);
+                        state_.low=std::min(state_.low,state_.high*.5);
+                        state_.cameraChangingFps=false; state_.exposureEV=0;
+                        exposureBase=exposure.exposure;
+                        settling=std::max(4u,unsigned(format.fps()*.1));
+                        state_.cameraStatus="帧率已切换，等待画面稳定";
+                        publishExposure();
+                        first=true; next=Clock::now(); latest_.reset();
+                        continue;
+                    }
+                    if (request.kind==CameraCommand::Meter) {
+                        autoExposure=true; meterPoint=request.point; meterWait=0; meterSteps=0;
+                        state_.exposureAuto=true; state_.exposureEV=0;
+                    } else if (request.kind==CameraCommand::Compensation) {
+                        if (autoExposure) exposureBase=exposure.exposure;
+                        autoExposure=false; state_.exposureAuto=false;
+                        exposure.exposure=boundedExposure(exposure,exposureBase*std::exp2(request.value));
+                        if (sensor) { sensor->exposure(exposure.exposure); exposure=sensor->read(format.height); }
+                        state_.exposureEV=request.value;
+                        settling=std::max(4u,unsigned(format.fps()*.1));
+                        state_.cameraStatus=exposureBase*std::exp2(request.value)>exposure.maximum
+                            ? "已达当前帧率曝光上限" : "手动曝光补偿";
+                    }
+                    if (autoExposure && (!meterWait || --meterWait==0)) {
+                        const double level=meteredBrightness(*frame,int(meterPoint.x()),int(meterPoint.y()));
+                        const int desired=boundedExposure(exposure,exposure.exposure*std::clamp(.30/std::max(.005,level),.5,2.));
+                        const bool done=std::abs(level-.30)<.025 || desired==exposure.exposure || ++meterSteps>=8;
+                        exposure.exposure=desired;
+                        if (sensor) { sensor->exposure(desired); exposure=sensor->read(format.height); }
+                        meterWait=std::max(4u,unsigned(format.fps()*.1)); settling=meterWait;
+                        if (done) {
+                            autoExposure=false; state_.exposureAuto=false; exposureBase=exposure.exposure;
+                            state_.cameraStatus=exposure.exposure==exposure.maximum?"已达当前帧率曝光上限":"自动曝光完成";
+                        }
+                    }
+                    if (settling) --settling;
+                    state_.cameraBusy=autoExposure || settling>0;
+                    publishExposure();
+                } catch (const std::exception &e) {
+                    if (!lock.owns_lock()) lock.lock();
+                    autoExposure=false; settling=0;
+                    state_.cameraBusy=false; state_.cameraChangingFps=false; state_.exposureAuto=false;
+                    state_.error="相机参数调整失败："+QString::fromUtf8(e.what());
+                    if (sensor && !camera) throw;
+                    if (sensor) { exposure=sensor->read(format.height); publishExposure(); }
+                    if (request.kind==CameraCommand::Fps) { first=true; next=Clock::now(); continue; }
+                }
+            }
             if (!first && (frame->sequence != last + 1 || frame->timestamp <= lastTime ||
                            std::abs(double(frame->timestamp - lastTime) * format.fps() / 1e9 - 1) > .2)) {
                 recorder.stop("相机采集不连续，已停止此录像");

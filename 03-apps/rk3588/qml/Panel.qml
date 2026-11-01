@@ -4,6 +4,7 @@ Pane {
     id: panel
     property string title: ""
     property string subtitle: "仅在本机显示"
+    property real contentSpacing: 12
     property bool closable: true
     signal closed()
     signal dragged(real dx, real dy)
@@ -14,7 +15,7 @@ Pane {
     bottomPadding: 22
     // Use Controls' content routing; a default alias to a child data list
     // crashes the stock ELF 2 Qt 5.15.10 QML compiler.
-    contentItem: Column { spacing: 12 }
+    contentItem: Column { spacing: panel.contentSpacing }
     background: Rectangle {
         radius: 18
         color: "#f7f8fa"

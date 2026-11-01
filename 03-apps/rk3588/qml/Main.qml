@@ -19,6 +19,7 @@ ApplicationWindow {
     palette.highlight: "#075ac5"
     palette.highlightedText: "#ffffff"
     property var s: backend.state
+    property point exposurePoint: Qt.point(0,0)
     property bool selectionPan: false
     property var panelPositions: ({})
     property bool liveMotionParameters: s.tool === "magnify" || (s.tool === "select" && s.fileName.length === 0)
@@ -35,6 +36,7 @@ ApplicationWindow {
         target: backend
         function onChanged() {
             if (s.tool !== "select" || !s.native) selectionPan = false
+            if (!s.exposureEditable) exposureTimer.stop()
             if(closingAfterSave && !recording && !s.offlineBusy && !s.streamBusy) {
                 closingAfterSave = false
                 Qt.callLater(function() { window.close() })
@@ -47,12 +49,19 @@ ApplicationWindow {
         property point startPoint
         property point previousPoint
         property point sourceStart
-        onPressed: { startPoint = Qt.point(mouse.x,mouse.y); previousPoint = startPoint; sourceStart = camera.toSource(mouse.x,mouse.y); selectionBox.visible = s.tool === "select" && s.step === 1 && !selectionPan; selectionBox.x = mouse.x; selectionBox.y = mouse.y; selectionBox.width = 0; selectionBox.height = 0 }
+        property bool exposureGesture: false
+        property bool exposureAdjusted: false
+        property real exposureStartEV: 0
+        onPressed: { exposureGesture = exposureTimer.running && s.exposureEditable; exposureAdjusted = false; exposureStartEV = s.exposureEV; startPoint = Qt.point(mouse.x,mouse.y); previousPoint = startPoint; sourceStart = camera.toSource(mouse.x,mouse.y); selectionBox.visible = s.tool === "select" && s.step === 1 && !selectionPan; selectionBox.x = mouse.x; selectionBox.y = mouse.y; selectionBox.width = 0; selectionBox.height = 0 }
         onPositionChanged: {
             if (!pressed) return
             if (s.tool === "select" && s.step === 1 && !selectionPan) {
                 selectionBox.x = Math.min(startPoint.x,mouse.x); selectionBox.y = Math.min(startPoint.y,mouse.y)
                 selectionBox.width = Math.abs(startPoint.x-mouse.x); selectionBox.height = Math.abs(startPoint.y-mouse.y)
+            } else if (exposureGesture && (exposureAdjusted || Math.abs(mouse.y-startPoint.y)>Math.max(6,Math.abs(mouse.x-startPoint.x)))) {
+                exposureAdjusted = true
+                backend.exposureCompensation(Math.max(-3,Math.min(3,exposureStartEV+(startPoint.y-mouse.y)/120)))
+                exposureTimer.restart()
             } else if (s.native && (s.tool !== "select" || selectionPan)) camera.panBy(mouse.x-previousPoint.x,mouse.y-previousPoint.y)
             previousPoint = Qt.point(mouse.x,mouse.y)
         }
@@ -62,9 +71,25 @@ ApplicationWindow {
             if (s.tool === "select" && !selectionPan) {
                 if (s.step === 2) backend.selectEdge(end.x,end.y)
                 else backend.selectObject(sourceStart.x,sourceStart.y,end.x-sourceStart.x,end.y-sourceStart.y,Math.abs(mouse.x-startPoint.x)+Math.abs(mouse.y-startPoint.y)<12)
+            } else if (s.exposureEditable && !exposureAdjusted && Math.abs(mouse.x-startPoint.x)+Math.abs(mouse.y-startPoint.y)<12) {
+                exposurePoint = end
+                backend.meterExposure(end.x,end.y)
+                exposureTimer.restart()
             }
         }
         onCanceled: selectionBox.visible = false
+    }
+    Timer { id: exposureTimer; interval: 5000; repeat: false }
+    Item {
+        objectName: "exposureIndicator"; visible: exposureTimer.running && s.exposureEditable
+        property point center: { camera.viewRevision; return camera.toView(exposurePoint.x,exposurePoint.y) }
+        x: center.x-36; y: center.y-36; width: 72; height: 72
+        Rectangle { anchors.fill: parent; color: "transparent"; border.width: 4; border.color: "#80201800" }
+        Rectangle { anchors.fill: parent; anchors.margins: 1; color: "transparent"; border.width: 2; border.color: "#ffd60a" }
+        Rectangle {
+            x: 0; y: 78; width: exposureLabel.implicitWidth+16; height: 30; radius: 6; color: "#101720"
+            Text { id: exposureLabel; anchors.centerIn: parent; color: "#ffd60a"; font.pixelSize: 14; text: s.exposureAuto ? "自动曝光…" : (s.exposureEV>=0?"+":"")+Number(s.exposureEV).toFixed(1)+" EV · "+Number(s.exposureMs).toFixed(2)+" ms" }
+        }
     }
     Rectangle { id: selectionBox; visible: false; color: "#167cb6ff"; border.color: "#91c5ff"; border.width: 2 }
     Item {
@@ -258,12 +283,18 @@ ApplicationWindow {
     Component {
         id: settingsPanel
         Panel {
-            title: "相机与设备"; subtitle: "当前协商格式"; onClosed: backend.tool("preview")
+            contentSpacing: 7
+            title: "相机与设备"; subtitle: "曝光与拍摄帧率"; onClosed: backend.tool("preview")
             Text { text: s.width+" × "+s.height+" · RAW"+s.bits; color: "#151a22"; font.pixelSize: 18 }
-            Text { text: "实际采集  "+Number(s.fps).toFixed(3)+" fps"; color: "#151a22"; font.pixelSize: 16 }
+            Text { text: "曝光 "+Number(s.exposureMs).toFixed(2)+" ms · 上限 "+Number(s.exposureMaxMs).toFixed(2)+" ms"; color: "#151a22"; font.pixelSize: 15 }
+            Text { text: "曝光补偿 "+(s.exposureEV>=0?"+":"")+Number(s.exposureEV).toFixed(1)+" EV"; color: "#151a22"; font.pixelSize: 15 }
+            Slider { objectName: "exposureSlider"; width: parent.width; height: 44; from: -3; to: 3; stepSize: .1; value: s.exposureEV; enabled: s.exposureEditable; onMoved: backend.exposureCompensation(value) }
+            TouchButton { objectName: "centerMeter"; width: parent.width; text: "中心区域自动曝光"; enabled: s.exposureEditable; onClicked: { exposurePoint=Qt.point(s.width/2,s.height/2); backend.meterExposure(exposurePoint.x,exposurePoint.y); exposureTimer.restart() } }
+            Text { text: "采集帧率 · "+Number(s.fps).toFixed(1)+" fps"; color: "#151a22"; font.pixelSize: 15 }
+            Row { spacing: 6; Repeater { model: [30,60,120]; TouchButton { objectName: "captureFps"+modelData; width: 84; height: 44; text: String(modelData); checked: Math.abs(s.fps-modelData)<.1; enabled: s.exposureEditable && !s.cameraBusy; onClicked: backend.captureFps(modelData) } } }
+            Text { width: parent.width; text: s.cameraStatus; wrapMode: Text.Wrap; color: "#151a22"; font.pixelSize: 14 }
             Text { width: parent.width; wrapMode: Text.Wrap; text: s.hasSam ? "NPU 物品识别 · 模型已配置" : "NPU 物品识别 · 模型未配置"; color: "#151a22"; font.pixelSize: 15 }
-            Text { text: "Qt "+s.qtVersion+" · "+s.transport.toUpperCase(); color: "#414e60"; font.pixelSize: 15 }
-            Text { width: parent.width; wrapMode: Text.Wrap; text: "格式与传感器帧率由启动配置确定。RAW10 使用 16 位低对齐容器，预览叠加不会改变原始数据。"; color: "#414e60"; font.pixelSize: 15 }
+            Text { width: parent.width; wrapMode: Text.Wrap; text: "曝光不超过单帧时长。选区、测量、录制或传输期间锁定相机参数。"; color: "#414e60"; font.pixelSize: 14 }
             TouchButton { width: parent.width; text: "完成"; primary: true; onClicked: backend.tool("preview") }
         }
     }

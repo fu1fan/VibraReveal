@@ -148,12 +148,16 @@ void Controller::confirmEdge() {
 void Controller::parameters(double a, double l, double h, double fps, double sensitivity) {
     handle([&] { engine_.setParameters(a, l, h, fps, .005 + (100 - sensitivity) * .001); });
 }
+void Controller::meterExposure(qreal x,qreal y) { handle([&] { engine_.meterExposure({x,y}); }); }
+void Controller::exposureCompensation(double ev) { handle([&] { engine_.exposureCompensation(ev); }); }
+void Controller::captureFps(double fps) { handle([&] { engine_.captureFps(fps); }); }
 void Controller::record() {
     handle([&] {
         if (mode_ != "local" || engine_.streaming.status().busy || view_.offlineBusy)
             throw std::runtime_error("请先结束电脑传输或离线分析");
         if (!view_.ready)
             throw std::runtime_error("相机尚未就绪");
+        engine_.ensureCameraStable();
         engine_.setTool("preview");
         tool_ = "record";
         currentFile_.clear();
@@ -381,6 +385,16 @@ void Controller::poll() {
               {"selectionBusy", view_.selectionBusy},
               {"selectionMs", view_.selectionMs},
               {"motionEstimate", view_.motionEstimate},
+              {"exposureEditable", view_.ready && view_.exposureSupported && !view_.cameraChangingFps && mode_=="local" &&
+                  (tool_=="preview" || tool_=="focus" || tool_=="settings" || tool_=="record") && !recordingBusy() && !stream.busy},
+              {"cameraBusy", view_.cameraBusy},
+              {"cameraChangingFps", view_.cameraChangingFps},
+              {"cameraStatus", view_.cameraStatus},
+              {"exposureAuto", view_.exposureAuto},
+              {"exposureMs", view_.exposureMs},
+              {"exposureMaxMs", view_.exposureMaxMs},
+              {"exposureMinMs", view_.exposureMinMs},
+              {"exposureEV", view_.exposureEV},
               {"samples", view_.samples},
               {"spectrumReady", view_.spectrumReady},
               {"peak", view_.peak},
