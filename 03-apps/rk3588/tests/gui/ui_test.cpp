@@ -5,6 +5,7 @@
 #include "backend_io.hpp"
 #include "motion_budget.hpp"
 #include "sensor_controls.hpp"
+#include <cstring>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -22,6 +23,79 @@ using namespace vr::touch;
 class UiTest : public QObject {
     Q_OBJECT
   private slots:
+    void gainControls() {
+        QTemporaryDir dir;
+        EngineOptions options; options.demo=true; options.width=160; options.height=120;
+        options.bits=8; options.demoFps=60; options.storage=dir.path().toStdString();
+        options.shader=qEnvironmentVariable("VR_TEST_SHADER_PATH",VR_TEST_SHADER).toStdString();
+        Controller controller(options);
+        QQmlApplicationEngine engine; engine.rootContext()->setContextProperty("backend",&controller);
+        engine.load(QUrl("qrc:/qml/Main.qml")); QVERIFY(!engine.rootObjects().isEmpty());
+        auto window=qobject_cast<QQuickWindow *>(engine.rootObjects().first()); QVERIFY(window); window->showFullScreen();
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["ready"].toBool(),5000);
+        std::function<QQuickItem *(QQuickItem *,const QString &)> find = [&](QQuickItem *parent,const QString &name) -> QQuickItem * {
+            if(parent->objectName()==name) return parent;
+            for(auto child:parent->childItems()) if(auto found=find(child,name)) return found;
+            return nullptr;
+        };
+        auto click=[&](const QString &name) {
+            auto item=find(window->contentItem(),name); QVERIFY2(item,qPrintable(name)); QVERIFY(item->isVisible()); QVERIFY(item->isEnabled());
+            QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,item->mapToScene(QPointF(item->width()/2,item->height()/2)).toPoint());
+            QTest::qWait(50);
+        };
+        auto dragGain=[&](double fraction) {
+            auto slider=find(window->contentItem(),"parameterGain"); QVERIFY(slider); QVERIFY(slider->height()>=48);
+            const auto start=slider->mapToScene(QPointF(slider->width()/2,slider->height()/2)).toPoint();
+            const auto end=slider->mapToScene(QPointF(fraction*(slider->width()-1),slider->height()/2)).toPoint();
+            QTest::mousePress(window,Qt::LeftButton,Qt::NoModifier,start);
+            QTest::mouseMove(window,end,80); QTest::mouseRelease(window,Qt::LeftButton,Qt::NoModifier,end);
+        };
+        auto capture=[&](const QString &name) {
+            const auto output=qEnvironmentVariable("VR_UI_CAPTURE_DIR"); if(output.isEmpty()) return;
+            QDir().mkpath(output); QTest::qWait(150); auto grab=window->contentItem()->grabToImage(); QVERIFY(grab);
+            QSignalSpy ready(grab.data(),&QQuickItemGrabResult::ready); QVERIFY(ready.wait(5000)||!grab->image().isNull());
+            QVERIFY(grab->image().save(output+"/"+name+".png"));
+        };
+        controller.tool("select"); click("selectionParameters"); dragGain(1);
+        QCOMPARE(find(window->contentItem(),"parameterGain")->property("value").toDouble(),80.);
+        capture("gain-before-live"); click("applyMotionParameters");
+        QCOMPARE(controller.engine().snapshot().alpha,80.);
+        controller.selectObject(32,30,64,64,false);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["objectReady"].toBool(),5000);
+        controller.magnifyRegion(); QTRY_VERIFY_WITH_TIMEOUT(!controller.image(1).isNull(),10000);
+        QCOMPARE(controller.engine().snapshot().alpha,80.);
+        controller.tool("preview"); controller.record();
+        QTRY_VERIFY_WITH_TIMEOUT(controller.engine().recorder.status().frames>=12,5000);
+        controller.stopRecording(); QTRY_COMPARE_WITH_TIMEOUT(controller.state()["recordState"].toString(),QString("saved"),5000);
+        controller.tool("files"); controller.openFile(0);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["replayReady"].toBool(),5000);
+        click("offlineParameters");
+        QCOMPARE(find(window->contentItem(),"parameterGain")->property("value").toDouble(),80.);
+        dragGain(0); capture("gain-before-offline"); click("applyMotionParameters");
+        QCOMPARE(controller.engine().snapshot().alpha,0.);
+        // The RAW object-selection route must expose the same control.
+        controller.tool("select"); click("selectionParameters"); click("applyMotionParameters");
+        controller.seek(0); QTRY_VERIFY_WITH_TIMEOUT(controller.state()["replayReady"].toBool(),5000);
+        controller.analysisRange(4./60); controller.analyzeGlobal();
+        QVERIFY(controller.state()["offlineBusy"].toBool());
+        auto button=find(window->contentItem(),"offlineParameters"); QVERIFY(button); QVERIFY(!button->isEnabled());
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["offlineBusy"].toBool(),30000);
+        const auto path=controller.state()["offlineOutput"].toString();
+        QVERIFY2(!path.isEmpty(),qPrintable(controller.state()["error"].toString()));
+        QFile output(path); QVERIFY(output.open(QIODevice::ReadOnly));
+        vr::ArchiveReader source(controller.files()[0].toMap()["path"].toString().toStdString()); Frame raw;
+        // Zero gain must reach the actual offline algorithm, preserving source pixels.
+        for(int i=0;i<4;++i) {
+            QVERIFY(source.read(raw)); QCOMPARE(output.read(40).size(),40);
+            auto pixels=output.read(raw.width*raw.height*4); QCOMPARE(pixels.size(),int(raw.width*raw.height*4));
+            for(unsigned y=0;y<raw.height;++y) for(unsigned x=0;x<raw.width;++x) {
+                float value; std::memcpy(&value,pixels.constData()+4*(y*raw.width+x),4);
+                QVERIFY(std::abs(value-float(raw.data[y*raw.stride+x])/255.f)<.0001f);
+            }
+        }
+        QVERIFY(output.atEnd());
+        auto panel=find(window->contentItem(),"inspector"); QVERIFY(panel); QVERIFY(panel->height()<=584);
+    }
     void regionAndClip() {
         QTemporaryDir dir;
         EngineOptions options; options.demo=true; options.width=320; options.height=200;

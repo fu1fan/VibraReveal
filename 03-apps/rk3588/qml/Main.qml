@@ -245,7 +245,7 @@ ApplicationWindow {
             }
             TouchButton { objectName: "centerSelection"; visible: s.step === 1 && !s.useNpu; width: parent.width; text: "使用中心 256 × 128 区域"; enabled: !s.selectionBusy; onClicked: backend.selectObject(s.width/2-128,s.height/2-64,256,128,false) }
             Text { width: parent.width; text: s.step === 2 ? "轻触红色轮廓；红框标出视频放大区域。" : "拖动红框移动区域，拖动圆点调整大小；松手后更新边缘。"; wrapMode: Text.Wrap; color: "#414e60"; font.pixelSize: 14 }
-            TouchButton { visible: liveMotionParameters; width: parent.width; text: "放大参数 · "+s.processingFps+" fps"; onClicked: frequencyPanel = true }
+            TouchButton { objectName: "selectionParameters"; width: parent.width; text: "放大参数 · 增益 "+Number(s.alpha).toFixed(0); enabled: !s.selectionBusy && !s.offlineBusy; onClicked: frequencyPanel = true }
             TouchButton { objectName: "magnifyRegion"; visible: s.step === 1; width: parent.width; primary: true; text: "放大整个区域"; enabled: s.objectReady && !s.selectionBusy; onClicked: backend.magnifyRegion() }
             TouchButton { objectName: "confirmSelection"; primary: s.step === 2; width: parent.width; text: s.step === 1 ? "选择边缘" : "完成选择"; enabled: !s.selectionBusy && (s.step === 1 ? s.objectReady && s.canChooseEdge : s.edgeReady); onClicked: s.step === 1 ? backend.confirmObject() : backend.confirmEdge() }
         }
@@ -265,13 +265,17 @@ ApplicationWindow {
     Component {
         id: bandPanel
         Panel {
-            title: liveMotionParameters ? "频段与处理帧率" : "离线分析频段"; subtitle: liveMotionParameters ? "启动前检查计算量" : "离线保持原始采样率"; onClosed: frequencyPanel = false
+            title: liveMotionParameters ? "放大参数" : "离线放大参数"; subtitle: liveMotionParameters ? "启动前检查计算量" : "离线保持原始采样率"; onClosed: frequencyPanel = false
+            // Snapshot editable values once; polling must not erase unsubmitted changes.
+            Component.onCompleted: { highSlider.value=s.high; lowSlider.value=s.low; gainSlider.value=s.alpha }
+            Text { text: "相位增益 · "+Number(gainSlider.value).toFixed(0); color: "#151a22"; font.pixelSize: 16 }
+            Slider { id: gainSlider; objectName: "parameterGain"; width: parent.width; height: 48; from: 0; to: 80; stepSize: 1; enabled: !s.offlineBusy }
             Text { text: "下限 · "+lowSlider.value.toFixed(1)+" Hz"; color: "#151a22"; font.pixelSize: 15 }
-            Slider { id: lowSlider; width: parent.width; height: 36; from: 0.5; to: Math.max(1,highSlider.value-0.5); stepSize: 0.5; value: s.low }
+            Slider { id: lowSlider; width: parent.width; height: 36; from: 0.5; to: Math.max(1,highSlider.value-0.5); stepSize: 0.5 }
             Text { text: "上限 · "+highSlider.value.toFixed(1)+" Hz"; color: "#151a22"; font.pixelSize: 15 }
-            Slider { id: highSlider; width: parent.width; height: 36; from: 1; to: Math.max(2,s.processingFps/2-0.5); stepSize: 0.5; value: s.high }
-            Row { visible: liveMotionParameters; spacing: 6; Repeater { model: [30,60,120]; TouchButton { text: modelData+" fps"; width: 84; enabled: s.fps >= modelData && Math.abs(s.fps/modelData-Math.round(s.fps/modelData))<0.001; checked: Math.abs(s.processingFps-modelData)<0.01; onClicked: setParams(s.alpha,Math.min(s.low,modelData/8),Math.min(s.high,modelData*.4),modelData,s.focus) } } }
-            TouchButton { width: parent.width; primary: true; text: "应用频段"; onClicked: { setParams(s.alpha,lowSlider.value,highSlider.value,s.processingFps,s.focus); frequencyPanel = false } }
+            Slider { id: highSlider; width: parent.width; height: 36; from: 1; to: Math.max(2,s.processingFps/2-0.5); stepSize: 0.5 }
+            Row { visible: liveMotionParameters; spacing: 6; Repeater { model: [30,60,120]; TouchButton { text: modelData+" fps"; width: 84; enabled: s.fps >= modelData && Math.abs(s.fps/modelData-Math.round(s.fps/modelData))<0.001; checked: Math.abs(s.processingFps-modelData)<0.01; onClicked: { setParams(gainSlider.value,Math.min(lowSlider.value,modelData/8),Math.min(highSlider.value,modelData*.4),modelData,s.focus); lowSlider.value=s.low; highSlider.value=s.high } } } }
+            TouchButton { objectName: "applyMotionParameters"; width: parent.width; primary: true; text: "应用参数"; enabled: !s.offlineBusy; onClicked: { setParams(gainSlider.value,lowSlider.value,highSlider.value,s.processingFps,s.focus); frequencyPanel = false } }
         }
     }
     Component {
@@ -331,7 +335,7 @@ ApplicationWindow {
             Text { width: parent.width; visible: s.motionEstimate.length > 0; text: s.motionEstimate; wrapMode: Text.Wrap; color: "#151a22"; font.pixelSize: 14 }
             Text { width: parent.width; text: s.message; wrapMode: Text.Wrap; color: "#414e60"; font.pixelSize: 15 }
             TouchButton { width: parent.width; text: s.tool === "offline" ? "返回 RAW 回放" : "在当前帧选择对象"; enabled: !s.offlineBusy && !s.playing && (s.tool === "offline" || s.replayReady); onClicked: s.tool === "offline" ? backend.seek(s.position) : backend.tool("select") }
-            TouchButton { width: parent.width; glyph: "chevron-right"; iconAfter: true; text: "分析频段 · "+s.low+"–"+s.high+" Hz"; enabled: !s.offlineBusy; onClicked: frequencyPanel = true }
+            TouchButton { objectName: "offlineParameters"; width: parent.width; glyph: "chevron-right"; iconAfter: true; text: "放大参数 · 增益 "+Number(s.alpha).toFixed(0); enabled: !s.offlineBusy; onClicked: frequencyPanel = true }
             TouchButton { objectName: "analysisRangeButton"; width: parent.width; text: "分析区间 · "+Number(s.analysisStart).toFixed(2)+" s 起"; enabled: !s.offlineBusy; onClicked: rangePanel=true }
             TouchButton { objectName: "globalAnalysis"; visible: s.tool === "replay"; width: parent.width; text: "全画面放大 · 跳过选区"; enabled: !s.offlineBusy && !s.playing && s.replayReady; onClicked: backend.analyzeGlobal() }
             TouchButton { width: parent.width; primary: true; glyph: s.offlineBusy ? "x" : "chart-no-axes-combined"; text: s.offlineBusy?"取消离线分析":"开始离线分析"; enabled: s.edgeReady || s.regionReady || s.offlineBusy; onClicked: s.offlineBusy ? backend.cancelAnalysis() : backend.analyze() }
