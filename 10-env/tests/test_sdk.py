@@ -15,6 +15,22 @@ sdk = importlib.util.module_from_spec(spec)
 loader.exec_module(sdk)
 
 class Client(unittest.TestCase):
+    def test_native_qt_cannot_leak_into_cross_environment(self):
+        with patch.dict(os.environ, {'ELF2_HOST_QT_PREFIX': '/opt/qt-5.15.10',
+                'PATH': '/opt/qt-5.15.10/bin:/usr/bin',
+                'CMAKE_PREFIX_PATH': '/opt/qt-5.15.10',
+                'Qt5_DIR': '/opt/qt-5.15.10/lib/cmake/Qt5',
+                'Qt5Core_DIR': '/opt/qt-5.15.10/lib/cmake/Qt5Core',
+                'QT_PLUGIN_PATH': '/opt/qt-5.15.10/plugins',
+                'QML_IMPORT_PATH': '/opt/qt-5.15.10/qml',
+                'QML2_IMPORT_PATH': '/opt/qt-5.15.10/qml',
+                'LD_LIBRARY_PATH': '/opt/qt-5.15.10/lib:/custom/lib'}):
+            env = sdk.environment(Path('/pinned-sdk'))
+        for key in ('CMAKE_PREFIX_PATH', 'Qt5_DIR', 'Qt5Core_DIR', 'QT_PLUGIN_PATH', 'QML_IMPORT_PATH', 'QML2_IMPORT_PATH'):
+            self.assertNotIn(key, env)
+        self.assertEqual(env['PATH'], '/pinned-sdk/toolchain/bin:/usr/bin')
+        self.assertEqual(env['LD_LIBRARY_PATH'], '/custom/lib')
+
     def fixture(self, root):
         lock = root / 'sdk.lock.json'
         spec = {'image': 'example.test/app-sdk@sha256:' + 'a'*64, 'system_commit': 'b'*40}

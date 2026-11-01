@@ -35,6 +35,12 @@ endif()
 if(DEFINED ENV{ELF2_SYSROOT} AND NOT "$ENV{ELF2_SYSROOT}" STREQUAL "")
   set(CMAKE_SYSROOT "$ENV{ELF2_SYSROOT}")
   set(CMAKE_FIND_ROOT_PATH "${CMAKE_SYSROOT}")
+  # GCC's bundled libstdc++ predates the board's Buildroot runtime. Prefer the
+  # target libraries (Qt/ICU require GLIBCXX_3.4.30) over the compiler's fallback.
+  foreach(_kind EXE SHARED MODULE)
+    set(CMAKE_${_kind}_LINKER_FLAGS_INIT
+        "-L\"${CMAKE_SYSROOT}/usr/lib\" -L\"${CMAKE_SYSROOT}/lib\"")
+  endforeach()
 endif()
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)

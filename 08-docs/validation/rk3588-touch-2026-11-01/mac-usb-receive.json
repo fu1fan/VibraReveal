@@ -1,0 +1,13 @@
+{
+  "firstSequence" : 759,
+  "firstTimestampNS" : 4288379409000,
+  "frames" : 155,
+  "lastSequence" : 913,
+  "lastTimestampNS" : 4289656124000,
+  "payloadBytes" : 317440000,
+  "seconds" : 1.294653583347099,
+  "senderQueueDropped" : 0,
+  "sequenceGaps" : 0,
+  "sourceFPS" : 120,
+  "syntheticTimestamps" : false
+}

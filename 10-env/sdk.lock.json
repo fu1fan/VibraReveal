@@ -1,4 +1,4 @@
 {
-  "image": "docker.cnb.cool/fu1fan/rk3588-ov9281/app-sdk@sha256:d2a21493198e25881cb03144bf4dd45b76e773e6cbbad1b62d6debbd4aa73cef",
+  "image": "docker.cnb.cool/fu1fan/vibrareveal/qt-app-sdk@sha256:1ad1117388be3cccfd4607aa7003768b5ed2c9f8b94e4572f7d815b5d76bb1e4",
   "system_commit": "ac7c05413b3882f578cb94be4b2edfe3958d84c6"
 }

@@ -1,0 +1,56 @@
+{
+  "qt_version": "5.15.10",
+  "runtime": {
+    "Core": {
+      "file_sha256": "e79d0acbf2fe2f7c3e6993aacdbef71c13b293bd2d284c440daa0c8a1e272a94",
+      "runtime_sha256": "dab3417a9a564191f8e788518f6fe7f40183e419b5a7dbb162e62b5fb448d395"
+    },
+    "Gui": {
+      "file_sha256": "d1a44c3ec9c56c8e37f4fde6411b0b5a0bb938f21c96a136164ca4b611c04596",
+      "runtime_sha256": "2a40570f79435878973995e59e7a307a4c2947e786644d8bd27dea37539aa79f"
+    },
+    "Qml": {
+      "file_sha256": "906fcd3e1b1f6ea35633087031e5ba447a232a0d5887d91d66a455ae62723188",
+      "runtime_sha256": "adaa5a2c76ce5995e64af3a1fb20191b7860f29e002bbcdb8101ff14ba859639"
+    },
+    "Quick": {
+      "file_sha256": "c20f1c4184f4a6dccdb7508c7c30c80e5819d9f3e8ec8c2f19551be314a33984",
+      "runtime_sha256": "58ac8752733c2831f6e876427d375cadeba50674c830645dcac21ba2a7af80cc"
+    },
+    "QuickControls2": {
+      "file_sha256": "a5a018f3ab865f4e1014efa9acc330dd3165c6444ddbdd5be72da57ad1954c69",
+      "runtime_sha256": "10d2f7e8841fa419545bc6229b0391c5d8b9ac34a01309289baf16b7a554b37c"
+    },
+    "QuickTemplates2": {
+      "file_sha256": "45b59fb7fa16ccf1319f9569b90e5bd2b04ce98b3baddc8eda1abd165d8ade87",
+      "runtime_sha256": "666107e1aa290c5a08b9f49222f4ed06a4d2674d2b65a23af7c588b30a0d195f"
+    }
+  },
+  "sdk": {
+    "Core": {
+      "file_sha256": "105fb173475a948414f0409f6b58ab8eeb878502b1a6ea001d829c42a5887941",
+      "runtime_sha256": "dab3417a9a564191f8e788518f6fe7f40183e419b5a7dbb162e62b5fb448d395"
+    },
+    "Gui": {
+      "file_sha256": "e5b94c5f0d2500d4ede746022865ba5b56812cc40837940adbee45c88e4ddf30",
+      "runtime_sha256": "2a40570f79435878973995e59e7a307a4c2947e786644d8bd27dea37539aa79f"
+    },
+    "Qml": {
+      "file_sha256": "dc810ba60750373c4e1a5c6ea20f501c7bb6d26490bd1191a30403b223e35e03",
+      "runtime_sha256": "adaa5a2c76ce5995e64af3a1fb20191b7860f29e002bbcdb8101ff14ba859639"
+    },
+    "Quick": {
+      "file_sha256": "2c94ac971b9235a80c1b64b7556ad6032f6c8db541327ce6f9f3dd5505af8d8a",
+      "runtime_sha256": "58ac8752733c2831f6e876427d375cadeba50674c830645dcac21ba2a7af80cc"
+    },
+    "QuickControls2": {
+      "file_sha256": "53f4fb1c02c7a89b9c94b3726b546bd270e430ab50a4b23cd10c5dbed0bb226d",
+      "runtime_sha256": "10d2f7e8841fa419545bc6229b0391c5d8b9ac34a01309289baf16b7a554b37c"
+    },
+    "QuickTemplates2": {
+      "file_sha256": "bcf230abcf6c1fbee3e196c8262524d6bc8ac65a7a21a7cc582a7cee6cbce6fd",
+      "runtime_sha256": "666107e1aa290c5a08b9f49222f4ed06a4d2674d2b65a23af7c588b30a0d195f"
+    }
+  },
+  "matching_runtime_sections": true
+}

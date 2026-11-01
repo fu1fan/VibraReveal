@@ -1,0 +1,737 @@
+#include "engine.hpp"
+#include "backend_io.hpp"
+#include "offline_motion.hpp"
+#include "vulkan_motion.hpp"
+#ifdef VR_TOUCH_RKNN
+#include "mobile_sam.hpp"
+#endif
+#include <QDateTime>
+#include <QDir>
+#include <QPainter>
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <cstring>
+#ifdef __linux__
+#include <linux/v4l2-subdev.h>
+#include <sys/file.h>
+#include <sys/ioctl.h>
+#endif
+namespace vr::touch {
+QImage frameImage(const Frame &f) {
+    Format{f.width, f.height, f.stride, f.bits, 1, 1, false}.validate();
+    if (f.data.size() != uint64_t(f.stride) * f.height)
+        throw std::runtime_error("预览帧长度无效");
+    QImage image(f.width, f.height, QImage::Format_Grayscale8);
+    if (image.isNull())
+        throw std::bad_alloc();
+    for (uint32_t y = 0; y < f.height; ++y) {
+        auto out = image.scanLine(y);
+        auto in = f.data.data() + size_t(y) * f.stride;
+        if (f.bits == 8)
+            std::memcpy(out, in, f.width);
+        else
+            for (uint32_t x = 0; x < f.width; ++x) {
+                const uint32_t v = (in[x * 2] | (uint32_t(in[x * 2 + 1]) << 8)) & ((1u << f.bits) - 1);
+                out[x] = uint8_t(std::min(255u, v >> (f.bits - 8)));
+            }
+    }
+    return image;
+}
+namespace {
+using Clock = std::chrono::steady_clock;
+struct FD {
+    int fd = -1;
+    ~FD() {
+        if (fd >= 0)
+            ::close(fd);
+    }
+};
+Frame synthetic(uint32_t w, uint32_t h, uint32_t bits, uint64_t seq, double fps) {
+    Frame f;
+    f.width = w;
+    f.height = h;
+    f.bits = bits;
+    f.stride = w * (bits == 8 ? 1 : 2);
+    f.sequence = seq;
+    f.timestamp = 1000000000ULL + uint64_t(std::llround(seq * 1e9 / fps));
+    f.data.resize(size_t(f.stride) * h);
+    const double wave = .5 * std::sin(2 * 3.141592653589793 * 12 * seq / fps);
+    for (uint32_t y = 0; y < h; ++y)
+        for (uint32_t x = 0; x < w; ++x) {
+            double v = .18 + .09 * y / h;
+            if (x > w * .13 && x < w * .31 && y > h * .27 && y < h * .76)
+                v = .53;
+            if (x > w * .25 && x < w * .83) {
+                const double d = std::abs(double(y) - h * .5 - wave);
+                v = std::max(v, .25 + .6 * std::clamp((h * .023 - d) / 2., 0., 1.));
+            }
+            if (y > h * .77 && y < h * .88 && x > w * .08 && x < w * .92)
+                v = .38;
+            auto value = uint32_t(std::llround(v * ((1u << bits) - 1)));
+            auto p = f.data.data() + size_t(y) * f.stride + x * (bits == 8 ? 1 : 2);
+            p[0] = value;
+            if (bits != 8)
+                p[1] = value >> 8;
+        }
+    return f;
+}
+QImage overlayImage(uint32_t w, uint32_t h, const std::vector<uint8_t> &mask, QRgb color) {
+    QImage image(w, h, QImage::Format_ARGB32_Premultiplied);
+    image.fill(Qt::transparent);
+    if (mask.size() != size_t(w) * h)
+        return image;
+    for (uint32_t y = 0; y < h; ++y) {
+        auto p = reinterpret_cast<QRgb *>(image.scanLine(y));
+        for (uint32_t x = 0; x < w; ++x)
+            if (mask[size_t(y) * w + x])
+                p[x] = color;
+    }
+    return image;
+}
+QImage amplifiedImage(uint32_t w, uint32_t h, const std::vector<float> &pixels) {
+    QImage out(w, h, QImage::Format_Grayscale8);
+    for (uint32_t y = 0; y < h; ++y) {
+        auto p = out.scanLine(y);
+        for (uint32_t x = 0; x < w; ++x)
+            p[x] = uint8_t(std::clamp(pixels[size_t(y) * w + x] * 255.f, 0.f, 255.f));
+    }
+    return out;
+}
+QVariantList spectrumVariant(const SpectrumResult &r) {
+    QVariantList list;
+    for (size_t i = 0; i < r.frequency.size(); ++i)
+        list.append(QVariantMap{{"frequency", r.frequency[i]}, {"amplitude", r.amplitude[i]}});
+    return list;
+}
+} // namespace
+Engine::Engine(EngineOptions options) : options_(std::move(options)) {}
+Engine::~Engine() { shutdown(); }
+void Engine::start() {
+    if (capture_.joinable())
+        return;
+    stopping_ = false;
+    capture_ = std::thread(&Engine::captureLoop, this);
+    compute_ = std::thread(&Engine::computeLoop, this);
+}
+void Engine::shutdown() {
+    stopping_ = true;
+    offlineCancel_ = true;
+    recorder.stop("程序退出");
+    streaming.cancel();
+    cv_.notify_all();
+    if (capture_.joinable())
+        capture_.join();
+    if (compute_.joinable())
+        compute_.join();
+    recorder.wait();
+    streaming.wait();
+}
+ViewState Engine::snapshot() const {
+    std::lock_guard<std::mutex> l(mutex_);
+    return state_;
+}
+void Engine::setTool(const QString &tool) {
+    std::lock_guard<std::mutex> l(mutex_);
+    if (state_.offlineBusy)
+        throw std::runtime_error("请先取消或完成离线分析");
+    if (tool == "magnify" && (!state_.edgeReady || !referenceArchive_.empty()))
+        throw std::runtime_error("请先在实时画面选择对象及测量边缘");
+    if ((tool == "preview" || tool == "focus" || tool == "direct") && !referenceArchive_.empty()) {
+        referenceArchive_.clear();
+        reference_.reset();
+        state_.edgeReady = state_.objectReady = false;
+        state_.roi = {};
+        if (state_.ready) {
+            state_.processingFps = state_.format.fps() / std::max(1.0, std::ceil(state_.format.fps() / 60));
+            state_.high = std::min(state_.high, state_.processingFps * .4);
+            state_.low = std::min(state_.low, state_.high * .5);
+        }
+    }
+    if (tool == "select") {
+        if (state_.tool == "replay" && !state_.replayReady)
+            throw std::runtime_error("正在读取回放帧，请稍候");
+        if (state_.tool != "replay") {
+            if (!latest_)
+                throw std::runtime_error("相机尚未就绪");
+            reference_ = latest_;
+            referenceArchive_.clear();
+            referenceFps_ = state_.format.fps();
+        }
+        if (!reference_)
+            throw std::runtime_error("没有可用参考帧");
+        state_.referenceSequence = reference_->sequence;
+        state_.image = frameImage(*reference_);
+        state_.overlay = {};
+        ++state_.displayRevision;
+        state_.selectionStep = 1;
+        state_.objectReady = state_.edgeReady = false;
+        state_.roi = {};
+    }
+    state_.tool = tool;
+    state_.error.clear();
+    state_.inset = {};
+    state_.spectrum.clear();
+    state_.samples = 0;
+    state_.spectrumReady = false;
+    state_.overlay = {};
+    command_ = {};
+    work_.clear();
+    ++generation_;
+    cv_.notify_all();
+}
+void Engine::selectObject(const QRectF &r, bool point) {
+    std::lock_guard<std::mutex> l(mutex_);
+    if (state_.tool != "select" || state_.selectionStep != 1 || !reference_)
+        return;
+    command_ = {};
+    command_.kind = Command::Object;
+    command_.rect = r;
+    command_.point = point;
+    ++generation_;
+    state_.message = "正在提取对象边缘…";
+    state_.objectReady = state_.edgeReady = false;
+    cv_.notify_all();
+}
+void Engine::chooseEdge(const QPointF &point) {
+    std::lock_guard<std::mutex> l(mutex_);
+    if (state_.tool != "select" || !state_.objectReady || state_.selectionStep != 2)
+        return;
+    command_ = {};
+    command_.kind = Command::Edge;
+    command_.rect = QRectF(point, QSizeF());
+    ++generation_;
+    cv_.notify_all();
+}
+void Engine::confirmObject() {
+    std::lock_guard<std::mutex> l(mutex_);
+    if (!state_.objectReady)
+        throw std::runtime_error("请先选定对象");
+    state_.selectionStep = 2;
+    state_.message = "轻触清晰边缘，测量其法向微小位移";
+}
+void Engine::finishSelection() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!state_.edgeReady)
+        throw std::runtime_error("请先选定测量边缘");
+    state_.tool = referenceArchive_.empty() ? "preview" : "replay";
+    state_.overlay = {};
+    command_ = {};
+    work_.clear();
+    ++generation_;
+    cv_.notify_all();
+}
+void Engine::setParameters(double alpha, double low, double high, double fps, double focus) {
+    std::lock_guard<std::mutex> l(mutex_);
+    const double source = referenceArchive_.empty() ? state_.format.fps() : referenceFps_;
+    if (!std::isfinite(alpha) || alpha < 0 || alpha > 80 || !std::isfinite(low) || !std::isfinite(high) ||
+        !std::isfinite(fps) || fps < 1 || low <= 0 || low >= high || high >= fps / 2 ||
+        !std::isfinite(focus) || focus < .001 || focus > .5 || (!state_.ready && referenceArchive_.empty()) ||
+        fps > source || std::abs(source / fps - std::round(source / fps)) > .001)
+        throw std::runtime_error("频段需满足 0 < 下限 < 上限 < 处理帧率/2；处理帧率须整除采集帧率");
+    state_.alpha = alpha;
+    state_.low = low;
+    state_.high = high;
+    state_.processingFps = fps;
+    state_.focus = focus;
+    ++generation_;
+    work_.clear();
+    cv_.notify_all();
+}
+void Engine::startOffline(const std::string &path) {
+    std::lock_guard<std::mutex> l(mutex_);
+    if (state_.offlineBusy)
+        throw std::runtime_error("离线分析正在运行");
+    if (!state_.edgeReady || !reference_ || referenceArchive_ != path)
+        throw std::runtime_error("请先在该录像回放上选择对象和边缘");
+    state_.tool = "offline";
+    state_.offlineBusy = true;
+    state_.offlineOutput.clear();
+    state_.error.clear();
+    offlineCancel_ = false;
+    command_ = {};
+    command_.kind = Command::Offline;
+    command_.path = path;
+    ++generation_;
+    work_.clear();
+    cv_.notify_all();
+}
+void Engine::cancelOffline() { offlineCancel_ = true; }
+void Engine::replay(const std::string &path, uint64_t index) {
+    std::lock_guard<std::mutex> l(mutex_);
+    if (state_.offlineBusy)
+        return;
+    if (referenceArchive_ != path) {
+        state_.edgeReady = state_.objectReady = false;
+        state_.roi = {};
+    }
+    state_.tool = "replay";
+    state_.replayReady = false;
+    state_.error.clear();
+    command_ = {};
+    command_.kind = Command::Replay;
+    command_.path = path;
+    command_.index = index;
+    work_.clear();
+    ++generation_;
+    cv_.notify_all();
+}
+void Engine::captureLoop() {
+    try {
+        std::unique_ptr<Camera> camera;
+        Format format{options_.width,
+                      options_.height,
+                      options_.width * (options_.bits == 8 ? 1u : 2u),
+                      options_.bits,
+                      uint32_t(std::llround(options_.demoFps * 1000)),
+                      1000,
+                      options_.demo};
+        FD lock;
+        if (!options_.demo) {
+#ifdef __linux__
+            lock.fd = ::open("/run/vr-camera.lock", O_CREAT | O_RDWR | O_CLOEXEC, 0600);
+            if (lock.fd < 0 || flock(lock.fd, LOCK_EX | LOCK_NB))
+                throw std::runtime_error("相机已被另一应用占用");
+            FD sensor;
+            sensor.fd = ::open(options_.sensor.c_str(), O_RDONLY | O_CLOEXEC);
+            v4l2_subdev_frame_interval rate{};
+            if (sensor.fd < 0 || ioctl(sensor.fd, VIDIOC_SUBDEV_G_FRAME_INTERVAL, &rate) ||
+                !rate.interval.numerator || !rate.interval.denominator)
+                throw std::runtime_error("无法读取实际传感器帧率，请检查 sensor 节点");
+            format.fpsNum = rate.interval.denominator;
+            format.fpsDen = rate.interval.numerator;
+#else
+            throw std::runtime_error("真实相机要求 Linux V4L2");
+#endif
+            camera =
+                std::make_unique<Camera>(options_.device, options_.width, options_.height, options_.bits);
+            auto f = camera->format();
+            format.width = f.width;
+            format.height = f.height;
+            format.bits = f.bits;
+            format.stride = f.stride;
+        }
+        format.validate();
+        {
+            std::lock_guard<std::mutex> l(mutex_);
+            state_.format = format;
+            state_.ready = true;
+            state_.processingFps = format.fps() / std::max(1.0, std::ceil(format.fps() / 60));
+            state_.high = std::min(25., state_.processingFps * .4);
+            state_.low = std::min(8., state_.high * .5);
+        }
+        auto next = Clock::now();
+        uint64_t seq = 0, last = 0, lastTime = 0;
+        bool first = true;
+        while (!stopping_) {
+            auto frame = std::make_shared<Frame>(
+                camera ? camera->read()
+                       : synthetic(format.width, format.height, format.bits, seq++, format.fps()));
+            if (!first && (frame->sequence != last + 1 || frame->timestamp <= lastTime ||
+                           std::abs(double(frame->timestamp - lastTime) * format.fps() / 1e9 - 1) > .2)) {
+                recorder.stop("相机采集不连续，已停止此录像");
+                streaming.cancel();
+                std::lock_guard<std::mutex> l(mutex_);
+                state_.error = "采集序号或时间戳出现缺口，测量已停止";
+                if (state_.tool == "magnify")
+                    state_.tool = "preview";
+                work_.clear();
+                ++generation_;
+            }
+            first = false;
+            last = frame->sequence;
+            lastTime = frame->timestamp;
+            recorder.submit(frame);
+            streaming.submit(frame);
+            {
+                std::lock_guard<std::mutex> l(mutex_);
+                latest_ = frame;
+                if (state_.tool == "magnify") {
+                    const uint64_t divisor = uint64_t(std::llround(format.fps() / state_.processingFps));
+                    if (frame->sequence % divisor == 0) {
+                        // Shader/pipeline creation is not part of a measurement.
+                        // Keep one recent sample until the processor is ready;
+                        // enforce continuity and the queue bound after that point.
+                        if (measurementReadyGeneration_ != generation_)
+                            work_.clear();
+                        if (work_.size() >= 2) {
+                            state_.error = "处理队列已满，实时测量已停止。请减小选区或降低处理帧率";
+                            state_.tool = "preview";
+                            state_.spectrumReady = false;
+                            state_.spectrum.clear();
+                            work_.clear();
+                            ++generation_;
+                        } else
+                            work_.push_back(frame);
+                    }
+                } else if (state_.tool != "select" && state_.tool != "offline" && state_.tool != "replay") {
+                    work_.clear();
+                    work_.push_back(frame);
+                }
+                cv_.notify_one();
+            }
+            if (options_.demo) {
+                next += std::chrono::nanoseconds(uint64_t(1e9 / format.fps()));
+                std::this_thread::sleep_until(next);
+            }
+        }
+    } catch (const std::exception &e) {
+        recorder.stop("相机断开，已停止此录像");
+        streaming.cancel();
+        std::lock_guard<std::mutex> l(mutex_);
+        state_.ready = false;
+        state_.error = QString::fromUtf8(e.what());
+        state_.message = "相机不可用";
+    }
+}
+void Engine::computeLoop() {
+    std::unique_ptr<VulkanMotion> analyzer, motion;
+    uint32_t analyzerW = 0, analyzerH = 0;
+    uint64_t activeGeneration = UINT64_MAX, processingSequence = 0;
+    EdgeSignal signal;
+    Spectrum spectrum;
+    std::vector<uint8_t> objectMask, edges;
+    std::shared_ptr<const Frame> selectedFrame;
+#ifdef VR_TOUCH_RKNN
+    std::unique_ptr<MobileSam> sam;
+    std::shared_ptr<const Frame> embeddedFrame;
+#endif
+    auto analyze = [&](const Frame &frame, double threshold, const std::vector<uint8_t> &mask) {
+        if (!analyzer || analyzerW != frame.width || analyzerH != frame.height) {
+            MotionConfig c;
+            c.width = frame.width;
+            c.height = frame.height;
+            c.analysisOnly = true;
+            c.realtime = false;
+            analyzer = std::make_unique<VulkanMotion>(c, options_.shader);
+            analyzerW = frame.width;
+            analyzerH = frame.height;
+        }
+        EdgeConfig config;
+        config.threshold = float(threshold);
+        return analyzer->analyze(frame, config, mask);
+    };
+    while (!stopping_) {
+        ViewState config;
+        Command command;
+        std::shared_ptr<const Frame> frame, reference;
+        uint64_t generation;
+        {
+            std::unique_lock<std::mutex> l(mutex_);
+            cv_.wait(l, [&] { return stopping_ || command_.kind != Command::None || !work_.empty(); });
+            if (stopping_)
+                break;
+            config = state_;
+            generation = generation_;
+            command = command_;
+            command_ = {};
+            reference = reference_;
+            if (!work_.empty()) {
+                frame = work_.front();
+                work_.pop_front();
+            }
+        }
+        try {
+            if (activeGeneration != generation) {
+                motion.reset();
+                processingSequence = 0;
+                spectrum.reset(config.processingFps);
+                activeGeneration = generation;
+            }
+            if (command.kind == Command::Object) {
+                if (!reference)
+                    continue;
+                selectedFrame = reference;
+                objectMask.assign(size_t(reference->width) * reference->height, 0);
+                QString method = "矩形区域";
+                QRect rect = command.rect.normalized().toAlignedRect().intersected(
+                    QRect(0, 0, reference->width, reference->height));
+#ifdef VR_TOUCH_RKNN
+                if (!options_.encoder.empty() && !options_.decoder.empty()) {
+                    if (!sam)
+                        sam = std::make_unique<MobileSam>(options_.encoder, options_.decoder);
+                    if (embeddedFrame != reference) {
+                        sam->setImage(*reference);
+                        embeddedFrame = reference;
+                    }
+                    std::vector<SelectionPrompt> prompts;
+                    if (command.point)
+                        prompts.push_back({float(command.rect.x()), float(command.rect.y()), 1});
+                    else
+                        prompts = {{float(rect.left()), float(rect.top()), 2},
+                                   {float(rect.right()), float(rect.bottom()), 3}};
+                    objectMask = sam->select(prompts).mask;
+                    method = "NPU 对象掩膜";
+                } else
+#endif
+                {
+                    if (command.point)
+                        rect = QRect(int(command.rect.x()) - 64, int(command.rect.y()) - 64, 128, 128)
+                                   .intersected(QRect(0, 0, reference->width, reference->height));
+                    if (rect.width() < 8 || rect.height() < 8)
+                        throw std::runtime_error("选区至少为 8 × 8 像素");
+                    for (int y = rect.top(); y <= rect.bottom(); ++y)
+                        for (int x = rect.left(); x <= rect.right(); ++x)
+                            objectMask[size_t(y) * reference->width + x] = 255;
+                }
+                auto result = analyze(*reference, config.focus, objectMask);
+                if (method == "矩形区域") {
+                    edges = std::move(result.peaks);
+                    for (size_t i = 0; i < edges.size(); ++i)
+                        if (!objectMask[i])
+                            edges[i] = 0;
+                } else
+                    edges = std::move(result.edges);
+                int left = reference->width, top = reference->height, right = -1, bottom = -1;
+                for (uint32_t y = 0; y < reference->height; ++y)
+                    for (uint32_t x = 0; x < reference->width; ++x)
+                        if (objectMask[size_t(y) * reference->width + x]) {
+                            left = std::min(left, int(x));
+                            right = std::max(right, int(x));
+                            top = std::min(top, int(y));
+                            bottom = std::max(bottom, int(y));
+                        }
+                if (right < left ||
+                    std::count_if(edges.begin(), edges.end(), [](uint8_t v) { return v != 0; }) < 4)
+                    throw std::runtime_error("选区内没有足够的清晰边缘，请重新选择");
+                QImage overlay =
+                    overlayImage(reference->width, reference->height, edges, qRgb(128, 205, 255));
+                std::lock_guard<std::mutex> l(mutex_);
+                if (generation != generation_)
+                    continue;
+                state_.roi = QRect(left, top, right - left + 1, bottom - top + 1);
+                state_.objectReady = true;
+                state_.edgeReady = false;
+                state_.selectionMethod = method;
+                state_.overlay = overlay;
+                state_.image = frameImage(*reference);
+                state_.message = "对象已选定，可调整选区或继续选择边缘";
+                state_.error.clear();
+                ++state_.displayRevision;
+                continue;
+            }
+            if (command.kind == Command::Edge) {
+                if (!selectedFrame)
+                    continue;
+                signal.setReference(*selectedFrame, edges, command.rect.x(), command.rect.y());
+                QImage overlay =
+                    overlayImage(selectedFrame->width, selectedFrame->height, edges, qRgb(120, 157, 180));
+                QPainter p(&overlay);
+                p.setPen(QPen(QColor("#91c5ff"), 3));
+                for (const auto &point : signal.points())
+                    p.drawPoint(point.x, point.y);
+                p.end();
+                std::lock_guard<std::mutex> l(mutex_);
+                if (generation != generation_)
+                    continue;
+                state_.edgeReady = true;
+                state_.overlay = overlay;
+                state_.message = "边缘已选定；测量单位为原图像素";
+                ++state_.displayRevision;
+                continue;
+            }
+            if (command.kind == Command::Replay) {
+                ArchiveReader reader(command.path);
+                if (command.index > 1000000000ULL)
+                    throw std::runtime_error("回放位置无效");
+                auto playback = std::make_shared<Frame>();
+                const uint64_t bytes = uint64_t(reader.stride) * reader.height;
+                std::ifstream file(command.path, std::ios::binary);
+                file.seekg(std::streamoff(80 + command.index * (80 + bytes)));
+                std::array<uint8_t, 80> h{};
+                if (!file.read(reinterpret_cast<char *>(h.data()), 80) || getLE(h.data() + 6, 2) != 2 ||
+                    getLE(h.data() + 12, 4) != bytes)
+                    throw std::runtime_error("已到录像末尾或录像不完整");
+                playback->width = reader.width;
+                playback->height = reader.height;
+                playback->stride = reader.stride;
+                playback->bits = reader.bits;
+                playback->sequence = getLE(h.data() + 32, 8);
+                playback->timestamp = getLE(h.data() + 40, 8);
+                playback->data.resize(bytes);
+                if (!file.read(reinterpret_cast<char *>(playback->data.data()), bytes) ||
+                    frameCRC(playback->data.data(), bytes) != getLE(h.data() + 64, 4))
+                    throw std::runtime_error("回放帧校验失败");
+                std::lock_guard<std::mutex> l(mutex_);
+                if (generation != generation_)
+                    continue;
+                if (referenceArchive_ != command.path) {
+                    state_.processingFps = reader.fps();
+                    state_.high = std::min(state_.high, reader.fps() * .4);
+                    state_.low = std::min(state_.low, state_.high * .5);
+                }
+                state_.replayFormat = {reader.width,  reader.height, reader.stride,         reader.bits,
+                                       reader.fpsNum, reader.fpsDen, bool(reader.flags & 2)};
+                state_.replayReady = true;
+                reference_ = playback;
+                referenceArchive_ = command.path;
+                referenceFps_ = reader.fps();
+                state_.referenceSequence = playback->sequence;
+                state_.image = frameImage(*playback);
+                state_.overlay = {};
+                state_.message = "RAW 回放 · 可在此帧选择对象";
+                ++state_.displayRevision;
+                continue;
+            }
+            if (command.kind == Command::Offline) {
+                ArchiveReader reader(command.path);
+                if (!selectedFrame || reader.width != selectedFrame->width ||
+                    reader.height != selectedFrame->height || reader.bits != selectedFrame->bits)
+                    throw std::runtime_error("录像格式与测量参考不匹配，请从该录像重新选区");
+                MotionConfig c;
+                c.x = config.roi.x();
+                c.y = config.roi.y();
+                c.width = config.roi.width();
+                c.height = config.roi.height();
+                c.fps = reader.fps();
+                c.low = config.low;
+                c.high = config.high;
+                c.alpha = config.alpha;
+                c.realtime = false;
+                c.validate();
+                const auto output =
+                    command.path + "." + std::to_string(QDateTime::currentMSecsSinceEpoch()) + ".vrv";
+                AtomicFile resultFile(output);
+                OfflineOptions offline;
+                offline.scratchDirectory = options_.storage;
+                Spectrum offlineSpectrum(reader.fps());
+                uint64_t count = 0;
+                processOffline(
+                    c, options_.shader, offline,
+                    [&](Frame &f) {
+                        if (stopping_ || offlineCancel_)
+                            throw std::runtime_error("离线分析已取消；原始录像保留");
+                        if (!reader.read(f))
+                            return false;
+                        offlineSpectrum.append(signal.measure(f), f.timestamp);
+                        ++count;
+                        return true;
+                    },
+                    [&](const Frame &f, const std::vector<float> &pixels) {
+                        if (stopping_ || offlineCancel_)
+                            throw std::runtime_error("离线分析已取消；原始录像保留");
+                        std::vector<uint8_t> bytes(40 + pixels.size() * 4);
+                        std::memcpy(bytes.data(), "VRV1", 4);
+                        putLE(bytes.data() + 4, c.width, 4);
+                        putLE(bytes.data() + 8, c.height, 4);
+                        putLE(bytes.data() + 12, pixels.size() * 4, 4);
+                        putLE(bytes.data() + 16, f.sequence, 8);
+                        putLE(bytes.data() + 24, f.timestamp, 8);
+                        putLE(bytes.data() + 32, reader.fpsNum, 4);
+                        putLE(bytes.data() + 36, reader.fpsDen, 4);
+                        for (size_t i = 0; i < pixels.size(); ++i) {
+                            uint32_t v;
+                            std::memcpy(&v, &pixels[i], 4);
+                            putLE(bytes.data() + 40 + i * 4, v, 4);
+                        }
+                        resultFile.write(bytes.data(), bytes.size());
+                        std::lock_guard<std::mutex> l(mutex_);
+                        state_.image = frameImage(f);
+                        state_.inset = amplifiedImage(c.width, c.height, pixels);
+                        state_.message = "离线重建中 · 原始文件保留";
+                        ++state_.displayRevision;
+                    });
+                resultFile.publish();
+                auto result = offlineSpectrum.result(c.low, c.high);
+                std::lock_guard<std::mutex> l(mutex_);
+                state_.spectrum = spectrumVariant(result);
+                state_.samples = result.samples;
+                state_.peak = result.peak;
+                state_.spectrumReady = result.ready;
+                state_.offlineBusy = false;
+                state_.offlineOutput = QString::fromStdString(output);
+                state_.message = "离线分析完成 · 频谱为末尾窗口，放大结果已保存";
+                ++state_.displayRevision;
+                continue;
+            }
+            if (!frame)
+                continue;
+            QImage image = frameImage(*frame), overlay, inset;
+            SpectrumResult result;
+            double displacement = 0;
+            if (config.tool == "focus" || config.tool == "direct") {
+                auto peaks = analyze(*frame, config.focus, {});
+                overlay = overlayImage(frame->width, frame->height, peaks.peaks, qRgb(113, 255, 160));
+            } else if (config.tool == "magnify") {
+                if (!signal.valid())
+                    throw std::runtime_error("测量参考已失效，请重新选边缘");
+                if (!motion) {
+                    MotionConfig c;
+                    c.x = config.roi.x();
+                    c.y = config.roi.y();
+                    c.width = config.roi.width();
+                    c.height = config.roi.height();
+                    c.fps = config.processingFps;
+                    c.low = config.low;
+                    c.high = config.high;
+                    c.alpha = config.alpha;
+                    c.realtime = !options_.demo;
+                    c.validate();
+                    motion = std::make_unique<VulkanMotion>(c, options_.shader);
+                    {
+                        std::lock_guard<std::mutex> l(mutex_);
+                        if (generation != generation_)
+                            continue;
+                        if (!work_.empty())
+                            frame = work_.back();
+                        work_.clear();
+                        measurementReadyGeneration_ = generation;
+                    }
+                    image = frameImage(*frame);
+                }
+                // Raw frame identity is retained everywhere else. The processor gets
+                // a contiguous index after explicit integer rate decimation.
+                Frame input = *frame;
+                input.sequence = processingSequence++;
+                auto pixels = motion->process(input);
+                inset = amplifiedImage(config.roi.width(), config.roi.height(), pixels);
+                displacement = signal.measure(*frame);
+                spectrum.append(displacement, frame->timestamp);
+                result = spectrum.result(config.low, config.high);
+                overlay = QImage(frame->width, frame->height, QImage::Format_ARGB32_Premultiplied);
+                overlay.fill(Qt::transparent);
+                QPainter painter(&overlay);
+                painter.setPen(QPen(QColor("#91c5ff"), 3));
+                for (const auto &point : signal.points())
+                    painter.drawPoint(point.x, point.y);
+            }
+            {
+                std::lock_guard<std::mutex> l(mutex_);
+                if (generation != generation_)
+                    continue;
+                state_.image = image;
+                state_.overlay = overlay;
+                state_.inset = inset;
+                state_.sequence = frame->sequence;
+                state_.timestamp = frame->timestamp;
+                state_.displacement = displacement;
+                if (config.tool == "magnify") {
+                    state_.spectrum = spectrumVariant(result);
+                    state_.samples = result.samples;
+                    state_.peak = result.peak;
+                    state_.spectrumReady = result.ready;
+                    state_.message =
+                        result.ready ? "本机实时测量 · 像素位移，未作物理标定" : "正在积累连续测量样本";
+                }
+                ++state_.displayRevision;
+            }
+        } catch (const std::exception &e) {
+            analyzer.reset();
+            motion.reset();
+            std::lock_guard<std::mutex> l(mutex_);
+            if (generation != generation_)
+                continue;
+            state_.error = QString::fromUtf8(e.what());
+            state_.offlineBusy = false;
+            if (state_.tool == "magnify") {
+                state_.tool = "preview";
+                state_.spectrumReady = false;
+                state_.spectrum.clear();
+                work_.clear();
+                ++generation_;
+            }
+            state_.message = "操作未完成，请查看错误原因";
+        }
+    }
+}
+} // namespace vr::touch

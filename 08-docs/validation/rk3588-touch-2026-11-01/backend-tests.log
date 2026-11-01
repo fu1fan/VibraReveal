@@ -1,0 +1,36 @@
+recording, pressure, disk failure, spectrum, edge measurement, VRI1 transfer PASS
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+PASS: Vulkan frames, invalid config/frame, gaps, format, failed session, odd/thin ROI, alpha=0
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+PASS: flat-mask boundary, focus ordering, selected edge geometry, identity
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+PASS: alpha=0, short/empty clip, sequence/timing, sink failure, budget, scratch cleanup
