@@ -1,0 +1,27 @@
+QStandardPaths: wrong permissions on runtime directory /run, 0755 instead of 0700
+********* Start testing of UiTest *********
+Config: Using QtTest library 5.15.10, Qt 5.15.10 (arm64-little_endian-lp64 shared (dynamic) release build; by GCC 12.3.0), buildroot 2021.11
+PASS   : UiTest::initTestCase()
+QWARN  : UiTest::panelMenuClearance() QQmlApplicationEngine failed to load component
+QWARN  : UiTest::panelMenuClearance() qrc:/qml/Main.qml: Invalid property assignment: "safeTop" is a read-only property
+FAIL!  : UiTest::panelMenuClearance() '!engine.rootObjects().isEmpty()' returned FALSE. ()
+   Loc: [/tmp/vr-roi-source/03-apps/rk3588/tests/gui/ui_test.cpp(33)]
+QWARN  : UiTest::gainControls() QQmlApplicationEngine failed to load component
+QWARN  : UiTest::gainControls() qrc:/qml/Main.qml: Invalid property assignment: "safeTop" is a read-only property
+FAIL!  : UiTest::gainControls() '!engine.rootObjects().isEmpty()' returned FALSE. ()
+   Loc: [/tmp/vr-roi-source/03-apps/rk3588/tests/gui/ui_test.cpp(81)]
+QWARN  : UiTest::regionAndClip() QQmlApplicationEngine failed to load component
+QWARN  : UiTest::regionAndClip() qrc:/qml/Main.qml: Invalid property assignment: "safeTop" is a read-only property
+FAIL!  : UiTest::regionAndClip() '!engine.rootObjects().isEmpty()' returned FALSE. ()
+   Loc: [/tmp/vr-roi-source/03-apps/rk3588/tests/gui/ui_test.cpp(162)]
+QWARN  : UiTest::draggablePanelsAndPan() QQmlApplicationEngine failed to load component
+QWARN  : UiTest::draggablePanelsAndPan() qrc:/qml/Main.qml: Invalid property assignment: "safeTop" is a read-only property
+FAIL!  : UiTest::draggablePanelsAndPan() '!engine.rootObjects().isEmpty()' returned FALSE. ()
+   Loc: [/tmp/vr-roi-source/03-apps/rk3588/tests/gui/ui_test.cpp(580)]
+QWARN  : UiTest::npuWorkflow() QQmlApplicationEngine failed to load component
+QWARN  : UiTest::npuWorkflow() qrc:/qml/Main.qml: Invalid property assignment: "safeTop" is a read-only property
+FAIL!  : UiTest::npuWorkflow() '!engine.rootObjects().isEmpty()' returned FALSE. ()
+   Loc: [/tmp/vr-roi-source/03-apps/rk3588/tests/gui/ui_test.cpp(779)]
+PASS   : UiTest::cleanupTestCase()
+Totals: 2 passed, 5 failed, 0 skipped, 0 blacklisted, 308ms
+********* Finished testing of UiTest *********

@@ -23,6 +23,54 @@ using namespace vr::touch;
 class UiTest : public QObject {
     Q_OBJECT
   private slots:
+    void panelMenuClearance() {
+        QTemporaryDir dir;
+        EngineOptions options; options.demo=true; options.width=320; options.height=200;
+        options.bits=8; options.demoFps=60; options.storage=dir.path().toStdString();
+        options.shader=qEnvironmentVariable("VR_TEST_SHADER_PATH",VR_TEST_SHADER).toStdString();
+        Controller controller(options);
+        QQmlApplicationEngine engine; engine.rootContext()->setContextProperty("backend",&controller);
+        engine.load(QUrl("qrc:/qml/Main.qml")); QVERIFY(!engine.rootObjects().isEmpty());
+        auto window=qobject_cast<QQuickWindow *>(engine.rootObjects().first()); QVERIFY(window); window->showFullScreen();
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["ready"].toBool(),5000);
+        auto panel=window->findChild<QQuickItem *>("inspector"); QVERIFY(panel);
+        auto check=[&](QQuickItem *item) {
+            QTest::qWait(100);
+            const QRectF box(item->mapToScene(QPointF()),item->size());
+            QVERIFY(box.top()>=78); QVERIFY(box.bottom()<=window->height()-8);
+            for(const auto name : {"toolDock","playbackBar","modeMenu","settingsButton"}) {
+                auto menu=window->findChild<QQuickItem *>(name); QVERIFY(menu);
+                if(menu->isVisible()) QVERIFY2(!box.intersects(QRectF(menu->mapToScene(QPointF()),menu->size())),name);
+            }
+        };
+        for(const auto &tool : {"focus","select","record","settings"}) { controller.tool(tool); check(panel); }
+        controller.tool("select"); QVERIFY(window->setProperty("frequencyPanel",true)); check(panel);
+        QVERIFY(panel->property("contentHeight").toDouble()>panel->height());
+        auto device=QTest::createTouchDevice();
+        const QPoint from=panel->mapToScene(QPointF(8,panel->height()-30)).toPoint();
+        const QPoint to=from-QPoint(0,180); const QPointF before(panel->x(),panel->y());
+        QTest::touchEvent(window,device).press(0,from,window);
+        for(int i=1;i<=6;++i) { QTest::touchEvent(window,device).move(0,from+(to-from)*i/6,window); QTest::qWait(30); }
+        QTest::touchEvent(window,device).release(0,to,window); QTest::qWait(300);
+        QVERIFY(panel->property("contentY").toDouble()>0); QCOMPARE(QPointF(panel->x(),panel->y()),before);
+        const auto captures=qEnvironmentVariable("VR_UI_CAPTURE_DIR");
+        if(!captures.isEmpty()) {
+            QDir().mkpath(captures); auto grab=window->contentItem()->grabToImage(); QVERIFY(grab);
+            QSignalSpy ready(grab.data(),&QQuickItemGrabResult::ready); QVERIFY(ready.wait(5000)||!grab->image().isNull());
+            QVERIFY(grab->image().save(captures+"/panel-scroll-clearance.png"));
+        }
+        QVERIFY(window->setProperty("frequencyPanel",false));
+        controller.selectObject(40,70,64,64,false);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["objectReady"].toBool(),5000);
+        controller.magnifyRegion(); QTRY_VERIFY_WITH_TIMEOUT(!controller.image(1).isNull(),10000); check(panel);
+        controller.tool("preview"); controller.record();
+        QTRY_VERIFY_WITH_TIMEOUT(controller.engine().recorder.status().frames>=8,5000);
+        controller.stopRecording(); QTRY_COMPARE_WITH_TIMEOUT(controller.state()["recordState"].toString(),QString("saved"),5000); check(panel);
+        controller.tool("files"); check(window->findChild<QQuickItem *>("filesPanel"));
+        controller.openFile(0); QTRY_VERIFY_WITH_TIMEOUT(controller.state()["replayReady"].toBool(),5000); check(panel);
+        QVERIFY(window->setProperty("frequencyPanel",true)); check(panel);
+        QVERIFY(window->setProperty("frequencyPanel",false)); QVERIFY(window->setProperty("rangePanel",true)); check(panel);
+    }
     void gainControls() {
         QTemporaryDir dir;
         EngineOptions options; options.demo=true; options.width=160; options.height=120;
@@ -40,6 +88,14 @@ class UiTest : public QObject {
         };
         auto click=[&](const QString &name) {
             auto item=find(window->contentItem(),name); QVERIFY2(item,qPrintable(name)); QVERIFY(item->isVisible()); QVERIFY(item->isEnabled());
+            auto panel=find(window->contentItem(),"inspector");
+            if(panel && panel->isAncestorOf(item)) {
+                const auto top=item->mapToItem(panel,QPointF()).y();
+                const double offset=panel->property("contentY").toDouble();
+                if(top<0 || top+item->height()>panel->height())
+                    panel->setProperty("contentY",std::clamp(offset+top+item->height()-panel->height(),0.,std::max(0.,panel->property("contentHeight").toDouble()-panel->height())));
+                QTest::qWait(50);
+            }
             QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,item->mapToScene(QPointF(item->width()/2,item->height()/2)).toPoint());
             QTest::qWait(50);
         };
@@ -115,7 +171,11 @@ class UiTest : public QObject {
             QTest::mouseMove(window,(from+to)/2,60);
             QTest::mouseMove(window,to,60);
             QVERIFY(region->property("adjusting").toBool());
+            const auto requested=region->property("draft").toRectF().toAlignedRect();
             QTest::mouseRelease(window,Qt::LeftButton,Qt::NoModifier,to);
+            // The submitted geometry must be visible before async processing ends.
+            QCOMPARE(controller.state()["roi"].toRect(),requested);
+            QCOMPARE(region->property("region").toRectF().toAlignedRect(),requested);
         };
         drag(camera->toView(82,102).toPoint(),camera->toView(92,107).toPoint());
         QTRY_VERIFY_WITH_TIMEOUT(controller.state()["objectReady"].toBool(),5000);
@@ -545,6 +605,9 @@ class UiTest : public QObject {
         };
         auto movePanel = [&] {
             QTest::qWait(100);
+            // Every new tool starts between the top and bottom menus.
+            QVERIFY(inspector->y()>=inspector->property("safeTop").toDouble());
+            QVERIFY(inspector->y()+inspector->height()<=inspector->property("safeBottom").toDouble()+.01);
             auto handle = find(inspector,"panelDragHandle");
             QVERIFY(handle);
             const QPointF before(inspector->x(),inspector->y());
@@ -752,9 +815,31 @@ class UiTest : public QObject {
             QVERIFY(grab->image().save(captures+"/npu-object.png"));
         }
         controller.selectObject(190,70,270,210,false);
+        QCOMPARE(controller.state()["roi"].toRect(),QRect(190,70,270,210));
         QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["selectionBusy"].toBool(), 10000);
         QVERIFY2(controller.state()["objectReady"].toBool(), qPrintable(controller.state()["error"].toString()));
         qInfo() << "BOARD_NPU_CACHED_BOX" << controller.state()["selectionMs"] << "ms";
+        auto region=window->findChild<QQuickItem *>("editableRegion"); QVERIFY(region);
+        for(bool resize : {false,true}) {
+            const auto old=controller.state()["roi"].toRect();
+            const QPointF source=resize ? QPointF(old.x()+old.width(),old.y()+old.height()) : QPointF(old.center());
+            const auto from=camera->mapToScene(camera->toView(source.x(),source.y())).toPoint();
+            const auto to=from+QPoint(8,5);
+            QTest::mousePress(window,Qt::LeftButton,Qt::NoModifier,from);
+            QTest::mouseMove(window,to,60);
+            QVERIFY(region->property("adjusting").toBool());
+            const auto requested=region->property("draft").toRectF().toAlignedRect();
+            QTest::mouseRelease(window,Qt::LeftButton,Qt::NoModifier,to);
+            QCOMPARE(controller.state()["roi"].toRect(),requested);
+            int busySamples=0; QElapsedTimer deadline; deadline.start();
+            while(controller.state()["selectionBusy"].toBool() && deadline.elapsed()<15000) {
+                QCOMPARE(region->property("region").toRectF().toAlignedRect(),requested);
+                ++busySamples; QTest::qWait(5);
+            }
+            QVERIFY(busySamples>0); QVERIFY(controller.state()["objectReady"].toBool());
+            QCOMPARE(controller.state()["roi"].toRect(),requested);
+            qInfo()<<"NPU_ROI_STABLE"<<(resize?"resize":"move")<<requested<<"busy_samples"<<busySamples;
+        }
         const QRect objectRoi = controller.state()["roi"].toRect();
         controller.confirmObject();
         controller.selectEdge(370,210);

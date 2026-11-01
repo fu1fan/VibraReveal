@@ -304,13 +304,17 @@ void Engine::selectObject(const QRectF &r, bool point) {
     std::lock_guard<std::mutex> l(mutex_);
     if (state_.tool != "select" || state_.selectionStep != 1 || !reference_ || state_.selectionBusy)
         return;
+    const auto rect=r.normalized().toAlignedRect().intersected(QRect(0,0,reference_->width,reference_->height));
     command_ = {};
     command_.kind = Command::Object;
-    command_.rect = r;
+    command_.rect = point ? r : QRectF(rect);
     command_.point = point;
     ++generation_;
     state_.message = state_.useNpu ? "NPU 正在识别物品…" : "正在提取对象边缘…";
     state_.selectionBusy = true;
+    // Publish the requested geometry before asynchronous edge/NPU work begins.
+    // Point prompts have no known rectangle until segmentation completes.
+    state_.roi = point ? QRect{} : rect;
     state_.selectionMs = 0;
     state_.error.clear();
     state_.overlay = {};

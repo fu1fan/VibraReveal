@@ -108,8 +108,8 @@ ApplicationWindow {
         x: begin.x; y: begin.y; width: end.x-begin.x; height: end.y-begin.y
         function submit() {
             var r=draft
-            adjusting=false
             backend.selectObject(r.x,r.y,r.width,r.height,false)
+            adjusting=false
         }
         Rectangle { anchors.fill: parent; color: "transparent"; border.width: 2; border.color: "#ff453a" }
         MouseArea {
@@ -163,13 +163,13 @@ ApplicationWindow {
     Text { x: 66; y: 18; text: "VibraReveal"; color: "white"; font.pixelSize: 23; font.weight: Font.DemiBold }
     Text { x: 66; y: 49; text: s.demo ? "合成相机 · 功能验证" : "RK3588 · 触屏测量"; color: "#edf3fb"; font.pixelSize: 13 }
     Row {
-        anchors.right: settingsButton.left; anchors.rightMargin: 12; y: 16; spacing: 4
+        objectName: "modeMenu"; anchors.right: settingsButton.left; anchors.rightMargin: 12; y: 16; spacing: 4
         TouchButton { objectName: "localMode"; glyph: "scan-line"; text: "独立测量"; checked: s.mode === "local"; onClicked: backend.mode("local") }
         TouchButton { objectName: "directMode"; glyph: "monitor"; text: "电脑直通"; checked: s.mode === "direct"; onClicked: { if(recording) switchDialog.open(); else backend.mode("direct") } }
     }
-    TouchButton { id: settingsButton; glyph: "sliders-horizontal"; iconOnly: true; anchors.right: parent.right; anchors.rightMargin: 18; y: 16; width: 50; text: "相机设置"; enabled: s.mode === "local" && !recording; onClicked: backend.tool("settings") }
+    TouchButton { id: settingsButton; objectName: "settingsButton"; glyph: "sliders-horizontal"; iconOnly: true; anchors.right: parent.right; anchors.rightMargin: 18; y: 16; width: 50; text: "相机设置"; enabled: s.mode === "local" && !recording; onClicked: backend.tool("settings") }
     Row {
-        x: 18; y: 86; spacing: 8
+        x: 18; y: 86; spacing: 8; visible: s.tool !== "files"
         Rectangle { width: formatLabel.width + 42; height: 48; radius: 10; color: "#101720"
             Rectangle { x: 12; anchors.verticalCenter: parent.verticalCenter; width: 8; height: 8; radius: 4; color: s.ready ? "#91dfb2" : "#ff8980" }
             Text { id: formatLabel; x: 28; anchors.verticalCenter: parent.verticalCenter; color: "#f4f7fc"; font.pixelSize: 15; text: (s.ready || s.fileName.length > 0) ? s.width+" × "+s.height+" · RAW"+s.bits+" · "+Number(s.fps).toFixed(1)+" fps" : "相机未就绪" }
@@ -179,16 +179,28 @@ ApplicationWindow {
         TouchButton { objectName: "selectionPan"; visible: s.tool === "select" && s.native; text: selectionPan ? "返回选择" : "移动画面"; checked: selectionPan; onClicked: selectionPan = !selectionPan }
     }
     Rectangle {
-        x: 18; y: 148; width: hint.width+24; height: 38; radius: 9; color: "#101720"; visible: hint.text.length > 0
+        x: 18; y: 148; width: hint.width+24; height: 38; radius: 9; color: "#101720"; visible: s.tool !== "files" && hint.text.length > 0
         Text { id: hint; anchors.centerIn: parent; color: "#f4f7fc"; font.pixelSize: 14
             text: s.mode === "direct" || s.tool === "focus" ? "峰值对焦 · 1:1 · "+Number(s.previewFps).toFixed(0)+" fps · 拖动画面" : s.tool === "select" && selectionPan ? "拖动画面 · 点击返回选择继续选区" : s.tool === "select" ? "冻结参考帧 · "+(s.step === 1 ? (s.selectionBusy?s.message:s.useNpu?"轻触物品 · NPU 自动识别":"拖动框选 · 手动模式") : "轻触对象边缘") : s.tool === "magnify" ? "本机实时计算 · 参考位置固定" : s.tool === "replay" || s.tool === "offline" ? "本地 RAW 回放与分析" : s.native ? "点对点显示 · 拖动画面" : ""
         }
     }
-    Loader {
+    Flickable {
         id: inspector; objectName: "inspector"; z: 20
+        readonly property var item: panelLoader.item
         property string positionKey: s.mode === "direct" ? "direct" : s.tool
+        property real safeTop: 78
+        readonly property real safeBottom: dock.visible ? dock.y-12 : playbackBar.visible ? playbackBar.y-12 : window.height-18
+        width: item ? item.width : 302
+        height: Math.min(contentHeight,Math.max(1,safeBottom-safeTop))
+        contentWidth: width
+        contentHeight: item ? item.height : 0
+        visible: item !== null
+        clip: true
+        flickableDirection: Flickable.VerticalFlick
+        boundsBehavior: Flickable.StopAtBounds
+        ScrollBar.vertical: ScrollBar { policy: inspector.contentHeight>inspector.height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff }
         x: window.width-width-18
-        y: s.tool === "record" || s.tool === "settings" ? 86 : 145
+        y: safeTop
         function constrain() {
             x = Math.max(8,Math.min(x,window.width-width-8))
             y = Math.max(8,Math.min(y,window.height-height-8))
@@ -198,17 +210,22 @@ ApplicationWindow {
             var saved = panelPositions[positionKey]
             x = saved ? saved.x : window.width-width-18
             y = saved ? saved.y : (s.tool === "record" || s.tool === "settings" ? 86 : 145)
-            constrain()
+            if (saved) constrain()
+            else y = Math.max(safeTop,Math.min(y,safeBottom-height))
         }
         function moveBy(dx,dy) {
             x += dx; y += dy; constrain()
             panelPositions[positionKey] = Qt.point(x,y)
         }
-        onLoaded: restorePosition()
         onPositionKeyChanged: Qt.callLater(restorePosition)
-        onHeightChanged: if (item) constrain()
-        onWidthChanged: if (item) constrain()
-        sourceComponent: s.mode === "direct" ? directPanel : s.tool === "focus" ? focusPanel : s.tool === "select" ? (frequencyPanel?bandPanel:selectionPanel) : s.tool === "magnify" ? (frequencyPanel?bandPanel:magnifyPanel) : s.tool === "record" ? recordingPanel : s.tool === "settings" ? settingsPanel : (s.tool === "replay" || s.tool === "offline") ? (frequencyPanel?bandPanel:rangePanel?analysisRangePanel:offlinePanel) : null
+        onHeightChanged: if (item) restorePosition()
+        onWidthChanged: if (item) restorePosition()
+        onSafeBottomChanged: if (item) restorePosition()
+        Loader {
+            id: panelLoader
+            onLoaded: { inspector.contentY=0; inspector.restorePosition() }
+            sourceComponent: s.mode === "direct" ? directPanel : s.tool === "focus" ? focusPanel : s.tool === "select" ? (frequencyPanel?bandPanel:selectionPanel) : s.tool === "magnify" ? (frequencyPanel?bandPanel:magnifyPanel) : s.tool === "record" ? recordingPanel : s.tool === "settings" ? settingsPanel : (s.tool === "replay" || s.tool === "offline") ? (frequencyPanel?bandPanel:rangePanel?analysisRangePanel:offlinePanel) : null
+        }
     }
     Connections {
         target: inspector.item
@@ -371,7 +388,7 @@ ApplicationWindow {
         }
     }
     Rectangle {
-        id: filesPanel; x: 18; y: 86; width: parent.width-36; height: 398; radius: 18; color: "#f7f8fa"; visible: s.tool === "files"
+        id: filesPanel; objectName: "filesPanel"; x: 18; y: 86; width: parent.width-36; height: Math.max(1,dock.y-12-y); radius: 18; color: "#f7f8fa"; visible: s.tool === "files"
         Text { x: 20; y: 18; text: "录制文件 · "+backend.files.length; color: "#151a22"; font.pixelSize: 22 }
         TouchButton { anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 10; text: "返回预览"; onClicked: backend.tool("preview") }
         Text { x: 20; y: 50; width: parent.width-200; text: s.fileMessage.length ? s.fileMessage : "保存在本机 · 支持回放、分析和删除"; elide: Text.ElideMiddle; color: "#414e60"; font.pixelSize: 14 }
@@ -390,7 +407,7 @@ ApplicationWindow {
         }
     }
     Rectangle {
-        id: dock; anchors.bottom: parent.bottom; anchors.bottomMargin: 18; anchors.horizontalCenter: parent.horizontalCenter
+        id: dock; objectName: "toolDock"; anchors.bottom: parent.bottom; anchors.bottomMargin: 18; anchors.horizontalCenter: parent.horizontalCenter
         height: 82; width: 596; radius: 20; color: "#f7f8fa"
         visible: s.mode === "local" && s.tool !== "replay" && s.tool !== "offline"
         Row { anchors.centerIn: parent; spacing: 6
@@ -400,7 +417,7 @@ ApplicationWindow {
         }
     }
     Rectangle {
-        anchors.bottom: parent.bottom; anchors.bottomMargin: 18; x: 18; width: parent.width-36; height: 66; radius: 15; color: "#f7f8fa"; visible: s.tool === "replay" || s.tool === "offline"
+        id: playbackBar; objectName: "playbackBar"; anchors.bottom: parent.bottom; anchors.bottomMargin: 18; x: 18; width: parent.width-36; height: 66; radius: 15; color: "#f7f8fa"; visible: s.tool === "replay" || s.tool === "offline"
         RowLayout { anchors.fill: parent; anchors.margins: 8; spacing: 12
             TouchButton { glyph: s.playing ? "pause" : "play"; text: s.playing?"暂停":"播放"; enabled: !s.offlineBusy; onClicked: backend.playPause() }
             Text { text: clock(s.position); color: "#151a22"; font.pixelSize: 16 }
