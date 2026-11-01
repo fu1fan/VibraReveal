@@ -1,0 +1,33 @@
+QStandardPaths: wrong permissions on runtime directory /run, 0755 instead of 0700
+********* Start testing of UiTest *********
+Config: Using QtTest library 5.15.10, Qt 5.15.10 (arm64-little_endian-lp64 shared (dynamic) release build; by GCC 12.3.0), buildroot 2021.11
+PASS   : UiTest::initTestCase()
+arm_release_ver: g13p0-01eac0, rk_so_ver: 10
+QWARN  : UiTest::hardwareCompression() qt.qpa.wayland: Wayland does not support QWindow::requestActivate()
+QINFO  : UiTest::hardwareCompression() BOARD_COMPRESSION frames 3639 fps 120.622 raw_bytes 7452672000 stored_payload_bytes 2516646705 saved_percent 66.2316 peak_buffer_bytes 10240552 stop_reason "手动停止"
+PASS   : UiTest::hardwareCompression()
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+QINFO  : UiTest::hardwareRegionClip() BOARD_GLOBAL_CLIP start_index 2 frames 6 dimensions QVariant(QRect, QRect(0,0 1280x800)) fps 30
+PASS   : UiTest::hardwareRegionClip()
+QWARN  : UiTest::regionAndClip() qt.qpa.wayland: Wayland does not support QWindow::requestActivate()
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+PASS   : UiTest::regionAndClip()
+QWARN  : UiTest::recordingDeletion() qt.qpa.wayland: Wayland does not support QWindow::requestActivate()
+PASS   : UiTest::recordingDeletion()
+PASS   : UiTest::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 54716ms
+********* Finished testing of UiTest *********

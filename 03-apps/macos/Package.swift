@@ -10,14 +10,15 @@ let package = Package(
         .library(name: "VibraRevealTransport", targets: ["VibraRevealTransport"]),
         .executable(name: "vr-receive", targets: ["vr-receive"])
     ],
+    dependencies: [.package(path: "../raw-codec")],
     targets: [
         .target(name: "VibraRevealBackend", resources: [.copy("Resources/Motion.metal")]),
         .systemLibrary(name: "CLibUSB", pkgConfig: "libusb-1.0", providers: [.brew(["libusb"])]),
         .target(name: "CVRBulk", dependencies: ["CLibUSB"], publicHeadersPath: "include"),
-        .target(name: "VibraRevealTransport", dependencies: ["VibraRevealBackend", "CVRBulk"]),
+        .target(name: "VibraRevealTransport", dependencies: ["VibraRevealBackend", "CVRBulk", .product(name: "CVRRawCodec", package: "raw-codec")]),
         .executableTarget(name: "vr-receive", dependencies: ["VibraRevealTransport"]),
         .executableTarget(name: "vibrareveal", dependencies: ["VibraRevealBackend", "VibraRevealTransport"]),
-        .testTarget(name: "VibraRevealTransportTests", dependencies: ["VibraRevealTransport"]),
+        .testTarget(name: "VibraRevealTransportTests", dependencies: ["VibraRevealTransport", .product(name: "CVRRawCodec", package: "raw-codec")]),
         .testTarget(name: "VibraRevealBackendTests", dependencies: ["VibraRevealBackend"])
     ],
     cxxLanguageStandard: .cxx17

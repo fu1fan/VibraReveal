@@ -19,6 +19,14 @@ ApplicationWindow {
     palette.highlight: "#075ac5"
     palette.highlightedText: "#ffffff"
     property var s: backend.state
+    property string deletePath: ""
+    property string deleteName: ""
+    property real deleteBytes: 0
+    property point exposurePoint: Qt.point(0,0)
+    property bool rangePanel: false
+    property bool selectionPan: false
+    property var panelPositions: ({})
+    property bool liveMotionParameters: s.tool === "magnify" || (s.tool === "select" && s.fileName.length === 0)
     property bool frequencyPanel: false
     property bool showSpectrum: true
     property bool showInset: true
@@ -31,6 +39,8 @@ ApplicationWindow {
     Connections {
         target: backend
         function onChanged() {
+            if (s.tool !== "select" || !s.native) selectionPan = false
+            if (!s.exposureEditable) exposureTimer.stop()
             if(closingAfterSave && !recording && !s.offlineBusy && !s.streamBusy) {
                 closingAfterSave = false
                 Qt.callLater(function() { window.close() })
@@ -39,63 +49,104 @@ ApplicationWindow {
     }
     FrameView { id: camera; objectName: "cameraView"; anchors.fill: parent; controller: backend; nativeSize: s.native }
     MouseArea {
-        id: imageTouch; anchors.fill: parent
+        id: imageTouch; objectName: "imageTouch"; preventStealing: true; anchors.fill: parent; enabled: !s.selectionBusy
         property point startPoint
         property point previousPoint
         property point sourceStart
-        onPressed: { startPoint = Qt.point(mouse.x,mouse.y); previousPoint = startPoint; sourceStart = camera.toSource(mouse.x,mouse.y); selectionBox.visible = s.tool === "select" && s.step === 1 }
+        property bool exposureGesture: false
+        property bool exposureAdjusted: false
+        property real exposureStartEV: 0
+        onPressed: { exposureGesture = exposureTimer.running && s.exposureEditable; exposureAdjusted = false; exposureStartEV = s.exposureEV; startPoint = Qt.point(mouse.x,mouse.y); previousPoint = startPoint; sourceStart = camera.toSource(mouse.x,mouse.y); selectionBox.visible = s.tool === "select" && s.step === 1 && !selectionPan; selectionBox.x = mouse.x; selectionBox.y = mouse.y; selectionBox.width = 0; selectionBox.height = 0 }
         onPositionChanged: {
             if (!pressed) return
-            if (s.tool === "select" && s.step === 1) {
+            if (s.tool === "select" && s.step === 1 && !selectionPan) {
                 selectionBox.x = Math.min(startPoint.x,mouse.x); selectionBox.y = Math.min(startPoint.y,mouse.y)
                 selectionBox.width = Math.abs(startPoint.x-mouse.x); selectionBox.height = Math.abs(startPoint.y-mouse.y)
-            } else if (s.native && s.tool !== "select") camera.panBy(mouse.x-previousPoint.x,mouse.y-previousPoint.y)
+            } else if (exposureGesture && (exposureAdjusted || Math.abs(mouse.y-startPoint.y)>Math.max(6,Math.abs(mouse.x-startPoint.x)))) {
+                exposureAdjusted = true
+                backend.exposureCompensation(Math.max(-3,Math.min(3,exposureStartEV+(startPoint.y-mouse.y)/120)))
+                exposureTimer.restart()
+            } else if (s.native && (s.tool !== "select" || selectionPan)) camera.panBy(mouse.x-previousPoint.x,mouse.y-previousPoint.y)
             previousPoint = Qt.point(mouse.x,mouse.y)
         }
         onReleased: {
             selectionBox.visible = false
             var end = camera.toSource(mouse.x,mouse.y)
-            if (s.tool === "select") {
+            if (s.tool === "select" && !selectionPan) {
                 if (s.step === 2) backend.selectEdge(end.x,end.y)
                 else backend.selectObject(sourceStart.x,sourceStart.y,end.x-sourceStart.x,end.y-sourceStart.y,Math.abs(mouse.x-startPoint.x)+Math.abs(mouse.y-startPoint.y)<12)
+            } else if (s.exposureEditable && !exposureAdjusted && Math.abs(mouse.x-startPoint.x)+Math.abs(mouse.y-startPoint.y)<12) {
+                exposurePoint = end
+                backend.meterExposure(end.x,end.y)
+                exposureTimer.restart()
             }
         }
         onCanceled: selectionBox.visible = false
     }
+    Timer { id: exposureTimer; interval: 5000; repeat: false }
+    Item {
+        objectName: "exposureIndicator"; visible: exposureTimer.running && s.exposureEditable
+        property point center: { camera.viewRevision; return camera.toView(exposurePoint.x,exposurePoint.y) }
+        x: center.x-36; y: center.y-36; width: 72; height: 72
+        Rectangle { anchors.fill: parent; color: "transparent"; border.width: 4; border.color: "#80201800" }
+        Rectangle { anchors.fill: parent; anchors.margins: 1; color: "transparent"; border.width: 2; border.color: "#ffd60a" }
+        Rectangle {
+            x: 0; y: 78; width: exposureLabel.implicitWidth+16; height: 30; radius: 6; color: "#101720"
+            Text { id: exposureLabel; anchors.centerIn: parent; color: "#ffd60a"; font.pixelSize: 14; text: s.exposureAuto ? "自动曝光…" : (s.exposureEV>=0?"+":"")+Number(s.exposureEV).toFixed(1)+" EV · "+Number(s.exposureMs).toFixed(2)+" ms" }
+        }
+    }
     Rectangle { id: selectionBox; visible: false; color: "#167cb6ff"; border.color: "#91c5ff"; border.width: 2 }
     Item {
-        id: selectedRegion
-        visible: s.tool === "select" && s.step === 1 && s.objectReady
-        property point begin: camera.toView(s.roi.x,s.roi.y)
-        property point end: camera.toView(s.roi.x+s.roi.width,s.roi.y+s.roi.height)
+        id: selectedRegion; objectName: "editableRegion"
+        visible: s.tool === "select" && s.step === 1 && (s.objectReady || s.selectionBusy) && s.roi.width>0
+        enabled: !s.selectionBusy && !selectionPan
+        property bool adjusting: false
+        property rect draft: Qt.rect(0,0,0,0)
+        property rect region: adjusting ? draft : s.roi
+        property point begin: { camera.viewRevision; return camera.toView(region.x,region.y) }
+        property point end: { camera.viewRevision; return camera.toView(region.x+region.width,region.y+region.height) }
         x: begin.x; y: begin.y; width: end.x-begin.x; height: end.y-begin.y
-        Rectangle { anchors.fill: parent; color: "transparent"; border.width: 1; border.color: "#91c5ff" }
+        function submit() {
+            var r=draft
+            adjusting=false
+            backend.selectObject(r.x,r.y,r.width,r.height,false)
+        }
+        Rectangle { anchors.fill: parent; color: "transparent"; border.width: 2; border.color: "#ff453a" }
         MouseArea {
-            anchors.fill: parent
+            objectName: "moveRegion"; anchors.fill: parent
             property point start
-            property var original
-            onPressed: { start=camera.toSource(mouse.x+selectedRegion.x,mouse.y+selectedRegion.y); original=s.roi }
-            onReleased: {
-                var end=camera.toSource(mouse.x+selectedRegion.x,mouse.y+selectedRegion.y)
-                backend.selectObject(original.x+end.x-start.x,original.y+end.y-start.y,original.width,original.height,false)
+            property rect original
+            function update(mx,my) {
+                var at=mapToItem(camera,mx,my), now=camera.toSource(at.x,at.y)
+                selectedRegion.draft=Qt.rect(Math.max(0,Math.min(s.width-original.width,original.x+now.x-start.x)),Math.max(0,Math.min(s.height-original.height,original.y+now.y-start.y)),original.width,original.height)
             }
+            onPressed: { var at=mapToItem(camera,mouse.x,mouse.y); start=camera.toSource(at.x,at.y); original=s.roi; selectedRegion.draft=original; selectedRegion.adjusting=true }
+            onPositionChanged: if(pressed) update(mouse.x,mouse.y)
+            onReleased: { update(mouse.x,mouse.y); selectedRegion.submit() }
+            onCanceled: selectedRegion.adjusting=false
         }
         Repeater {
-            model: 4
+            model: [[0,0],[0.5,0],[1,0],[1,0.5],[1,1],[0.5,1],[0,1],[0,0.5]]
             Rectangle {
-                x: (index%2 ? selectedRegion.width : 0)-24
-                y: (index>=2 ? selectedRegion.height : 0)-24
+                x: modelData[0]*selectedRegion.width-24; y: modelData[1]*selectedRegion.height-24
                 width: 48; height: 48; color: "transparent"
-                Rectangle { anchors.centerIn: parent; width: 12; height: 12; radius: 6; color: "#91c5ff"; border.color: "#152236"; border.width: 2 }
+                Rectangle { anchors.centerIn: parent; width: 14; height: 14; radius: 7; color: "#ff453a"; border.color: "white"; border.width: 2 }
                 MouseArea {
-                    anchors.fill: parent
-                    property point opposite
-                    onPressed: opposite=Qt.point(index%2?s.roi.x:s.roi.x+s.roi.width,index>=2?s.roi.y:s.roi.y+s.roi.height)
-                    onReleased: {
-                        var at=mapToItem(camera,mouse.x,mouse.y)
-                        var source=camera.toSource(at.x,at.y)
-                        backend.selectObject(opposite.x,opposite.y,source.x-opposite.x,source.y-opposite.y,false)
+                    objectName: "resizeRegion_"+index; anchors.fill: parent
+                    property rect original
+                    function update(mx,my) {
+                        var at=mapToItem(camera,mx,my), p=camera.toSource(at.x,at.y)
+                        var left=original.x, right=left+original.width, top=original.y, bottom=top+original.height
+                        if(modelData[0]===0) left=Math.max(0,Math.min(right-8,p.x))
+                        if(modelData[0]===1) right=Math.min(s.width,Math.max(left+8,p.x))
+                        if(modelData[1]===0) top=Math.max(0,Math.min(bottom-8,p.y))
+                        if(modelData[1]===1) bottom=Math.min(s.height,Math.max(top+8,p.y))
+                        selectedRegion.draft=Qt.rect(left,top,right-left,bottom-top)
                     }
+                    onPressed: { original=s.roi; selectedRegion.draft=original; selectedRegion.adjusting=true }
+                    onPositionChanged: if(pressed) update(mouse.x,mouse.y)
+                    onReleased: { update(mouse.x,mouse.y); selectedRegion.submit() }
+                    onCanceled: selectedRegion.adjusting=false
                 }
             }
         }
@@ -125,24 +176,53 @@ ApplicationWindow {
         }
         TouchButton { objectName: "fitView"; text: "适应"; checked: !s.native; enabled: s.tool !== "focus" && s.mode !== "direct"; onClicked: backend.view(false) }
         TouchButton { objectName: "nativeView"; text: "1:1"; checked: s.native; onClicked: backend.view(true) }
+        TouchButton { objectName: "selectionPan"; visible: s.tool === "select" && s.native; text: selectionPan ? "返回选择" : "移动画面"; checked: selectionPan; onClicked: selectionPan = !selectionPan }
     }
     Rectangle {
         x: 18; y: 148; width: hint.width+24; height: 38; radius: 9; color: "#101720"; visible: hint.text.length > 0
         Text { id: hint; anchors.centerIn: parent; color: "#f4f7fc"; font.pixelSize: 14
-            text: s.mode === "direct" || s.tool === "focus" ? "峰值对焦 · 1:1 · "+Number(s.previewFps).toFixed(0)+" fps · 拖动画面" : s.tool === "select" ? "冻结参考帧 · "+(s.step === 1 ? (s.hasSam?"轻触对象或拖动框选":"拖动框选 · 未配置 NPU 模型") : "轻触对象边缘") : s.tool === "magnify" ? "本机实时计算 · 参考位置固定" : s.tool === "replay" || s.tool === "offline" ? "本地 RAW 回放与分析" : s.native ? "点对点显示 · 拖动画面" : ""
+            text: s.mode === "direct" || s.tool === "focus" ? "峰值对焦 · 1:1 · "+Number(s.previewFps).toFixed(0)+" fps · 拖动画面" : s.tool === "select" && selectionPan ? "拖动画面 · 点击返回选择继续选区" : s.tool === "select" ? "冻结参考帧 · "+(s.step === 1 ? (s.selectionBusy?s.message:s.useNpu?"轻触物品 · NPU 自动识别":"拖动框选 · 手动模式") : "轻触对象边缘") : s.tool === "magnify" ? "本机实时计算 · 参考位置固定" : s.tool === "replay" || s.tool === "offline" ? "本地 RAW 回放与分析" : s.native ? "点对点显示 · 拖动画面" : ""
         }
     }
     Loader {
-        id: inspector; objectName: "inspector"; anchors.right: parent.right; anchors.rightMargin: 18
+        id: inspector; objectName: "inspector"; z: 20
+        property string positionKey: s.mode === "direct" ? "direct" : s.tool
+        x: window.width-width-18
         y: s.tool === "record" || s.tool === "settings" ? 86 : 145
-        sourceComponent: s.mode === "direct" ? directPanel : s.tool === "focus" ? focusPanel : s.tool === "select" ? selectionPanel : s.tool === "magnify" ? (frequencyPanel?bandPanel:magnifyPanel) : s.tool === "record" ? recordingPanel : s.tool === "settings" ? settingsPanel : (s.tool === "replay" || s.tool === "offline") ? (frequencyPanel?bandPanel:offlinePanel) : null
+        function constrain() {
+            x = Math.max(8,Math.min(x,window.width-width-8))
+            y = Math.max(8,Math.min(y,window.height-height-8))
+        }
+        function restorePosition() {
+            if (!item) return
+            var saved = panelPositions[positionKey]
+            x = saved ? saved.x : window.width-width-18
+            y = saved ? saved.y : (s.tool === "record" || s.tool === "settings" ? 86 : 145)
+            constrain()
+        }
+        function moveBy(dx,dy) {
+            x += dx; y += dy; constrain()
+            panelPositions[positionKey] = Qt.point(x,y)
+        }
+        onLoaded: restorePosition()
+        onPositionKeyChanged: Qt.callLater(restorePosition)
+        onHeightChanged: if (item) constrain()
+        onWidthChanged: if (item) constrain()
+        sourceComponent: s.mode === "direct" ? directPanel : s.tool === "focus" ? focusPanel : s.tool === "select" ? (frequencyPanel?bandPanel:selectionPanel) : s.tool === "magnify" ? (frequencyPanel?bandPanel:magnifyPanel) : s.tool === "record" ? recordingPanel : s.tool === "settings" ? settingsPanel : (s.tool === "replay" || s.tool === "offline") ? (frequencyPanel?bandPanel:rangePanel?analysisRangePanel:offlinePanel) : null
     }
+    Connections {
+        target: inspector.item
+        ignoreUnknownSignals: true
+        function onDragged(dx,dy) { inspector.moveBy(dx,dy) }
+    }
+    onWidthChanged: inspector.constrain()
+    onHeightChanged: inspector.constrain()
     Component {
         id: focusPanel
         Panel {
             title: "峰值对焦"; onClosed: backend.tool("preview")
             Text { text: "峰值灵敏度 · "+Math.round(s.focus)+"%"; color: "#151a22"; font.pixelSize: 16 }
-            Slider { id: focusSlider; width: parent.width; height: 42; from: 0; to: 100; value: s.focus; onPressedChanged: if(!pressed) setParams(s.alpha,s.low,s.high,s.processingFps,value) }
+            Slider { id: focusSlider; objectName: "focusSlider"; width: parent.width; height: 42; from: 0; to: 100; value: s.focus; onPressedChanged: if(!pressed) setParams(s.alpha,s.low,s.high,s.processingFps,value) }
             Text { text: "转动镜头对焦环，观察绿色清晰边缘。完成后恢复此前显示比例。"; width: parent.width; wrapMode: Text.Wrap; color: "#414e60"; font.pixelSize: 15 }
             TouchButton { objectName: "finishFocus"; width: parent.width; primary: true; text: "完成对焦"; onClicked: backend.tool("preview") }
         }
@@ -150,21 +230,34 @@ ApplicationWindow {
     Component {
         id: selectionPanel
         Panel {
-            title: s.step === 1 ? "选择对象" : "选择测量边缘"; onClosed: backend.tool("preview")
-            Text { text: s.step === 1 ? "① 对象    →    ② 边缘" : "✓ 对象    →    ② 边缘"; color: "#414e60"; font.pixelSize: 16 }
-            Text { width: parent.width; text: s.objectReady ? s.selectionMethod+" · "+s.roi.width+" × "+s.roi.height+" px" : "在图像中拖动框选；重新框选可修改区域。"; wrapMode: Text.Wrap; color: "#151a22"; font.pixelSize: 16 }
-            TouchButton { objectName: "centerSelection"; visible: s.step === 1; width: parent.width; text: "使用中心 256 × 128 区域"; onClicked: backend.selectObject(s.width/2-128,s.height/2-64,256,128,false) }
-            Text { width: parent.width; text: s.step === 2 ? "轻触蓝色轮廓上的一段清晰边缘，测量该段边缘的法向微小位移。" : "选区保持在原图坐标，不自动追踪移动对象。"; wrapMode: Text.Wrap; color: "#414e60"; font.pixelSize: 15 }
-            TouchButton { objectName: "confirmSelection"; primary: true; width: parent.width; text: s.step === 1 ? "确认对象 · 选择边缘" : "完成选择"; enabled: s.step === 1 ? s.objectReady : s.edgeReady; onClicked: s.step === 1 ? backend.confirmObject() : backend.confirmEdge() }
+            contentSpacing: 7
+            title: s.step === 1 ? "选择放大区域" : "选择测量边缘"
+            subtitle: s.useNpu ? "NPU · MobileSAM" : "手动框选 · 本机处理"
+            onClosed: backend.tool("preview")
+            Row {
+                visible: s.step === 1; width: parent.width; spacing: 8
+                TouchButton { objectName: "npuSelection"; text: "NPU 识别"; width: (parent.width-8)/2; height: 44; checked: s.useNpu; enabled: s.hasSam; onClicked: backend.selectionNpu(true) }
+                TouchButton { objectName: "manualSelection"; text: "手动框选"; width: (parent.width-8)/2; height: 44; checked: !s.useNpu; onClicked: backend.selectionNpu(false) }
+            }
+            Text {
+                width: parent.width; wrapMode: Text.Wrap; color: "#151a22"; font.pixelSize: 15
+                text: s.selectionBusy ? s.message : s.objectReady ? (s.canChooseEdge?s.selectionMethod+" · "+Math.round(s.selectionMs)+" ms":s.message) : s.useNpu ? "轻触物品或拖动框选，提取对象轮廓。" : s.hasSam ? "拖动框选测量区域。" : "NPU 模型未配置，请手动框选。"
+            }
+            TouchButton { objectName: "centerSelection"; visible: s.step === 1 && !s.useNpu; width: parent.width; text: "使用中心 256 × 128 区域"; enabled: !s.selectionBusy; onClicked: backend.selectObject(s.width/2-128,s.height/2-64,256,128,false) }
+            Text { width: parent.width; text: s.step === 2 ? "轻触红色轮廓；红框标出视频放大区域。" : "拖动红框移动区域，拖动圆点调整大小；松手后更新边缘。"; wrapMode: Text.Wrap; color: "#414e60"; font.pixelSize: 14 }
+            TouchButton { visible: liveMotionParameters; width: parent.width; text: "放大参数 · "+s.processingFps+" fps"; onClicked: frequencyPanel = true }
+            TouchButton { objectName: "magnifyRegion"; visible: s.step === 1; width: parent.width; primary: true; text: "放大整个区域"; enabled: s.objectReady && !s.selectionBusy; onClicked: backend.magnifyRegion() }
+            TouchButton { objectName: "confirmSelection"; primary: s.step === 2; width: parent.width; text: s.step === 1 ? "选择边缘" : "完成选择"; enabled: !s.selectionBusy && (s.step === 1 ? s.objectReady && s.canChooseEdge : s.edgeReady); onClicked: s.step === 1 ? backend.confirmObject() : backend.confirmEdge() }
         }
     }
     Component {
         id: magnifyPanel
         Panel {
             title: "实时运动放大"; subtitle: "RK3588 · 本机计算"; onClosed: backend.tool("preview")
+            Text { width: parent.width; text: s.motionEstimate; wrapMode: Text.Wrap; color: "#151a22"; font.pixelSize: 14 }
             Text { text: "相位增益 · "+Number(s.alpha).toFixed(0); color: "#151a22"; font.pixelSize: 16 }
             Slider { width: parent.width; height: 36; from: 0; to: 80; value: s.alpha; onPressedChanged: if(!pressed) setParams(value,s.low,s.high,s.processingFps,s.focus) }
-            CheckBox { text: "叠加频谱"; checked: showSpectrum; onToggled: showSpectrum = checked; font.pixelSize: 16; height: 44; palette.windowText: "#151a22" }
+            CheckBox { visible: !s.areaMode; text: "叠加频谱"; checked: showSpectrum; onToggled: showSpectrum = checked; font.pixelSize: 16; height: 44; palette.windowText: "#151a22" }
             CheckBox { text: "叠加局部放大"; checked: showInset; onToggled: showInset = checked; font.pixelSize: 16; height: 44; palette.windowText: "#151a22" }
             TouchButton { width: parent.width; glyph: "chevron-right"; iconAfter: true; text: "频段与帧率 · "+s.low+"–"+s.high+" Hz"; onClicked: frequencyPanel = true }
         }
@@ -172,18 +265,19 @@ ApplicationWindow {
     Component {
         id: bandPanel
         Panel {
-            title: s.tool === "magnify" ? "频段与处理帧率" : "离线分析频段"; subtitle: s.tool === "magnify" ? "修改后重新积累连续样本" : "离线保持原始采样率"; onClosed: frequencyPanel = false
+            title: liveMotionParameters ? "频段与处理帧率" : "离线分析频段"; subtitle: liveMotionParameters ? "启动前检查计算量" : "离线保持原始采样率"; onClosed: frequencyPanel = false
             Text { text: "下限 · "+lowSlider.value.toFixed(1)+" Hz"; color: "#151a22"; font.pixelSize: 15 }
             Slider { id: lowSlider; width: parent.width; height: 36; from: 0.5; to: Math.max(1,highSlider.value-0.5); stepSize: 0.5; value: s.low }
             Text { text: "上限 · "+highSlider.value.toFixed(1)+" Hz"; color: "#151a22"; font.pixelSize: 15 }
             Slider { id: highSlider; width: parent.width; height: 36; from: 1; to: Math.max(2,s.processingFps/2-0.5); stepSize: 0.5; value: s.high }
-            Row { visible: s.tool === "magnify"; spacing: 6; Repeater { model: [30,60,120]; TouchButton { text: modelData+" fps"; width: 84; enabled: s.fps >= modelData && Math.abs(s.fps/modelData-Math.round(s.fps/modelData))<0.001; checked: Math.abs(s.processingFps-modelData)<0.01; onClicked: setParams(s.alpha,Math.min(s.low,modelData/8),Math.min(s.high,modelData*.4),modelData,s.focus) } } }
+            Row { visible: liveMotionParameters; spacing: 6; Repeater { model: [30,60,120]; TouchButton { text: modelData+" fps"; width: 84; enabled: s.fps >= modelData && Math.abs(s.fps/modelData-Math.round(s.fps/modelData))<0.001; checked: Math.abs(s.processingFps-modelData)<0.01; onClicked: setParams(s.alpha,Math.min(s.low,modelData/8),Math.min(s.high,modelData*.4),modelData,s.focus) } } }
             TouchButton { width: parent.width; primary: true; text: "应用频段"; onClicked: { setParams(s.alpha,lowSlider.value,highSlider.value,s.processingFps,s.focus); frequencyPanel = false } }
         }
     }
     Component {
         id: recordingPanel
         Panel {
+            Text { width: parent.width; wrapMode: Text.Wrap; text: "Bitshuffle + LZ4 · 无损压缩"+(s.recordCompressed?" · 已写入节省 "+Number(s.recordSaving).toFixed(0)+"%":""); color: "#151a22"; font.pixelSize: 14 }
             title: s.recordState === "recording" ? "正在录制 RAW" : s.recordState === "draining" ? "正在完成写入" : s.recordState === "saved" ? "录制已保存" : s.recordState === "failed" ? "录制未完成" : "RAW 录制"
             subtitle: "本机 eMMC · DDR 缓冲上限 4 GiB"; onClosed: backend.tool("preview")
             Text { text: "DDR · "+bytes(s.bufferBytes)+" / "+bytes(s.bufferBudget || 4294967296); color: "#151a22"; font.pixelSize: 16 }
@@ -214,49 +308,78 @@ ApplicationWindow {
     Component {
         id: settingsPanel
         Panel {
-            title: "相机与设备"; subtitle: "当前协商格式"; onClosed: backend.tool("preview")
+            contentSpacing: 7
+            title: "相机与设备"; subtitle: "曝光与拍摄帧率"; onClosed: backend.tool("preview")
             Text { text: s.width+" × "+s.height+" · RAW"+s.bits; color: "#151a22"; font.pixelSize: 18 }
-            Text { text: "实际采集  "+Number(s.fps).toFixed(3)+" fps"; color: "#151a22"; font.pixelSize: 16 }
-            Text { text: "Qt "+s.qtVersion+" · "+s.transport.toUpperCase(); color: "#414e60"; font.pixelSize: 15 }
-            Text { width: parent.width; wrapMode: Text.Wrap; text: "格式与传感器帧率由启动配置确定。RAW10 使用 16 位低对齐容器，预览叠加不会改变原始数据。"; color: "#414e60"; font.pixelSize: 15 }
+            Text { text: "曝光 "+Number(s.exposureMs).toFixed(2)+" ms · 上限 "+Number(s.exposureMaxMs).toFixed(2)+" ms"; color: "#151a22"; font.pixelSize: 15 }
+            Text { text: "曝光补偿 "+(s.exposureEV>=0?"+":"")+Number(s.exposureEV).toFixed(1)+" EV"; color: "#151a22"; font.pixelSize: 15 }
+            Slider { objectName: "exposureSlider"; width: parent.width; height: 44; from: -3; to: 3; stepSize: .1; value: s.exposureEV; enabled: s.exposureEditable; onMoved: backend.exposureCompensation(value) }
+            TouchButton { objectName: "centerMeter"; width: parent.width; text: "中心区域自动曝光"; enabled: s.exposureEditable; onClicked: { exposurePoint=Qt.point(s.width/2,s.height/2); backend.meterExposure(exposurePoint.x,exposurePoint.y); exposureTimer.restart() } }
+            Text { text: "采集帧率 · "+Number(s.fps).toFixed(1)+" fps"; color: "#151a22"; font.pixelSize: 15 }
+            Row { spacing: 6; Repeater { model: [30,60,120]; TouchButton { objectName: "captureFps"+modelData; width: 84; height: 44; text: String(modelData); checked: Math.abs(s.fps-modelData)<.1; enabled: s.exposureEditable && !s.cameraBusy; onClicked: backend.captureFps(modelData) } } }
+            Text { width: parent.width; text: s.cameraStatus; wrapMode: Text.Wrap; color: "#151a22"; font.pixelSize: 14 }
+            Text { width: parent.width; wrapMode: Text.Wrap; text: s.hasSam ? "NPU 物品识别 · 模型已配置" : "NPU 物品识别 · 模型未配置"; color: "#151a22"; font.pixelSize: 15 }
+            Text { width: parent.width; wrapMode: Text.Wrap; text: "曝光不超过单帧时长。选区、测量、录制或传输期间锁定相机参数。"; color: "#414e60"; font.pixelSize: 14 }
             TouchButton { width: parent.width; text: "完成"; primary: true; onClicked: backend.tool("preview") }
         }
     }
     Component {
         id: offlinePanel
         Panel {
+            contentSpacing: 7
             title: s.tool === "offline" ? (s.offlineBusy?"正在离线分析":"离线分析结果") : "RAW 回放"; subtitle: s.fileName; onClosed: backend.tool("files")
+            Text { width: parent.width; visible: s.motionEstimate.length > 0; text: s.motionEstimate; wrapMode: Text.Wrap; color: "#151a22"; font.pixelSize: 14 }
             Text { width: parent.width; text: s.message; wrapMode: Text.Wrap; color: "#414e60"; font.pixelSize: 15 }
             TouchButton { width: parent.width; text: s.tool === "offline" ? "返回 RAW 回放" : "在当前帧选择对象"; enabled: !s.offlineBusy && !s.playing && (s.tool === "offline" || s.replayReady); onClicked: s.tool === "offline" ? backend.seek(s.position) : backend.tool("select") }
             TouchButton { width: parent.width; glyph: "chevron-right"; iconAfter: true; text: "分析频段 · "+s.low+"–"+s.high+" Hz"; enabled: !s.offlineBusy; onClicked: frequencyPanel = true }
-            TouchButton { width: parent.width; primary: true; glyph: s.offlineBusy ? "x" : "chart-no-axes-combined"; text: s.offlineBusy?"取消离线分析":"开始离线分析"; enabled: s.edgeReady || s.offlineBusy; onClicked: s.offlineBusy ? backend.cancelAnalysis() : backend.analyze() }
+            TouchButton { objectName: "analysisRangeButton"; width: parent.width; text: "分析区间 · "+Number(s.analysisStart).toFixed(2)+" s 起"; enabled: !s.offlineBusy; onClicked: rangePanel=true }
+            TouchButton { objectName: "globalAnalysis"; visible: s.tool === "replay"; width: parent.width; text: "全画面放大 · 跳过选区"; enabled: !s.offlineBusy && !s.playing && s.replayReady; onClicked: backend.analyzeGlobal() }
+            TouchButton { width: parent.width; primary: true; glyph: s.offlineBusy ? "x" : "chart-no-axes-combined"; text: s.offlineBusy?"取消离线分析":"开始离线分析"; enabled: s.edgeReady || s.regionReady || s.offlineBusy; onClicked: s.offlineBusy ? backend.cancelAnalysis() : backend.analyze() }
             Text { width: parent.width; visible: s.offlineOutput.length > 0; text: "结果已保存为 VRV；原始 RAW 保留"; wrapMode: Text.Wrap; color: "#13623a"; font.pixelSize: 14 }
+        }
+    }
+    Component {
+        id: analysisRangePanel
+        Panel {
+            title: "RAW 分析区间"; subtitle: "仅计算所选时间段"; onClosed: rangePanel=false
+            Text { width: parent.width; wrapMode: Text.Wrap; text: "起点 "+Number(s.analysisStart).toFixed(3)+" s · 默认使用选取对象的帧"; color: "#151a22"; font.pixelSize: 16 }
+            TouchButton { objectName: "analysisFromCurrent"; width: parent.width; text: "使用当前回放帧为起点"; enabled: !s.playing && s.replayReady; onClicked: backend.analysisRange(0,true) }
+            Text { width: parent.width; wrapMode: Text.Wrap; text: "分析时长 "+Number(s.analysisSeconds>0?Math.min(s.analysisSeconds,s.analysisRemaining):s.analysisRemaining).toFixed(3)+" s"; color: "#151a22"; font.pixelSize: 18 }
+            Slider { objectName: "analysisDuration"; width: parent.width; height: 44; from: 1/s.fps; to: Math.max(from,s.analysisRemaining); stepSize: 1/s.fps; value: s.analysisSeconds>0?Math.min(s.analysisSeconds,to):to; onMoved: backend.analysisRange(value) }
+            Row { spacing: 8
+                TouchButton { width: 82; text: "−1秒"; onClicked: backend.analysisRange(Math.max(1/s.fps,(s.analysisSeconds>0?s.analysisSeconds:s.analysisRemaining)-1)) }
+                TouchButton { width: 82; text: "+1秒"; onClicked: backend.analysisRange(Math.min(s.analysisRemaining,(s.analysisSeconds>0?s.analysisSeconds:s.analysisRemaining)+1)) }
+                TouchButton { width: 92; text: "至末尾"; onClicked: backend.analysisRange(0) }
+            }
+            Text { width: parent.width; wrapMode: Text.Wrap; text: "全画面分析从当前回放帧开始；所选时长超过剩余录像时自动截到末尾。"; color: "#414e60"; font.pixelSize: 14 }
+            TouchButton { width: parent.width; primary: true; text: "完成"; onClicked: rangePanel=false }
         }
     }
     Rectangle {
         x: 18; anchors.bottom: dock.top; anchors.bottomMargin: 18; width: 326
         height: measureColumn.height+28; radius: 16; color: "#f7f8fa"
-        visible: (s.tool === "magnify" || s.tool === "offline") && (showSpectrum || showInset)
+        visible: (s.tool === "magnify" || s.tool === "offline") && ((showSpectrum && !s.areaMode) || showInset)
         Column { id: measureColumn; x: 14; y: 14; width: parent.width-28; spacing: 6
-            Text { visible: showSpectrum; text: s.spectrumReady ? "主峰  "+Number(s.peak).toFixed(2)+" Hz" : (s.tool === "offline" && !s.offlineBusy ? "样本不足  " : "频谱采集中  ")+s.samples+" / 256"; color: "#151a22"; font.pixelSize: 18 }
-            FrameView { visible: showSpectrum; width: parent.width; height: 110; channel: 2; controller: backend }
+            Text { visible: showSpectrum && !s.areaMode; text: s.spectrumReady ? "主峰  "+Number(s.peak).toFixed(2)+" Hz" : (s.tool === "offline" && !s.offlineBusy ? "样本不足  " : "频谱采集中  ")+s.samples+" / 256"; color: "#151a22"; font.pixelSize: 18 }
+            FrameView { visible: showSpectrum && !s.areaMode; width: parent.width; height: 110; channel: 2; controller: backend }
             Text { visible: showInset; text: "局部放大 · 相位增益 "+s.alpha; color: "#414e60"; font.pixelSize: 14 }
             FrameView { visible: showInset; width: parent.width; height: 86; channel: 1; controller: backend }
         }
     }
     Rectangle {
         id: filesPanel; x: 18; y: 86; width: parent.width-36; height: 398; radius: 18; color: "#f7f8fa"; visible: s.tool === "files"
-        Text { x: 20; y: 18; text: "录制文件"; color: "#151a22"; font.pixelSize: 22 }
+        Text { x: 20; y: 18; text: "录制文件 · "+backend.files.length; color: "#151a22"; font.pixelSize: 22 }
         TouchButton { anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 10; text: "返回预览"; onClicked: backend.tool("preview") }
+        Text { x: 20; y: 50; width: parent.width-200; text: s.fileMessage.length ? s.fileMessage : "保存在本机 · 支持回放、分析和删除"; elide: Text.ElideMiddle; color: "#414e60"; font.pixelSize: 14 }
         ListView { id: fileList; objectName: "fileList"; x: 20; y: 78; width: parent.width-40; height: parent.height-96; clip: true; model: backend.files; spacing: 8
             delegate: Rectangle { width: fileList.width; height: 86; radius: 12; color: "#e9edf2"
-                Column { x: 14; anchors.verticalCenter: parent.verticalCenter; spacing: 7; width: parent.width-390
+                Column { x: 14; anchors.verticalCenter: parent.verticalCenter; spacing: 7; width: parent.width-320
                     Text { text: modelData.name; color: "#151a22"; font.pixelSize: 16; width: parent.width; elide: Text.ElideMiddle }
-                    Text { text: clock(modelData.duration)+" · "+bytes(modelData.bytes)+(modelData.synthetic?" · 合成源":" · 原始帧"); color: "#414e60"; font.pixelSize: 14 }
+                    Text { text: clock(modelData.duration)+" · "+bytes(modelData.bytes)+(modelData.compressed?" · 无损压缩":" · 原始帧")+(modelData.synthetic?" · 合成源":""); color: "#414e60"; font.pixelSize: 14 }
                 }
                 Row { anchors.right: parent.right; anchors.rightMargin: 12; anchors.verticalCenter: parent.verticalCenter; spacing: 10
-                    TouchButton { glyph: "chart-no-axes-combined"; text: "回放 / 分析"; onClicked: backend.openFile(index) }
-                    TouchButton { glyph: "send"; text: "传入电脑"; enabled: !s.streamBusy; onClicked: backend.transferFile(index) }
+                    TouchButton { glyph: "chart-no-axes-combined"; text: "回放 / 分析"; enabled: !s.streamBusy && !s.offlineBusy; onClicked: backend.openFile(index) }
+                    TouchButton { objectName: "deleteFile_"+index; text: "删除"; danger: true; enabled: !recording && !s.streamBusy && !s.offlineBusy; onClicked: { deletePath=modelData.path; deleteName=modelData.name; deleteBytes=modelData.bytes; deleteDialog.open() } }
                 }
             }
             Text { anchors.centerIn: parent; visible: fileList.count === 0; text: "尚无已完成的 RAW 录像"; color: "#414e60"; font.pixelSize: 18 }
@@ -294,6 +417,20 @@ ApplicationWindow {
     Rectangle {
         objectName: "errorBanner"; x: 18; anchors.bottom: parent.bottom; anchors.bottomMargin: 108; width: parent.width-36; height: errorText.implicitHeight+24; color: "#702c32"; radius: 12; visible: s.error.length > 0
         Text { id: errorText; x: 14; y: 12; width: parent.width-28; text: s.error; color: "#fff2f1"; wrapMode: Text.Wrap; font.pixelSize: 16 }
+    }
+    Dialog {
+        id: deleteDialog; objectName: "deleteDialog"; anchors.centerIn: parent; width: 480
+        modal: true; title: "删除这段录像？"; standardButtons: Dialog.NoButton
+        background: Rectangle { color: "#f7f8fa"; radius: 18 }
+        header: Text { padding: 20; text: deleteDialog.title; font.pixelSize: 22; font.bold: true; color: "#151a22" }
+        contentItem: Text { text: deleteName+"\n"+bytes(deleteBytes)+"\n\n将永久删除 RAW 录像及附属说明，无法撤销。"; wrapMode: Text.Wrap; color: "#151a22"; font.pixelSize: 18 }
+        footer: Row {
+            padding: 12; spacing: 12
+            TouchButton { objectName: "cancelDelete"; width: 216; text: "取消"; onClicked: deleteDialog.reject() }
+            TouchButton { objectName: "confirmDelete"; width: 216; text: "删除录像"; danger: true; onClicked: deleteDialog.accept() }
+        }
+        onAccepted: { backend.deleteFile(deletePath); deletePath = "" }
+        onRejected: deletePath = ""
     }
     Dialog {
         id: switchDialog; anchors.centerIn: parent; width: 440; modal: true; title: "停止录制并切换？"

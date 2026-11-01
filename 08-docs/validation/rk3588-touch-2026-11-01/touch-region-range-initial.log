@@ -1,0 +1,30 @@
+QStandardPaths: wrong permissions on runtime directory /run, 0755 instead of 0700
+********* Start testing of UiTest *********
+Config: Using QtTest library 5.15.10, Qt 5.15.10 (arm64-little_endian-lp64 shared (dynamic) release build; by GCC 12.3.0), buildroot 2021.11
+PASS   : UiTest::initTestCase()
+arm_release_ver: g13p0-01eac0, rk_so_ver: 10
+QWARN  : UiTest::regionAndClip() qt.qpa.wayland: Wayland does not support QWindow::requestActivate()
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+FAIL!  : UiTest::regionAndClip() Compared values are not the same
+   Actual   (file.size())                      : 2304360
+   Expected (qint64(count)*(40+width*height*4)): 1024160
+   Loc: [/tmp/vr-region-source/03-apps/rk3588/tests/gui/ui_test.cpp(81)]
+FAIL!  : UiTest::regionAndClip() 'controller.state()["error"].toString().contains("两帧")' returned FALSE. ()
+   Loc: [/tmp/vr-region-source/03-apps/rk3588/tests/gui/ui_test.cpp(100)]
+QWARN  : UiTest::npuWorkflow() qt.qpa.wayland: Wayland does not support QWindow::requestActivate()
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+QINFO  : UiTest::npuWorkflow() BOARD_NPU_POINT QVariant(double, 671.338) ms 9722 mask pixels
+QINFO  : UiTest::npuWorkflow() BOARD_NPU_CACHED_BOX QVariant(double, 243.262) ms
+QINFO  : UiTest::npuWorkflow() EDGE_MAGNIFICATION_ROI QRect(329,171 81x66)
+PASS   : UiTest::npuWorkflow()
+PASS   : UiTest::cleanupTestCase()
+Totals: 3 passed, 2 failed, 0 skipped, 0 blacklisted, 6077ms
+********* Finished testing of UiTest *********

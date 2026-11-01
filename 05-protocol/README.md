@@ -36,20 +36,20 @@ TCP 实时模式保留原先的单帧待发队列、逐帧 ACK 和自适应缩�
 | 0 | 4 bytes | ASCII `VRI1` |
 | 4 | u16 | version=1 |
 | 6 | u16 | kind：1 HELLO，2 FRAME，3 END |
-| 8 | u32 | flags：bit0 实时；bit1 时间由序号/FPS 合成；bit2 无逐帧 ACK 的固定尺寸流水；其他位必须为 0 |
+| 8 | u32 | flags：bit0 实时；bit1 时间由序号/FPS 合成；bit2 无逐帧 ACK 的固定尺寸流水；bit3 本机逐帧无损压缩归档；其他位必须为 0 |
 | 12 | u32 | payloadBytes；HELLO/END 必须为 0 |
 | 16/20/24/28 | u32 ×4 | 传输 width/height/stride/validBits |
 | 32 | u64 | FRAME 采集序号；END 已发送帧数；HELLO 为 0 |
-| 40 | u64 | FRAME 单调采集时间 ns；END 累计 payload 字节数；HELLO 为 0 |
+| 40 | u64 | FRAME 单调采集时间 ns；END 累计未压缩 payload 字节数；HELLO 为 0 |
 | 48/52 | u32 ×2 | 源 FPS 分子/分母（不能用网络到达速率替代） |
 | 56 | u64 | 累计发送端待发队列替换数；不含传感器/驱动自身缺口 |
-| 64 | u32 | FRAME payload 的 IEEE CRC32（与 zlib 一致）；其他记录为 0 |
+| 64 | u32 | FRAME 解码后完整 payload 的 IEEE CRC32（与 zlib 一致）；其他记录为 0 |
 | 68/72 | u32 ×2 | 原始 sourceWidth/sourceHeight |
-| 76 | u32 | 保留，必须为 0 |
+| 76 | u32 | FRAME codec：0 原始帧，1 Bitshuffle + LZ4；HELLO/END 必须为 0 |
 
 每轴 1...65535，单帧默认上限 256 MiB；接收端在分配 payload 前验证尺寸和乘积。
 `bits=8` 为 GRAY8；10/12/16 为低位对齐 uint16 LE，允许行 padding。
-FRAME payload 必须恰好为 stride×height，含最后一行 padding。当前不支持 Bayer、RGB、MIPI packed RAW10。
+未压缩 FRAME payload 必须恰好为 stride×height，含最后一行 padding。当前不支持 Bayer、RGB、MIPI packed RAW10。
 相机会读取单平面的 V4L2 multiplanar GREY/Y10，验证 monotonic 标记，并处理 32 位采集序号回绕。
 RKCIF compact 模式必须先关闭，不能把厂商压缩布局误标成 uint16。
 
@@ -73,3 +73,13 @@ END ACK 是 ASCII `VRDONE01`，只有帧数和总字节数一致才返回。
 没有索引时明确设置 syntheticTimestamps 标志，时间为 `sequence/fps`，不是实测传感器时间。
 `--frames 0` 表示文件至 EOF；指定有限帧数时，文件短于该数量视为错误，较长则仅发送指定前缀。
 不包含 IMU、曝光控制、ROI 控制或硬件时钟同步；这些不占用未定义的保留字段。
+
+## 板端无损压缩归档（flags bit3）
+
+仅用于磁盘 `.vri`，不得与实时 bit0 或流水传输 bit2 组合；bit1 合成时间可保留。USB/TCP 直通继续使用原始帧。旧读者会拒绝未知标志，新读者兼容旧录像。
+
+每帧独立选择 codec，`payloadBytes` 是实际存储字节数。codec 1 先对完整 `stride×height` 字节执行 Bitshuffle：RAW8 的元素大小为 1，RAW10/12/16 为 2，块大小固定为 `8192 / 元素大小` 个元素；尾部按 Bitshuffle 原规则保留。然后对整个变换后的帧使用单个 LZ4 block，acceleration=8，无字典。压缩后不小于原帧时使用 codec 0；16 位容器的总字节数为奇数时也使用 codec 0，保留任意行填充。
+
+CRC32 始终覆盖未压缩的全部字节，包括高位与行填充；禁止量化、截位或掩掉高位。END 总字节数仍为所有未压缩帧的字节数。codec 1 必须满足 `0 < payloadBytes < stride×height`；解压长度必须精确等于原始长度。未知 codec、解压失败、CRC 错误、采样缺口、缺少 END 或尾部多余数据均判为失败。文件列表只读 HELLO/END；正式离线分析仍完整顺序校验全部帧，包括所选分析区间以外的帧。
+
+回放不能再按固定帧长 seek，采用帧头扫描及每 256 帧一个稀疏偏移缓存；随机回放校验选定帧的 CRC。录制压缩在独立写盘线程执行，两个完整帧的压缩工作区计入 4 GiB DDR 预算；内存不足仍停止采集并排空已接受的连续前缀。未完成或失败文件保持 `.partial`，不发布为成功录像。

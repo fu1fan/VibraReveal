@@ -2,6 +2,7 @@
 #include "frame_view.hpp"
 #include <QCommandLineParser>
 #include <QDir>
+#include <QFileInfo>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -44,6 +45,9 @@ int main(int argc, char **argv) {
     args.addOption({"shader", "Compiled motion shader", "path", VR_MOTION_SHADER_PATH});
     args.addOption({"encoder", "MobileSAM RKNN encoder", "path"});
     args.addOption({"decoder", "MobileSAM RKNN decoder", "path"});
+    args.addOption({"models-dir", "Installed MobileSAM model directory", "path",
+                    "/usr/local/share/vibrareveal-touch/models/mobilesam"});
+    args.addOption({"rknn-runtime", "Isolated RKNN runtime library", "path"});
     args.addOption({"storage", "RAW and offline scratch directory", "path", "/userdata/vibrareveal"});
     args.addOption({"transport", "Computer transport: bulk or tcp", "mode", "bulk"});
     args.addOption({"ffs", "Prepared FunctionFS mount", "path", "/dev/ffs-vri"});
@@ -80,6 +84,22 @@ int main(int argc, char **argv) {
         o.storage = args.value("storage").toStdString();
         if (o.encoder.empty() != o.decoder.empty())
             throw std::runtime_error("Supply both MobileSAM model paths");
+        // Discover the installed pair only for production. Synthetic workflows
+        // remain explicit and do not silently enable hardware inference.
+        if (o.encoder.empty() && !o.demo) {
+            const QDir models(args.value("models-dir"));
+            const auto encoder = models.filePath("mobilesam_encoder.rknn");
+            const auto decoder = models.filePath("mobilesam_decoder.rknn");
+            if (QFileInfo(encoder).isReadable() && QFileInfo(decoder).isReadable()) {
+                o.encoder = encoder.toStdString();
+                o.decoder = decoder.toStdString();
+            }
+        }
+        const QString privateRuntime = "/usr/local/lib/vibrareveal-touch/librknnrt.so";
+        if (args.isSet("rknn-runtime"))
+            o.rknnRuntime = args.value("rknn-runtime").toStdString();
+        else if (QFileInfo(privateRuntime).isReadable())
+            o.rknnRuntime = privateRuntime.toStdString();
         o.stream.transport = args.value("transport").toStdString();
         if (o.stream.transport != "bulk" && o.stream.transport != "tcp")
             throw std::runtime_error("Invalid transport");

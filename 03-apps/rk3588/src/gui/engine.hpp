@@ -14,12 +14,20 @@ struct EngineOptions {
     uint32_t width = 1280, height = 800, bits = 10;
     double demoFps = 120;
     std::string device = "/dev/video11", sensor = "/dev/v4l-subdev2", shader, encoder, decoder, storage;
+    std::string rknnRuntime = "librknnrt.so";
     StreamOptions stream;
 };
 struct ViewState {
-    QString tool = "preview", message, error, selectionMethod;
+    QString tool = "preview", message, error, selectionMethod, motionEstimate;
     Format format, replayFormat;
     bool ready = false, objectReady = false, edgeReady = false, offlineBusy = false, replayReady = false;
+    bool useNpu = false, selectionBusy = false;
+    bool regionReady = false, areaMode = false, canChooseEdge = false;
+    uint64_t replayIndex = 0;
+    double selectionMs = 0;
+    bool exposureSupported = false, cameraBusy = false, cameraChangingFps = false, exposureAuto = false;
+    double exposureMs = 0, exposureMinMs = 0, exposureMaxMs = 0, exposureEV = 0;
+    QString cameraStatus;
     QRect roi;
     double focus = .04, alpha = 20, low = 8, high = 25, processingFps = 60, displacement = 0, peak = 0;
     int selectionStep = 1, samples = 0;
@@ -38,11 +46,18 @@ class Engine {
     ViewState snapshot() const;
     void setTool(const QString &);
     void selectObject(const QRectF &, bool point = false);
+    void setSelectionNpu(bool);
+    bool hasNpuModels() const;
     void chooseEdge(const QPointF &);
     void confirmObject();
+    void confirmRegion();
     void finishSelection();
     void setParameters(double alpha, double low, double high, double fps, double focus);
-    void startOffline(const std::string &archive);
+    void meterExposure(const QPointF &);
+    void exposureCompensation(double ev);
+    void captureFps(double fps);
+    void ensureCameraStable() const;
+    void startOffline(const std::string &archive, uint64_t start = 0, double seconds = 0, bool global = false);
     void cancelOffline();
     void replay(const std::string &archive, uint64_t frameIndex);
     Recording recorder;
@@ -55,8 +70,15 @@ class Engine {
         QRectF rect;
         bool point = false;
         std::string path;
-        uint64_t index = 0;
+        uint64_t index = 0, count = 0;
     };
+    struct CameraCommand {
+        enum Kind { None, Meter, Compensation, Fps } kind = None;
+        QPointF point;
+        double value = 0;
+    } cameraCommand_;
+    void requireCameraEdit() const;
+    void invalidateMeasurement();
     EngineOptions options_;
     mutable std::mutex mutex_;
     std::condition_variable cv_;
@@ -70,6 +92,8 @@ class Engine {
     std::deque<std::shared_ptr<const Frame>> work_;
     std::thread capture_, compute_;
     std::atomic<bool> stopping_{false}, offlineCancel_{false};
+    uint64_t admitMotion(bool offline, double fps, double low, double high, double alpha,
+                     const std::string &archive = {}, uint64_t start = 0, double seconds = 0);
     void captureLoop();
     void computeLoop();
 };

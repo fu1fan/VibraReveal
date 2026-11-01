@@ -1,0 +1,20 @@
+QStandardPaths: wrong permissions on runtime directory /run, 0755 instead of 0700
+********* Start testing of UiTest *********
+Config: Using QtTest library 5.15.10, Qt 5.15.10 (arm64-little_endian-lp64 shared (dynamic) release build; by GCC 12.3.0), buildroot 2021.11
+PASS   : UiTest::initTestCase()
+arm_release_ver: g13p0-01eac0, rk_so_ver: 10
+QWARN  : UiTest::draggablePanelsAndPan() qt.qpa.wayland: Wayland does not support QWindow::requestActivate()
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+PASS   : UiTest::draggablePanelsAndPan()
+QWARN  : UiTest::hardwarePreview() qt.qpa.wayland: Wayland does not support QWindow::requestActivate()
+QINFO  : UiTest::hardwarePreview() BOARD_PREVIEW_PERFORMANCE "preview" computed_fps 60.3333 delivered_fps 36.6667 swapped_fps 36.6667
+QINFO  : UiTest::hardwarePreview() BOARD_PREVIEW_PERFORMANCE "focus" computed_fps 47.9361 delivered_fps 46.9374 swapped_fps 46.6045
+bulk_ready mount=/dev/ffs-vri requestBytes=262144 queue=32
+QINFO  : UiTest::hardwarePreview() BOARD_USB_CANCEL QVariant(QString, "cancelled") QVariant(QString, "已退出电脑直通")
+PASS   : UiTest::hardwarePreview()
+PASS   : UiTest::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 15913ms
+********* Finished testing of UiTest *********

@@ -20,6 +20,7 @@ std::array<uint8_t, 80> recordHeader(const Format &, uint16_t kind, uint64_t seq
                                      uint64_t timestamp = 0, uint32_t crc = 0, uint32_t flags = 0);
 uint64_t availableMemory();
 struct RecordingOptions {
+    bool compression = true;
     uint64_t maxBufferBytes = 4ULL * 1024 * 1024 * 1024;
     uint64_t memoryReserve = 512ULL * 1024 * 1024;
     uint64_t diskReserve = 64ULL * 1024 * 1024;
@@ -29,8 +30,9 @@ struct RecordingOptions {
 };
 struct RecordingStatus {
     enum State { Idle, Recording, Draining, Saved, Failed } state = Idle;
-    uint64_t buffered = 0, budget = 0, frames = 0, payload = 0, written = 0;
+    uint64_t buffered = 0, budget = 0, frames = 0, payload = 0, written = 0, processed = 0;
     double seconds = 0;
+    bool compressed = false;
     std::string reason, path;
 };
 // Exactly one producer. In-flight writer data remains charged to the budget.

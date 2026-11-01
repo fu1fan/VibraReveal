@@ -3,6 +3,7 @@
 #include <QDateTime>
 #include <QDir>
 #include <QFileInfo>
+#include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSaveFile>
@@ -51,8 +52,9 @@ void Controller::tool(const QString &requested) {
         if (requested == "select") {
             selectionReturn_ = currentFile_.isEmpty() ? "preview" : "replay";
             playing_ = false;
+            if (!currentFile_.isEmpty()) analysisStart_=engine_.snapshot().replayIndex;
         }
-        if (requested == "magnify" && !view_.edgeReady) {
+        if (requested == "magnify" && !view_.edgeReady && !view_.regionReady) {
             selectionReturn_ = "magnify";
             currentFile_.clear();
             engine_.setTool("select");
@@ -121,6 +123,9 @@ void Controller::mode(const QString &mode) {
 void Controller::selectObject(qreal x, qreal y, qreal w, qreal h, bool point) {
     handle([&] { engine_.selectObject(QRectF(x, y, w, h), point); });
 }
+void Controller::selectionNpu(bool enabled) {
+    handle([&] { engine_.setSelectionNpu(enabled); });
+}
 void Controller::selectEdge(qreal x, qreal y) {
     handle([&] { engine_.chooseEdge(QPointF(x, y)); });
 }
@@ -129,26 +134,58 @@ void Controller::confirmObject() {
 }
 void Controller::confirmEdge() {
     handle([&] {
-        engine_.finishSelection();
         if (selectionReturn_ == "magnify") {
             engine_.setTool("magnify");
             tool_ = "magnify";
         } else if (selectionReturn_ == "replay") {
+            engine_.finishSelection();
             tool_ = "replay";
-            engine_.replay(currentFile_.toStdString(), uint64_t(position_ * fileFps_));
-        } else
+            engine_.replay(currentFile_.toStdString(), uint64_t(std::floor(position_ * fileFps_+1e-7)));
+        } else {
+            engine_.finishSelection();
             tool_ = "preview";
+        }
+    });
+}
+void Controller::magnifyRegion() {
+    handle([&] {
+        engine_.confirmRegion();
+        if (currentFile_.isEmpty()) { engine_.setTool("magnify"); tool_="magnify"; }
+        else { engine_.finishSelection(); tool_="replay"; }
+    });
+}
+void Controller::analysisRange(double seconds, bool fromCurrent) {
+    handle([&] {
+        if (currentFile_.isEmpty() || view_.offlineBusy || !std::isfinite(seconds) || seconds<0 || seconds>fileDuration_)
+            throw std::runtime_error("分析时长无效或分析正在运行");
+        if (fromCurrent) {
+            if (!view_.replayReady || playing_) throw std::runtime_error("请先暂停并等待回放帧加载");
+            analysisStart_=engine_.snapshot().replayIndex;
+        }
+        analysisSeconds_=seconds;
+    });
+}
+void Controller::analyzeGlobal() {
+    handle([&] {
+        if (currentFile_.isEmpty() || playing_ || !view_.replayReady) throw std::runtime_error("请先打开并暂停 RAW 回放");
+        analysisStart_=engine_.snapshot().replayIndex;
+        engine_.startOffline(currentFile_.toStdString(),analysisStart_,analysisSeconds_,true);
+        tool_="offline";
     });
 }
 void Controller::parameters(double a, double l, double h, double fps, double sensitivity) {
     handle([&] { engine_.setParameters(a, l, h, fps, .005 + (100 - sensitivity) * .001); });
 }
+void Controller::meterExposure(qreal x,qreal y) { handle([&] { engine_.meterExposure({x,y}); }); }
+void Controller::exposureCompensation(double ev) { handle([&] { engine_.exposureCompensation(ev); }); }
+void Controller::captureFps(double fps) { handle([&] { engine_.captureFps(fps); }); }
 void Controller::record() {
     handle([&] {
         if (mode_ != "local" || engine_.streaming.status().busy || view_.offlineBusy)
             throw std::runtime_error("请先结束电脑传输或离线分析");
         if (!view_.ready)
             throw std::runtime_error("相机尚未就绪");
+        engine_.ensureCameraStable();
         engine_.setTool("preview");
         tool_ = "record";
         currentFile_.clear();
@@ -168,28 +205,19 @@ void Controller::stopRecording() {
 void Controller::refreshFiles() {
     files_.clear();
     QDir dir(QString::fromStdString(engine_.options().storage));
-    for (const auto &entry : dir.entryInfoList({"*.vri"}, QDir::Files, QDir::Time)) {
+    for (const auto &entry : dir.entryInfoList({"*.vri"}, QDir::Files | QDir::NoSymLinks, QDir::Time)) {
         try {
             ArchiveReader reader(entry.absoluteFilePath().toStdString());
-            const uint64_t frameBytes = uint64_t(reader.stride) * reader.height;
-            const uint64_t size = uint64_t(entry.size());
-            if (size < 240 || ((size - 160) % (80 + frameBytes)))
-                continue;
-            const uint64_t frames = (size - 160) / (80 + frameBytes);
-            std::ifstream file(entry.absoluteFilePath().toStdString(), std::ios::binary);
-            file.seekg(-80, std::ios::end);
-            std::array<uint8_t, 80> end{};
-            if (!file.read(reinterpret_cast<char *>(end.data()), 80) || std::memcmp(end.data(), "VRI1", 4) ||
-                getLE(end.data() + 6, 2) != 3 || getLE(end.data() + 32, 8) != frames ||
-                getLE(end.data() + 40, 8) != frames * frameBytes)
-                continue;
+            const uint64_t frames=reader.frameCount();
+            const uint64_t size=uint64_t(entry.size());
             files_.append(QVariantMap{{"name", entry.fileName()},
                                       {"path", entry.absoluteFilePath()},
                                       {"bytes", double(size)},
                                       {"duration", frames / reader.fps()},
                                       {"fps", reader.fps()},
                                       {"frames", double(frames)},
-                                      {"synthetic", bool(reader.flags & 2)}});
+                                      {"synthetic", bool(reader.flags & 2)},
+                                      {"compressed", bool(reader.flags & 8)}});
         } catch (const std::exception &) {
         }
     }
@@ -205,19 +233,55 @@ void Controller::openFile(int index) {
         currentFile_ = f["path"].toString();
         fileFps_ = f["fps"].toDouble();
         fileDuration_ = f["duration"].toDouble();
+        analysisStart_=0; analysisSeconds_=0;
         position_ = 0;
         playing_ = false;
         tool_ = "replay";
         engine_.replay(currentFile_.toStdString(), 0);
     });
 }
+void Controller::deleteFile(const QString &path) {
+    handle([&] {
+        fileMessage_.clear();
+        if (mode_ != "local" || tool_ != "files" || recordingBusy() ||
+            engine_.snapshot().offlineBusy || engine_.streaming.status().busy)
+            throw std::runtime_error("请先结束录制、分析或传输，再从文件菜单删除");
+        // Use the confirmed path, never a row index that can change after refresh.
+        const auto listed = std::any_of(files_.cbegin(), files_.cend(), [&](const QVariant &item) {
+            return item.toMap()["path"].toString() == path;
+        });
+        const QFileInfo entry(path);
+        const QDir storage(QString::fromStdString(engine_.options().storage));
+        if (!listed || !entry.isFile() || entry.isSymLink() || entry.suffix() != "vri" ||
+            entry.canonicalPath() != storage.canonicalPath())
+            throw std::runtime_error("录像不存在或不属于当前录制目录，请刷新文件列表");
+        QFile recording(path);
+        if (!recording.remove())
+            throw std::runtime_error(("删除失败：" + recording.errorString()).toStdString());
+        if (currentFile_ == path) {
+            playing_ = false;
+            currentFile_.clear();
+            fileFps_ = fileDuration_ = position_ = 0;
+            engine_.setTool("preview");
+        }
+        fileMessage_ = "已删除 " + entry.fileName();
+        const QString metadata = path + ".json";
+        if (QFileInfo::exists(metadata) && !QFile::remove(metadata))
+            fileMessage_ += "；附属说明删除失败";
+        refreshFiles();
+    });
+}
 void Controller::seek(double seconds) {
     handle([&] {
         if (currentFile_.isEmpty() || fileFps_ <= 0)
             return;
+        if (!std::isfinite(seconds)) throw std::runtime_error("回放位置无效");
         playing_ = false;
         position_ = std::clamp(seconds, 0., std::max(0., fileDuration_ - 1 / fileFps_));
-        engine_.replay(currentFile_.toStdString(), uint64_t(position_ * fileFps_));
+        // Compensate floating-point roundoff at exact frame boundaries.
+        const auto index=uint64_t(std::floor(position_*fileFps_+1e-7));
+        position_=index/fileFps_;
+        engine_.replay(currentFile_.toStdString(), index);
         tool_ = "replay";
     });
 }
@@ -234,7 +298,7 @@ void Controller::analyze() {
         if (currentFile_.isEmpty())
             throw std::runtime_error("请先打开已保存的 RAW 录像");
         playing_ = false;
-        engine_.startOffline(currentFile_.toStdString());
+        engine_.startOffline(currentFile_.toStdString(),analysisStart_,analysisSeconds_);
         tool_ = "offline";
     });
 }
@@ -319,6 +383,8 @@ void Controller::poll() {
             QJsonObject data{{"version", 1},
                              {"frames", double(r.frames)},
                              {"bytes", double(r.payload)},
+                             {"storedPayloadBytes", double(r.written)},
+                             {"compression", r.compressed ? "bitshuffle-lz4-fast8" : "raw"},
                              {"seconds", r.seconds},
                              {"stopReason", QString::fromStdString(r.reason)},
                              {"bufferBudgetBytes", double(r.budget)},
@@ -344,7 +410,7 @@ void Controller::poll() {
             playing_ = false;
             position_ = std::max(0., fileDuration_ - 1 / fileFps_);
         }
-        engine_.replay(currentFile_.toStdString(), uint64_t(position_ * fileFps_));
+        engine_.replay(currentFile_.toStdString(), uint64_t(std::floor(position_ * fileFps_+1e-7)));
     }
     const char *names[] = {"idle", "recording", "draining", "saved", "failed"};
     const bool archiveView =
@@ -370,13 +436,35 @@ void Controller::poll() {
               {"roi", view_.roi},
               {"objectReady", view_.objectReady},
               {"edgeReady", view_.edgeReady},
+              {"regionReady", view_.regionReady},
+              {"areaMode", view_.areaMode},
+              {"canChooseEdge", view_.canChooseEdge},
+              {"analysisStart", fileFps_>0 ? analysisStart_/fileFps_ : 0},
+              {"analysisSeconds", analysisSeconds_},
+              {"analysisRemaining", fileFps_>0 ? std::max(0.,fileDuration_-analysisStart_/fileFps_) : 0},
               {"step", view_.selectionStep},
               {"selectionMethod", view_.selectionMethod},
+              {"useNpu", view_.useNpu},
+              {"selectionBusy", view_.selectionBusy},
+              {"selectionMs", view_.selectionMs},
+              {"motionEstimate", view_.motionEstimate},
+              {"exposureEditable", view_.ready && view_.exposureSupported && !view_.cameraChangingFps && mode_=="local" &&
+                  (tool_=="preview" || tool_=="focus" || tool_=="settings" || tool_=="record") && !recordingBusy() && !stream.busy},
+              {"cameraBusy", view_.cameraBusy},
+              {"cameraChangingFps", view_.cameraChangingFps},
+              {"cameraStatus", view_.cameraStatus},
+              {"exposureAuto", view_.exposureAuto},
+              {"exposureMs", view_.exposureMs},
+              {"exposureMaxMs", view_.exposureMaxMs},
+              {"exposureMinMs", view_.exposureMinMs},
+              {"exposureEV", view_.exposureEV},
               {"samples", view_.samples},
               {"spectrumReady", view_.spectrumReady},
               {"peak", view_.peak},
               {"displacement", view_.displacement},
               {"recordState", names[r.state]},
+              {"recordCompressed", r.compressed},
+              {"recordSaving", r.processed ? 100.*(1.-double(r.written)/r.processed) : 0.},
               {"bufferBytes", double(r.buffered)},
               {"bufferBudget", double(r.budget)},
               {"recordSeconds", r.seconds},
@@ -394,14 +482,11 @@ void Controller::poll() {
               {"replayReady", view_.replayReady},
               {"offlineOutput", view_.offlineOutput},
               {"fileName", QFileInfo(currentFile_).fileName()},
+              {"fileMessage", fileMessage_},
               {"fileDuration", fileDuration_},
               {"position", position_},
               {"playing", playing_},
-#ifdef VR_TOUCH_RKNN
-              {"hasSam", !engine_.options().encoder.empty() && !engine_.options().decoder.empty()},
-#else
-              {"hasSam", false},
-#endif
+              {"hasSam", engine_.hasNpuModels()},
               {"qtVersion", qVersion()}};
     emit changed();
 }
