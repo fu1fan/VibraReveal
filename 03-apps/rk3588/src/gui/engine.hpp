@@ -18,7 +18,7 @@ struct EngineOptions {
     StreamOptions stream;
 };
 struct ViewState {
-    QString tool = "preview", message, error, selectionMethod;
+    QString tool = "preview", message, error, selectionMethod, motionEstimate;
     Format format, replayFormat;
     bool ready = false, objectReady = false, edgeReady = false, offlineBusy = false, replayReady = false;
     bool useNpu = false, selectionBusy = false;
@@ -75,6 +75,8 @@ class Engine {
     std::deque<std::shared_ptr<const Frame>> work_;
     std::thread capture_, compute_;
     std::atomic<bool> stopping_{false}, offlineCancel_{false};
+    void admitMotion(bool offline, double fps, double low, double high, double alpha,
+                     const std::string &archive = {});
     void captureLoop();
     void computeLoop();
 };

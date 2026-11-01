@@ -132,15 +132,17 @@ void Controller::confirmObject() {
 }
 void Controller::confirmEdge() {
     handle([&] {
-        engine_.finishSelection();
         if (selectionReturn_ == "magnify") {
             engine_.setTool("magnify");
             tool_ = "magnify";
         } else if (selectionReturn_ == "replay") {
+            engine_.finishSelection();
             tool_ = "replay";
             engine_.replay(currentFile_.toStdString(), uint64_t(position_ * fileFps_));
-        } else
+        } else {
+            engine_.finishSelection();
             tool_ = "preview";
+        }
     });
 }
 void Controller::parameters(double a, double l, double h, double fps, double sensitivity) {
@@ -378,6 +380,7 @@ void Controller::poll() {
               {"useNpu", view_.useNpu},
               {"selectionBusy", view_.selectionBusy},
               {"selectionMs", view_.selectionMs},
+              {"motionEstimate", view_.motionEstimate},
               {"samples", view_.samples},
               {"spectrumReady", view_.spectrumReady},
               {"peak", view_.peak},

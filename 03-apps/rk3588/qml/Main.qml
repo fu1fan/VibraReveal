@@ -21,6 +21,7 @@ ApplicationWindow {
     property var s: backend.state
     property bool selectionPan: false
     property var panelPositions: ({})
+    property bool liveMotionParameters: s.tool === "magnify" || (s.tool === "select" && s.fileName.length === 0)
     property bool frequencyPanel: false
     property bool showSpectrum: true
     property bool showInset: true
@@ -160,7 +161,7 @@ ApplicationWindow {
         onPositionKeyChanged: Qt.callLater(restorePosition)
         onHeightChanged: if (item) constrain()
         onWidthChanged: if (item) constrain()
-        sourceComponent: s.mode === "direct" ? directPanel : s.tool === "focus" ? focusPanel : s.tool === "select" ? selectionPanel : s.tool === "magnify" ? (frequencyPanel?bandPanel:magnifyPanel) : s.tool === "record" ? recordingPanel : s.tool === "settings" ? settingsPanel : (s.tool === "replay" || s.tool === "offline") ? (frequencyPanel?bandPanel:offlinePanel) : null
+        sourceComponent: s.mode === "direct" ? directPanel : s.tool === "focus" ? focusPanel : s.tool === "select" ? (frequencyPanel?bandPanel:selectionPanel) : s.tool === "magnify" ? (frequencyPanel?bandPanel:magnifyPanel) : s.tool === "record" ? recordingPanel : s.tool === "settings" ? settingsPanel : (s.tool === "replay" || s.tool === "offline") ? (frequencyPanel?bandPanel:offlinePanel) : null
     }
     Connections {
         target: inspector.item
@@ -196,6 +197,7 @@ ApplicationWindow {
             }
             TouchButton { objectName: "centerSelection"; visible: s.step === 1 && !s.useNpu; width: parent.width; text: "使用中心 256 × 128 区域"; enabled: !s.selectionBusy; onClicked: backend.selectObject(s.width/2-128,s.height/2-64,256,128,false) }
             Text { width: parent.width; text: s.step === 2 ? "轻触红色轮廓；红框标出视频放大区域。" : "冻结参考帧；重新点选可更换对象。"; wrapMode: Text.Wrap; color: "#414e60"; font.pixelSize: 14 }
+            TouchButton { visible: s.step === 2 && liveMotionParameters; width: parent.width; text: "放大参数 · "+s.processingFps+" fps"; onClicked: frequencyPanel = true }
             TouchButton { objectName: "confirmSelection"; primary: true; width: parent.width; text: s.step === 1 ? "确认对象 · 选择边缘" : "完成选择"; enabled: !s.selectionBusy && (s.step === 1 ? s.objectReady : s.edgeReady); onClicked: s.step === 1 ? backend.confirmObject() : backend.confirmEdge() }
         }
     }
@@ -203,6 +205,7 @@ ApplicationWindow {
         id: magnifyPanel
         Panel {
             title: "实时运动放大"; subtitle: "RK3588 · 本机计算"; onClosed: backend.tool("preview")
+            Text { width: parent.width; text: s.motionEstimate; wrapMode: Text.Wrap; color: "#151a22"; font.pixelSize: 14 }
             Text { text: "相位增益 · "+Number(s.alpha).toFixed(0); color: "#151a22"; font.pixelSize: 16 }
             Slider { width: parent.width; height: 36; from: 0; to: 80; value: s.alpha; onPressedChanged: if(!pressed) setParams(value,s.low,s.high,s.processingFps,s.focus) }
             CheckBox { text: "叠加频谱"; checked: showSpectrum; onToggled: showSpectrum = checked; font.pixelSize: 16; height: 44; palette.windowText: "#151a22" }
@@ -213,12 +216,12 @@ ApplicationWindow {
     Component {
         id: bandPanel
         Panel {
-            title: s.tool === "magnify" ? "频段与处理帧率" : "离线分析频段"; subtitle: s.tool === "magnify" ? "修改后重新积累连续样本" : "离线保持原始采样率"; onClosed: frequencyPanel = false
+            title: liveMotionParameters ? "频段与处理帧率" : "离线分析频段"; subtitle: liveMotionParameters ? "启动前检查计算量" : "离线保持原始采样率"; onClosed: frequencyPanel = false
             Text { text: "下限 · "+lowSlider.value.toFixed(1)+" Hz"; color: "#151a22"; font.pixelSize: 15 }
             Slider { id: lowSlider; width: parent.width; height: 36; from: 0.5; to: Math.max(1,highSlider.value-0.5); stepSize: 0.5; value: s.low }
             Text { text: "上限 · "+highSlider.value.toFixed(1)+" Hz"; color: "#151a22"; font.pixelSize: 15 }
             Slider { id: highSlider; width: parent.width; height: 36; from: 1; to: Math.max(2,s.processingFps/2-0.5); stepSize: 0.5; value: s.high }
-            Row { visible: s.tool === "magnify"; spacing: 6; Repeater { model: [30,60,120]; TouchButton { text: modelData+" fps"; width: 84; enabled: s.fps >= modelData && Math.abs(s.fps/modelData-Math.round(s.fps/modelData))<0.001; checked: Math.abs(s.processingFps-modelData)<0.01; onClicked: setParams(s.alpha,Math.min(s.low,modelData/8),Math.min(s.high,modelData*.4),modelData,s.focus) } } }
+            Row { visible: liveMotionParameters; spacing: 6; Repeater { model: [30,60,120]; TouchButton { text: modelData+" fps"; width: 84; enabled: s.fps >= modelData && Math.abs(s.fps/modelData-Math.round(s.fps/modelData))<0.001; checked: Math.abs(s.processingFps-modelData)<0.01; onClicked: setParams(s.alpha,Math.min(s.low,modelData/8),Math.min(s.high,modelData*.4),modelData,s.focus) } } }
             TouchButton { width: parent.width; primary: true; text: "应用频段"; onClicked: { setParams(s.alpha,lowSlider.value,highSlider.value,s.processingFps,s.focus); frequencyPanel = false } }
         }
     }
@@ -268,6 +271,7 @@ ApplicationWindow {
         id: offlinePanel
         Panel {
             title: s.tool === "offline" ? (s.offlineBusy?"正在离线分析":"离线分析结果") : "RAW 回放"; subtitle: s.fileName; onClosed: backend.tool("files")
+            Text { width: parent.width; visible: s.motionEstimate.length > 0; text: s.motionEstimate; wrapMode: Text.Wrap; color: "#151a22"; font.pixelSize: 14 }
             Text { width: parent.width; text: s.message; wrapMode: Text.Wrap; color: "#414e60"; font.pixelSize: 15 }
             TouchButton { width: parent.width; text: s.tool === "offline" ? "返回 RAW 回放" : "在当前帧选择对象"; enabled: !s.offlineBusy && !s.playing && (s.tool === "offline" || s.replayReady); onClicked: s.tool === "offline" ? backend.seek(s.position) : backend.tool("select") }
             TouchButton { width: parent.width; glyph: "chevron-right"; iconAfter: true; text: "分析频段 · "+s.low+"–"+s.high+" Hz"; enabled: !s.offlineBusy; onClicked: frequencyPanel = true }

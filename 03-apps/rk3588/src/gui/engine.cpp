@@ -1,5 +1,8 @@
 #include "engine.hpp"
 #include "focus_peaking.hpp"
+#include "motion_budget.hpp"
+#include <QFileInfo>
+#include <sstream>
 #include "backend_io.hpp"
 #include "offline_motion.hpp"
 #include "vulkan_motion.hpp"
@@ -141,12 +144,73 @@ ViewState Engine::snapshot() const {
     std::lock_guard<std::mutex> l(mutex_);
     return state_;
 }
+void Engine::admitMotion(bool offline, double fps, double low, double high, double alpha,
+                         const std::string &archive) {
+    MotionConfig c;
+    c.x=state_.roi.x(); c.y=state_.roi.y();
+    c.width=state_.roi.width(); c.height=state_.roi.height();
+    c.fps=fps; c.low=low; c.high=high; c.alpha=alpha; c.realtime=!offline;
+    uint32_t width=state_.format.width, height=state_.format.height, stride=state_.format.stride;
+    uint64_t frames=0, availableDisk=0;
+    if (offline) {
+        ArchiveReader reader(archive);
+        width=reader.width; height=reader.height; stride=reader.stride;
+        c.fps=reader.fps();
+        const uint64_t rawBytes=uint64_t(stride)*height;
+        const auto fileSize=QFileInfo(QString::fromStdString(archive)).size();
+        if (fileSize<160 || (uint64_t(fileSize)-160)%(rawBytes+80))
+            throw std::runtime_error("无法预估：录像长度无效");
+        frames=(uint64_t(fileSize)-160)/(rawBytes+80);
+        std::ifstream file(archive,std::ios::binary);
+        file.seekg(-80,std::ios::end);
+        std::array<uint8_t,80> end{};
+        if (!file.read(reinterpret_cast<char *>(end.data()),80) || std::memcmp(end.data(),"VRI1",4) ||
+            getLE(end.data()+6,2)!=3 || getLE(end.data()+32,8)!=frames ||
+            getLE(end.data()+40,8)!=loadMultiply(frames,rawBytes))
+            throw std::runtime_error("无法预估：录像尚未完整保存");
+        availableDisk=std::min(std::filesystem::space(options_.storage).available,
+                              std::filesystem::space(std::filesystem::path(archive).parent_path()).available);
+    }
+    uint64_t availableMemory=0;
+#ifdef __linux__
+    std::ifstream mem("/proc/meminfo");
+    std::string line;
+    while (std::getline(mem,line)) {
+        std::istringstream input(line);
+        std::string key; uint64_t kib=0;
+        if (input >> key >> kib && key=="MemAvailable:") { availableMemory=kib*1024; break; }
+    }
+#else
+    if (options_.demo) availableMemory=4ULL*1024*1024*1024;
+#endif
+    if (!availableMemory) throw std::runtime_error("无法读取可用内存，未启动运动放大");
+    const auto estimate=estimateMotionLoad(c,width,height,stride,frames);
+    const QString summary=offline
+        ? QString("预估计算 %1 s · 临时及输出 %2 GiB · 内存 %3 MiB（不含磁盘耗时）")
+              .arg(estimate.computeSeconds,0,'f',1).arg(double(loadAdd(estimate.scratchBytes,estimate.outputBytes))/1073741824.,0,'f',2)
+              .arg(double(estimate.memoryBytes)/1048576.,0,'f',0)
+        : QString("预估 %1 ms/帧 · 可用预算 %2 ms · %3 M层像素/s")
+              .arg(estimate.frameMs,0,'f',1).arg(estimate.budgetMs,0,'f',1).arg(estimate.levelMegapixelsPerSecond,0,'f',2);
+    QString reason;
+    switch (motionLimit(estimate,!offline,availableMemory,availableDisk)) {
+    case MotionLimit::Compute: reason="预计超出 RK3588 实时计算能力，请缩小选区或降低处理帧率"; break;
+    case MotionLimit::Memory: reason="可用内存不足（需保留 512 MiB 系统余量），请缩小选区或结束其他任务"; break;
+    case MotionLimit::Scratch: reason="离线临时数据超过 64 GiB 上限，请缩短录像或缩小选区"; break;
+    case MotionLimit::Disk: reason="临时文件与输出所需空间超过可用存储，请清理空间或缩短录像"; break;
+    case MotionLimit::None: state_.motionEstimate=summary; return;
+    }
+    const QString prefix=state_.tool == "magnify" ? "未应用新参数（保持原参数运行）：" : "未启动运动放大：";
+    if (state_.tool != "magnify") state_.motionEstimate=summary;
+    throw std::runtime_error((prefix+reason+"。"+summary).toStdString());
+}
 void Engine::setTool(const QString &tool) {
     std::lock_guard<std::mutex> l(mutex_);
     if (state_.offlineBusy)
         throw std::runtime_error("请先取消或完成离线分析");
     if (tool == "magnify" && (!state_.edgeReady || !referenceArchive_.empty()))
         throw std::runtime_error("请先在实时画面选择对象及测量边缘");
+    if (tool == "magnify")
+        admitMotion(false,state_.processingFps,state_.low,state_.high,state_.alpha);
     if ((tool == "preview" || tool == "focus" || tool == "direct") && !referenceArchive_.empty()) {
         referenceArchive_.clear();
         reference_.reset();
@@ -267,6 +331,8 @@ void Engine::setParameters(double alpha, double low, double high, double fps, do
         !std::isfinite(focus) || focus < .001 || focus > .5 || (!state_.ready && referenceArchive_.empty()) ||
         fps > source || std::abs(source / fps - std::round(source / fps)) > .001)
         throw std::runtime_error("频段需满足 0 < 下限 < 上限 < 处理帧率/2；处理帧率须整除采集帧率");
+    if (state_.tool == "magnify")
+        admitMotion(false,fps,low,high,alpha);
     state_.alpha = alpha;
     state_.low = low;
     state_.high = high;
@@ -282,6 +348,7 @@ void Engine::startOffline(const std::string &path) {
         throw std::runtime_error("离线分析正在运行");
     if (!state_.edgeReady || !reference_ || referenceArchive_ != path)
         throw std::runtime_error("请先在该录像回放上选择对象和边缘");
+    admitMotion(true,referenceFps_,state_.low,state_.high,state_.alpha,path);
     state_.tool = "offline";
     state_.offlineBusy = true;
     state_.offlineOutput.clear();

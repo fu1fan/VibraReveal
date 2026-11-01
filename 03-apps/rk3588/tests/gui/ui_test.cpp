@@ -3,6 +3,7 @@
 #include "focus_peaking.hpp"
 #include "vulkan_motion.hpp"
 #include "backend_io.hpp"
+#include "motion_budget.hpp"
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -20,6 +21,67 @@ using namespace vr::touch;
 class UiTest : public QObject {
     Q_OBJECT
   private slots:
+    void motionAdmission() {
+        using namespace vr;
+        constexpr uint64_t ample=8ULL*1024*1024*1024;
+        MotionConfig c; c.width=64; c.height=64; c.fps=60; c.low=8; c.high=25;
+        auto small=estimateMotionLoad(c,1280,800,2560);
+        QCOMPARE(motionLimit(small,true,ample),MotionLimit::None);
+        QCOMPARE(motionLimit(small,true,motionReserve+small.memoryBytes-1),MotionLimit::Memory);
+        QCOMPARE(motionLimit(small,true,motionReserve+small.memoryBytes),MotionLimit::None);
+        c.width=256; c.height=256; c.fps=120;
+        auto large=estimateMotionLoad(c,1280,800,2560);
+        QCOMPARE(motionLimit(large,true,ample),MotionLimit::Compute);
+        c.fps=30; c.low=3; c.high=12;
+        QCOMPARE(motionLimit(estimateMotionLoad(c,1280,800,2560),true,ample),MotionLimit::None);
+        c.width=1280; c.height=800; c.fps=120;
+        QCOMPARE(motionLimit(estimateMotionLoad(c,1280,800,2560),true,ample),MotionLimit::Compute);
+        c.width=31; c.height=23; c.fps=30; c.realtime=false;
+        auto offline=estimateMotionLoad(c,320,200,320,10);
+        // 31x23 + 15x11 + 7x5 = 913 phase samples, nine padding frames per end.
+        QCOMPARE(offline.scratchBytes,uint64_t(10*(64000+16+3*913*4)+18*913*4));
+        QCOMPARE(offline.outputBytes,uint64_t(10*(40+31*23*4)));
+        QCOMPARE(motionLimit(offline,false,ample,ample),MotionLimit::None);
+        QCOMPARE(motionLimit(offline,false,ample,motionReserve+offline.scratchBytes+offline.outputBytes-1),MotionLimit::Disk);
+        QVERIFY_EXCEPTION_THROWN(estimateMotionLoad(c,320,200,320,UINT64_MAX),MotionError);
+        auto huge=estimateMotionLoad(c,320,200,320,10000000);
+        QCOMPARE(motionLimit(huge,false,ample,UINT64_MAX),MotionLimit::Scratch);
+
+        QTemporaryDir dir;
+        EngineOptions options;
+        options.demo=true; options.width=320; options.height=200; options.bits=8; options.demoFps=240;
+        options.storage=dir.path().toStdString();
+        options.shader=qEnvironmentVariable("VR_TEST_SHADER_PATH", VR_TEST_SHADER).toStdString();
+        Controller controller(options);
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.image(0).isNull(),5000);
+        // Enter through the real button path: select first, then auto-start.
+        controller.tool("magnify");
+        controller.selectObject(100,85,130,30,false);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["objectReady"].toBool(),10000);
+        controller.confirmObject(); controller.selectEdge(160,96);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["edgeReady"].toBool(),10000);
+        controller.parameters(20,8,25,240,65);
+        controller.confirmEdge();
+        QCOMPARE(controller.state()["tool"].toString(),QString("select"));
+        QCOMPARE(controller.engine().snapshot().tool,QString("select"));
+        QVERIFY(controller.state()["error"].toString().contains("RK3588"));
+        QVERIFY(controller.image(1).isNull());
+        QCOMPARE(controller.state()["samples"].toInt(),0);
+        QVERIFY(controller.state()["edgeReady"].toBool());
+        qInfo() << "MOTION_REJECTED_BEFORE_START" << controller.state()["error"];
+        controller.parameters(20,8,25,60,65);
+        controller.confirmEdge();
+        QCOMPARE(controller.state()["tool"].toString(),QString("magnify"));
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.image(1).isNull(),10000);
+        const auto acceptedEstimate=controller.state()["motionEstimate"].toString();
+        // Increasing load while running must not restart with rejected parameters.
+        controller.parameters(20,8,25,240,65);
+        QCOMPARE(controller.state()["processingFps"].toDouble(),60.0);
+        QCOMPARE(controller.engine().snapshot().processingFps,60.0);
+        QCOMPARE(controller.state()["motionEstimate"].toString(),acceptedEstimate);
+        QVERIFY(controller.state()["error"].toString().contains("RK3588"));
+        controller.tool("preview");
+    }
     void draggablePanelsAndPan() {
         QTemporaryDir dir;
         EngineOptions options;
