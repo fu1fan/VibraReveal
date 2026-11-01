@@ -1,0 +1,36 @@
+# Reusable Qt 5.15.10 Linux/amd64 host tests; target SDK stays separate.
+# docker build --platform linux/amd64 -f 10-env/Dockerfile.qt-test \
+#   -t vibrareveal-qt-tests:local 10-env
+FROM ubuntu:22.04 AS qt-host-build
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential ca-certificates python3 perl pkg-config libvulkan-dev \
+    libx11-dev libsm-dev libice-dev xz-utils \
+    && rm -rf /var/lib/apt/lists/*
+COPY fetch-qt51510.py build-qt51510-host.sh /usr/local/lib/
+RUN python3 /usr/local/lib/fetch-qt51510.py /sources \
+    && sh /usr/local/lib/build-qt51510-host.sh /sources /qt-build
+
+FROM public.ecr.aws/docker/library/ubuntu:22.04
+ARG DEBIAN_FRONTEND=noninteractive
+RUN printf 'Acquire::Retries "3";\nAcquire::http::Timeout "30";\n' > /etc/apt/apt.conf.d/80-network-retries \
+    && apt-get update && apt-get install -y --no-install-recommends \
+       build-essential cmake ninja-build pkg-config ccache git file ca-certificates clang-format-15 \
+       python3 python3-numpy python3-pil \
+       libvulkan-dev mesa-vulkan-drivers vulkan-tools glslang-tools \
+       libgl1-mesa-dri xvfb xauth fonts-dejavu-core fonts-noto-cjk \
+    && ln -s /usr/bin/clang-format-15 /usr/local/bin/clang-format \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=qt-host-build /opt/qt-5.15.10 /opt/qt-5.15.10
+ENV LANG=C.UTF-8 QT_QUICK_BACKEND=software LIBGL_ALWAYS_SOFTWARE=1 \
+    PATH=/opt/qt-5.15.10/bin:$PATH \
+    CMAKE_PREFIX_PATH=/opt/qt-5.15.10 \
+    QML2_IMPORT_PATH=/opt/qt-5.15.10/qml \
+    QT_PLUGIN_PATH=/opt/qt-5.15.10/plugins \
+    QT_QPA_FONTDIR=/usr/share/fonts/opentype/noto
+COPY qt-smoke/ /usr/local/lib/elf2-qt-smoke/
+COPY check-qt.sh /usr/local/lib/check-qt.sh
+RUN sh /usr/local/lib/check-qt.sh host
+RUN QT_QPA_PLATFORM=offscreen /opt/qt-5.15.10/bin/qmltestrunner -input /usr/local/lib/elf2-qt-smoke \
+    && VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json vulkaninfo --summary
+WORKDIR /workspace

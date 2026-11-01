@@ -1,0 +1,25 @@
+#!/bin/sh
+# ELF2 launch defaults. Does not silently change sensor FPS or stop other apps.
+set -eu
+if pidof vr-stream >/dev/null 2>&1; then
+    echo 'vr-stream is running. Stop /etc/init.d/S91vrstream before starting the touch application.' >&2
+    exit 1
+fi
+# The stock ELF 2 system normally runs Weston and owns the DRM device.
+# Prefer its Wayland socket, while retaining explicit operator overrides.
+if [ -z "${QT_QPA_PLATFORM:-}" ]; then
+    runtime_dir=${XDG_RUNTIME_DIR:-/run}
+    if [ -S "$runtime_dir/${WAYLAND_DISPLAY:-wayland-0}" ]; then
+        QT_QPA_PLATFORM=wayland
+        XDG_RUNTIME_DIR=$runtime_dir
+        export XDG_RUNTIME_DIR
+    else
+        QT_QPA_PLATFORM=eglfs
+    fi
+fi
+export QT_QPA_PLATFORM
+export QT_SCALE_FACTOR=1
+export QT_AUTO_SCREEN_SCALE_FACTOR=0
+# Use the board's installed Qt, QPA and Mali/EGL configuration. Do not add a
+# desktop Qt plugin directory to QT_PLUGIN_PATH or replace the board libraries.
+exec /usr/local/bin/vr-touch --transport bulk --manage-usb "$@"

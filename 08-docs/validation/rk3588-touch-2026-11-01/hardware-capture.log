@@ -1,0 +1,15 @@
+QStandardPaths: wrong permissions on runtime directory /run, 0755 instead of 0700
+********* Start testing of UiTest *********
+Config: Using QtTest library 5.15.10, Qt 5.15.10 (arm64-little_endian-lp64 shared (dynamic) release build; by GCC 12.3.0), buildroot 2021.11
+PASS   : UiTest::initTestCase()
+arm_release_ver: g13p0-01eac0, rk_so_ver: 10
+QWARN  : UiTest::hardwareCapture() qt.qpa.wayland: Wayland does not support QWindow::requestActivate()
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+arm_release_ver: g24p0-00eac0, rk_so_ver: 10
+QINFO  : UiTest::hardwareCapture() BOARD_CAMERA_RECORD_REPLAY 242 frames 120 fps "/root/vr-touch-validation/recordings/20261101-115903-361-ae66b283.vri"
+bulk_ready mount=/dev/ffs-vri requestBytes=262144 queue=32
+QINFO  : UiTest::hardwareCapture() BOARD_USB_DIRECT_COMPLETE 155
+PASS   : UiTest::hardwareCapture()
+PASS   : UiTest::cleanupTestCase()
+Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 8203ms
+********* Finished testing of UiTest *********

@@ -14,6 +14,14 @@ fi
 command -v codebuddy
 command -v clangd
 command -v flock
+if [ "${1:-system}" = daily ]; then
+    [ "$(qmake -query QT_VERSION)" = 5.15.10 ]
+    moc -v 2>&1 | grep -Fx 'moc 5.15.10'
+    rcc -v 2>&1 | grep -Fx 'rcc 5.15.10'
+    sh /usr/local/lib/check-qt.sh host
+    qmltestrunner -input /usr/local/lib/elf2-qt-smoke
+    command -v glslangValidator
+fi
 extensions=$(code-server --list-extensions)
 for ext in cnbcool.cnb-welcome redhat.vscode-yaml dbaeumer.vscode-eslint mhutchie.git-graph ms-python.python llvm-vs-code-extensions.vscode-clangd mathematic.vscode-pdf tencent-cloud.coding-copilot; do
     printf '%s\n' "$extensions" | grep -Fxi "$ext"

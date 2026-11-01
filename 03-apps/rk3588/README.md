@@ -2,6 +2,8 @@
 
 五项 GPU/NPU 后端、接口及命令见 [BACKENDS.md](BACKENDS.md)。
 
+新增 Qt **5.15.10** 触屏应用 `vr-touch`：1024×600 实时预览、对象/边缘选择、运动放大与频谱、DDR 缓冲 RAW 录制、离线分析和电脑直通。构建、操作及验收边界见 [TOUCH_APP.md](TOUCH_APP.md)。
+
 `vr-stream` 是 C++17 单会话发送器，支持 V4L2 相机、已有 RAW 文件及合成负载。
 图像走自定义 USB Bulk；管理和部署走 Wi-Fi。协议与队列策略见 [VRI1](../../05-protocol/README.md)。
 

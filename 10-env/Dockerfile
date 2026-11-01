@@ -1,4 +1,16 @@
-# Daily IDE image: no system rootfs, vendor materials or preloaded SDK.
+# Native Qt tools only. Target Qt must still come from the pinned ARM SDK.
+FROM ubuntu:22.04 AS qt-host-build
+ARG DEBIAN_FRONTEND=noninteractive
+RUN printf 'Acquire::Retries "3";\nAcquire::http::Timeout "30";\n' > /etc/apt/apt.conf.d/80-network-retries \
+    && apt-get update && apt-get install -y --no-install-recommends \
+    build-essential ca-certificates python3 perl pkg-config libvulkan-dev \
+    libx11-dev libsm-dev libice-dev xz-utils \
+    && rm -rf /var/lib/apt/lists/*
+COPY 10-env/fetch-qt51510.py 10-env/build-qt51510-host.sh /usr/local/lib/
+RUN python3 /usr/local/lib/fetch-qt51510.py /sources \
+    && sh /usr/local/lib/build-qt51510-host.sh /sources /qt-build
+
+# Daily IDE image: no system rootfs, vendor materials or preloaded ARM SDK.
 FROM ubuntu:22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -11,12 +23,24 @@ ENV LANG=C.UTF-8 \
     ELF2_DEPENDENCY_ROOT=/opt/elf2-deps \
     ELF2_WORK_CACHE=/cache/elf2-work \
     ELF2_CCACHE_DIR=/cache/elf2-ccache \
-    CCACHE_DIR=/cache/elf2-app-ccache
+    CCACHE_DIR=/cache/elf2-app-ccache \
+    ELF2_HOST_QT_PREFIX=/opt/qt-5.15.10 \
+    PATH=/opt/qt-5.15.10/bin:$PATH \
+    CMAKE_PREFIX_PATH=/opt/qt-5.15.10 \
+    QML2_IMPORT_PATH=/opt/qt-5.15.10/qml \
+    QT_PLUGIN_PATH=/opt/qt-5.15.10/plugins \
+    QT_QPA_PLATFORM=offscreen \
+    QT_QUICK_BACKEND=software \
+    QT_QPA_FONTDIR=/usr/share/fonts/opentype/noto
+
+COPY --from=qt-host-build /opt/qt-5.15.10 /opt/qt-5.15.10
 
 # Daily development tools. SDK payloads are loaded on demand by elf2-sdk.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    bash build-essential ca-certificates ccache cmake curl git jq pkg-config \
+    bash build-essential ca-certificates ccache cmake ninja-build curl git jq pkg-config \
     python3 rsync unzip xz-utils file e2fsprogs \
+    libvulkan-dev mesa-vulkan-drivers vulkan-tools glslang-tools \
+    xvfb xauth fonts-dejavu-core fonts-noto-cjk \
     && ln -s /usr/bin/python3 /usr/local/bin/python \
     && rm -rf /var/lib/apt/lists/*
 
@@ -79,6 +103,8 @@ RUN set -eux; \
     printf '\n[ -f /etc/profile.d/elf2.sh ] && . /etc/profile.d/elf2.sh\n' >> /etc/bash.bashrc
 
 COPY 10-env/smoke-test.sh /usr/local/lib/dev-env-smoke-test.sh
+COPY 10-env/qt-smoke/ /usr/local/lib/elf2-qt-smoke/
+COPY 10-env/check-qt.sh /usr/local/lib/check-qt.sh
 RUN sh /usr/local/lib/dev-env-smoke-test.sh daily
 
 COPY 10-env/ /tmp/dev-env-check/

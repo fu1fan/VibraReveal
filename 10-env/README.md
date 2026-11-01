@@ -56,6 +56,74 @@ RK3588 系统流水线在验证最终系统后导出 `/sdk`：工具链、开发
 Docker 镜像层与提取缓存可能各占一份空间；本工具不自动删除 Docker 镜像，以免干扰其他使用者。
 SDK 缓存也不自动清理。确认没有构建使用后，可手动删除不再需要的 digest 目录。
 
+## Qt/QML 开发准备
+
+日常镜像通过独立构建阶段，从官方源码及固定 SHA256 编译宿主 Qt **5.15.10**，只将
+`/opt/qt-5.15.10` 安装产物复制到最终镜像，提供 Qt Quick/Controls 2/QML/Test/QuickTest、
+Ninja 和 glslangValidator。默认 PATH/CMake/QML 插件路径均指向该版本。
+镜像构建时编译含 moc 的最小 C++ 程序，
+以 offscreen/software 模式实例化 1024×600 QML 窗口及控件，无需显示器或 GPU。
+这只是宿主开发及 QML 模块检查，不验证渲染、触摸、性能或目标 ABI。
+
+```sh
+sh 10-env/check-qt.sh host  # 宿主编译和 QML 实例化
+sh 10-env/check-qt.sh sdk   # 固定 SDK 的 Qt 5.15.10 EXACT 交叉链接；不运行目标程序
+```
+
+第二条必须使用 SDK 自己的目标 Qt 头文件、库、CMake package，以及版本匹配且能在
+amd64 构建机运行的 moc 等工具。安装宿主 Qt **不会**给 RK3588 sysroot
+补齐 Qt。2026-11-01 锁定的 `qt-app-sdk` 已加入匹配的原厂 Qt 开发文件并通过 CMake/qmake 搬迁链接及原板运行；旧系统 SDK 仅保证 C/C++/Vulkan。
+`sdk` 检查失败时应在系统仓库补齐配套 Qt staging 开发文件和宿主工具、做搬迁检查，
+发布新 SDK 并更新 digest/system_commit，禁止用宿主库绕过检查。
+还须确认板端 Qt 版本、QML 插件、平台插件、触摸输入与图形驱动兼容；现阶段不升级
+板端 Qt 或刷系统。应用接口准备见 [Qt/QML 准备](../03-apps/rk3588/QT_PREPARATION.md)。
+
+用户已确认板端 Qt 为 **5.15.10**，系统仓库 `buildroot/package/qt5/qt5.mk` 亦固定该版本。
+Ubuntu 5.15.3 仅为一般宿主测试环境，不能用于正式 Qt 5.15.10 构建验收。
+`build-qt51510-host.sh` 用官方 Qt 5.15.10 发布源码及 SHA256 构建独立的软件离屏宿主 Qt；
+它仍不是 AArch64 目标 SDK，也不证明与板端平台插件/图形配置一致。
+`elf2-sdk run` 会清除原生 Qt 的 CMake/QML/plugin 查找变量，并移除其 PATH/动态库路径；
+交叉 CMake 的库/头/package 查找仍仅限 sysroot。配套宿主工具须通过目标 SDK 的配置
+显式绑定，不能把原生 Qt 的 CMake package 当作 ARM 依赖。
+宿主与 ARM 构建必须使用不同的 build 目录；环境清理不会修复已有 CMake 缓存中的宿主路径。
+
+本地已经保留 `vibrareveal-qt51510-tests:local`：官方 5.15.10 源码构建，精确版本
+CMake 检查、C++/moc、QML 实例化和 QuickTest 控件点击均通过；含 clang-format 15。
+默认 offscreen/software，字体路径为 `/usr/share/fonts/opentype/noto`，Vulkan 默认 lavapipe。
+
+```sh
+docker run --rm --platform linux/amd64 -v "$PWD:/workspace" -v vr-gui-build:/build \
+  vibrareveal-qt51510-tests:local sh
+# 容器内：cmake -S 03-apps/rk3588 -B /build -G Ninja ...
+# Qt 路径已设置为 /opt/qt-5.15.10；按应用 CMake 选项开启 GUI 和后端。
+```
+
+完整 CNB daily 镜像仅更新了上述构建配置，本轮没有重建或发布。宿主 Qt 使用软件
+离屏配置、无 OpenGL/XCB，适用于测试和生成工具；它不是板端显示/触摸验收环境。
+
+### 本地 Linux Qt 测试镜像
+
+独立的 `Dockerfile.qt-test` 不安装 IDE，也不包含目标 SDK。构建一次后可复用镜像层：
+
+```sh
+docker build --platform linux/amd64 -f 10-env/Dockerfile.qt-test \
+  -t vibrareveal-qt-tests:local 10-env
+docker run --rm --platform linux/amd64 \
+  -v "$PWD:/workspace" -v vr-qt-build:/build \
+  vibrareveal-qt-tests:local sh -c \
+  'cmake -S 03-apps/rk3588 -B /build -G Ninja -DVR_BUILD_VULKAN_MOTION=ON && cmake --build /build -j4'
+docker run --rm --platform linux/amd64 \
+  -v "$PWD:/workspace" -v vr-qt-build:/build \
+  -e VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json \
+  vibrareveal-qt-tests:local xvfb-run -a ctest --test-dir /build --output-on-failure
+```
+
+镜像包含 Qt 5.15 Core/Quick/Controls2/Test/QuickTest、CMake/Ninja、Vulkan 开发库、
+Mesa lavapipe 软件 ICD、glslang、Xvfb、DejaVu/Noto CJK 字体和 Python NumPy/Pillow。
+默认 Qt Quick 使用软件场景图；Vulkan 计算仍经软件 ICD 执行。构建时验证 QML 控件
+实例化、Qt Quick Test 鼠标交互和 Vulkan 设备枚举。容器测试不证明 Mali/NPU 或触屏实机性能。
+RKNN 头需单独只读挂载并设置 `RKNN_INCLUDE_DIR`；镜像不附带 NPU 运行时/模型。
+
 ## 完整系统构建
 
 ```sh
@@ -134,3 +202,27 @@ Linux 回归覆盖持久化故障、构建互斥、sysroot 提取、网络重试
   此为构建容器自检，不含完整 WebIDE 会话启动，不可直接当作 IDE 启动耗时。
 - 未启动额外 WebIDE 会话测量完整冷启动，以免并行会话的漫游回写影响正在使用的环境。
   镜像体积下降不等于启动时间按相同比例下降；真实交互启动耗时待重建环境后确认。
+
+## 重建板端 Qt 5.15.10 SDK
+
+当前 `sdk.lock.json` 指向 `qt-app-sdk`，使用原系统 SDK 的编译器和目标运行库，仅补齐开发文件。
+来源是原厂 `aarch64-buildroot-linux-gnu_sdk-buildroot.tar.gz`，SHA-256 为
+`4a5c3e6deba91a6556917efab471dbffe6beb6c5b6cbb01ec1ffdb3f07b88ea8`。
+
+在 Linux/amd64 解包原厂 archive，准备旧 SDK `d2a21493198e25881cb03144bf4dd45b76e773e6cbbad1b62d6debbd4aa73cef` 的 `/sdk`：
+
+```sh
+python3 10-env/augment-qt-sdk.py \
+  --base /path/to/base-sdk \
+  --vendor /path/to/aarch64-buildroot-linux-gnu_sdk-buildroot \
+  --archive /path/to/aarch64-buildroot-linux-gnu_sdk-buildroot.tar.gz \
+  --output /tmp/qt-sdk-image/sdk \
+  --rknn-header /path/to/rknn_api.h
+docker build -f 10-env/Dockerfile.qt-sdk -t qt-app-sdk:local /tmp/qt-sdk-image
+```
+
+脚本拒绝错误 archive 哈希或已有输出目录，并逐个核对 Core/Gui/Qml/Quick/Controls2/Templates2 的全部 ELF 可加载节。原厂库虽含未剥离信息，其运行内容与板端库一致；补齐后保留原目标 Qt 库字节。Qt 头、CMake、QML、mkspecs 和宿主工具分别加入 sysroot/qt-host，原厂绝对路径改为相对定位。qmake 配套 Mali 注入静态开发库一并保留。
+
+交叉工具链显式优先链接目标 sysroot 的 libstdc++，满足板端 Qt/ICU 的 GLIBCXX_3.4.30；不会把编译器附带的旧运行库部署到板端。仓库内 `check-qt.sh sdk` 和 `build-touch-app.sh` 使用当前仓库的工具链文件，兼容尚未重建的日常 IDE 镜像。新容器若缺 `ninja` / `glslangValidator`，安装 `ninja-build glslang-tools`。
+
+验证和具体边界见 [2026-11-01 板端记录](../08-docs/validation/rk3588-touch-2026-11-01.md)。

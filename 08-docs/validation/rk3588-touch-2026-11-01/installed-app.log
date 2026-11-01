@@ -1,0 +1,3 @@
+QStandardPaths: wrong permissions on runtime directory /run, 0755 instead of 0700
+qt.qpa.wayland: Wayland does not support QWindow::requestActivate()
+arm_release_ver: g13p0-01eac0, rk_so_ver: 10

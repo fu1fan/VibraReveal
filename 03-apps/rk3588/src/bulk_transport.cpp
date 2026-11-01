@@ -26,6 +26,8 @@ struct BulkTransport::Impl {
     int control=-1,in=-1,out=-1;
     aio_context_t context=0;
     double timeout;
+    std::function<bool()> cancelled;
+    void checkCancelled() const { if(cancelled && cancelled()) throw std::runtime_error("USB session cancelled"); }
     struct Slot { iocb cb{}; std::vector<uint8_t> bytes=std::vector<uint8_t>(chunkSize); bool busy=false; };
     std::vector<Slot> slots;
     std::vector<io_event> events;
@@ -33,7 +35,7 @@ struct BulkTransport::Impl {
     std::array<uint8_t,8> reply{};
     bool reading=false,received=false,enabled=false;
     size_t pending=0,used=0,current=0;
-    explicit Impl(size_t depth,double timeout):timeout(timeout),slots(depth),events(depth+1) {}
+    explicit Impl(size_t depth,double timeout,std::function<bool()> cancel):timeout(timeout),cancelled(std::move(cancel)),slots(depth),events(depth+1) {}
     ~Impl() {
         // io_destroy waits for pending I/O. Unbinding our owned gadget cancels it
         // even when the host disappeared. Buffers survive until that has finished.
@@ -47,6 +49,7 @@ struct BulkTransport::Impl {
         if(control>=0) close(control);
     }
     void controlEvents(bool waiting=false) {
+        checkCancelled();
         pollfd fd{control,POLLIN,0};
         int n=poll(&fd,1,waiting?100:0);
         if(n<0 && errno==EINTR) return;
@@ -99,6 +102,7 @@ struct BulkTransport::Impl {
         if(memcmp(reply.data(),expected,8)) throw std::runtime_error("Invalid USB session handshake");
     }
     void flush() {
+        checkCancelled();
         if(!used) return;
         auto& s=slots[current];
         s.cb={}; s.cb.aio_data=current; s.cb.aio_lio_opcode=IOCB_CMD_PWRITE;
@@ -106,7 +110,7 @@ struct BulkTransport::Impl {
         submit(s.cb); s.busy=true; ++pending; used=0; current=(current+1)%slots.size();
     }
 };
-BulkTransport::BulkTransport(const std::string& mount,size_t depth,double timeout):impl(new Impl(depth,timeout)) {
+BulkTransport::BulkTransport(const std::string& mount,size_t depth,double timeout,std::function<bool()> cancel):impl(new Impl(depth,timeout,std::move(cancel))) {
     auto& p=*impl;
     p.control=open((mount+"/ep0").c_str(),O_RDWR|O_CLOEXEC); check(p.control>=0,"open ep0");
     std::vector<uint8_t> d; le32(d,FUNCTIONFS_DESCRIPTORS_MAGIC_V2); le32(d,0);
@@ -144,6 +148,7 @@ void BulkTransport::waitStart() {
 void BulkTransport::write(const void* data,size_t size) {
     auto* bytes=static_cast<const uint8_t*>(data); auto& p=*impl;
     while(size) {
+        p.checkCancelled();
         auto until=p.deadline();
         while(p.slots[p.current].busy) p.reap(true,until);
         size_t n=std::min(size,chunkSize-p.used);
@@ -159,7 +164,7 @@ void BulkTransport::finish() {
 }
 #else
 struct BulkTransport::Impl {};
-BulkTransport::BulkTransport(const std::string&,size_t,double) { throw std::runtime_error("FunctionFS requires Linux"); }
+BulkTransport::BulkTransport(const std::string&,size_t,double,std::function<bool()>) { throw std::runtime_error("FunctionFS requires Linux"); }
 BulkTransport::~BulkTransport()=default;
 void BulkTransport::waitStart() {} void BulkTransport::write(const void*,size_t) {}
 void BulkTransport::flush() {} void BulkTransport::finish() {}

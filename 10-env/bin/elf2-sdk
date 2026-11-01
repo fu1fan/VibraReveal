@@ -53,6 +53,15 @@ def validate(sdk, spec):
 
 def environment(sdk):
     env = os.environ.copy()
+    # Native IDE Qt must never become an accidental target package/tool source.
+    # Explicit target CMake -D arguments remain available to SDK consumers.
+    host_qt = env.get('ELF2_HOST_QT_PREFIX', '/opt/qt-5.15.10')
+    for key in list(env):
+        if key in ('CMAKE_PREFIX_PATH', 'QTDIR', 'QT_HOST_PATH', 'QT_PLUGIN_PATH', 'QT_QPA_PLATFORM_PLUGIN_PATH', 'QML_IMPORT_PATH', 'QML2_IMPORT_PATH') or (key.startswith(('Qt5', 'Qt6')) and key.endswith('_DIR')):
+            env.pop(key)
+    env['PATH'] = ':'.join(p for p in env.get('PATH', '').split(':') if p != host_qt + '/bin')
+    if 'LD_LIBRARY_PATH' in env:
+        env['LD_LIBRARY_PATH'] = ':'.join(p for p in env['LD_LIBRARY_PATH'].split(':') if p != host_qt + '/lib')
     env.update(ELF2_CROSS_COMPILE=str(sdk / 'toolchain/bin/aarch64-none-linux-gnu-'),
                ELF2_SYSROOT=str(sdk / 'sysroot'),
                PKG_CONFIG_SYSROOT_DIR=str(sdk / 'sysroot'),

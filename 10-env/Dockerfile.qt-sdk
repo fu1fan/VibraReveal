@@ -1,0 +1,5 @@
+# Build context is the output parent produced by augment-qt-sdk.py.
+# Payload artifact only: elf2-sdk extracts /sdk into its locked local cache.
+FROM scratch
+COPY sdk /sdk
+CMD ["/sdk/qt-host/bin/qmake", "-v"]

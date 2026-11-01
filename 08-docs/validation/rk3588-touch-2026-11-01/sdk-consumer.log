@@ -1,0 +1,19 @@
+docker.cnb.cool/fu1fan/vibrareveal/qt-app-sdk@sha256:1ad1117388be3cccfd4607aa7003768b5ed2c9f8b94e4572f7d815b5d76bb1e4: Pulling from fu1fan/vibrareveal/qt-app-sdk
+Digest: sha256:1ad1117388be3cccfd4607aa7003768b5ed2c9f8b94e4572f7d815b5d76bb1e4
+Status: Image is up to date for docker.cnb.cool/fu1fan/vibrareveal/qt-app-sdk@sha256:1ad1117388be3cccfd4607aa7003768b5ed2c9f8b94e4572f7d815b5d76bb1e4
+docker.cnb.cool/fu1fan/vibrareveal/qt-app-sdk@sha256:1ad1117388be3cccfd4607aa7003768b5ed2c9f8b94e4572f7d815b5d76bb1e4
+-- The CXX compiler identification is GNU 10.3.1
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /cache/elf2-sdk/1ad1117388be3cccfd4607aa7003768b5ed2c9f8b94e4572f7d815b5d76bb1e4/toolchain/bin/aarch64-none-linux-gnu-g++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /tmp/tmp.wuXqojc5cP/build
+[1/4] Automatic MOC for target qt-smoke
+[2/4] Building CXX object CMakeFiles/qt-smoke.dir/qt-smoke_autogen/mocs_compilation.cpp.o
+[3/4] Building CXX object CMakeFiles/qt-smoke.dir/main.cpp.o
+[4/4] Linking CXX executable qt-smoke
+/tmp/tmp.wuXqojc5cP/build/qt-smoke: ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, for GNU/Linux 3.7.0, with debug_info, not stripped
+QT_SDK_LINK_VERIFIED_NOT_BOARD_RUNTIME
