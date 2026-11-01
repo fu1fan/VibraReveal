@@ -2,7 +2,9 @@
 
 五项 GPU/NPU 后端、接口及命令见 [BACKENDS.md](BACKENDS.md)。
 
-新增 Qt **5.15.10** 触屏应用 `vr-touch`：1024×600 实时预览、对象/边缘选择、运动放大与频谱、DDR 缓冲 RAW 录制、离线分析和电脑直通。构建、操作及验收边界见 [TOUCH_APP.md](TOUCH_APP.md)。
+Qt **5.15.10** 触屏应用 `vr-touch` 已在原板运行：1024×600 实时预览、可拖动浮层、NPU 对象/红色边缘选择、八点 ROI 调整、运动放大与频谱、点按曝光和 30/60/120 FPS、4 GiB 上限 DDR 缓冲及 RAW 无损录制、区间离线分析、文件删除和电脑直通。构建、操作及验收边界见 [TOUCH_APP.md](TOUCH_APP.md)。
+
+本机 `.vri` 默认 Bitshuffle + LZ4 fast8，保留完整原始字节并兼容旧录像；USB 直通仍传原始帧。当前场景 120 FPS 档向 eMMC 录制约 30 秒节省 66.23%，详见[实测记录](../../08-docs/validation/rk3588-touch-2026-11-01.md)，不代表所有画面的压缩率或长期稳定性。
 
 `vr-stream` 是 C++17 单会话发送器，支持 V4L2 相机、已有 RAW 文件及合成负载。
 图像走自定义 USB Bulk；管理和部署走 Wi-Fi。协议与队列策略见 [VRI1](../../05-protocol/README.md)。
@@ -19,7 +21,7 @@ sh 10-env/build-image-transport.sh /tmp/image-transport-build
 或提交代码后调用独立流水线：
 
 ```sh
-cnb build start-build --repo fu1fan/VibraReveal --branch codex/image-transport \
+cnb build start-build --repo fu1fan/VibraReveal --branch main \
   --event api_trigger_image_transport --sync false
 ```
 

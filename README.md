@@ -11,7 +11,7 @@ VibraReveal（振见）是一个软硬件协同研发项目：利用 **OV9281 �
 > **系统与应用分别维护。** 本仓库只管理应用、算法、通信协议、整机硬件设计和实验资料。RK3588 的 Linux 系统、内核、设备树、OV9281 驱动、rootfs 和系统镜像由独立仓库 [RK3588-OV9281](https://cnb.cool/fu1fan/RK3588-OV9281) 维护。
 
 > [!NOTE]
-> **Work in Progress（2026-10-31）：** 已打通 OV9281 → RK3588 → USB Bulk → macOS Metal 命令行链路，并实现板端 Vulkan / RKNN 计算后端。全分辨率 120 FPS 图像传输通过约五分钟零丢帧验收；同条件 Metal 处理队列仍丢弃 0.1833% 输入帧，不能称为端到端零丢帧。图形界面、多后端并发、物理位移标定及整机长期稳定性仍待完成。
+> **当前状态（2026-11-01）：** RK3588 Qt 5.15.10 触屏主程序已在原板运行，可独立测量，也可通过 USB Bulk 与 Mac 配合。已集成峰值对焦、NPU 选物、区域/边缘测量、曝光与帧率调整、实时/区间离线放大及 RAW 无损录制。当前场景 120 FPS 档向 eMMC 录制约 30 秒，3,639 帧完整校验，空间节省 66.23%。此前原始 USB 图像传输通过约五分钟零接收丢帧验收；Mac Metal 同条件仍替换 0.1833% 输入帧，不能称为端到端零丢帧。Mac 原生 GUI、物理位移标定及整机长期稳定性仍待完成。
 
 ## 1. 项目目标
 
@@ -42,7 +42,8 @@ VibraReveal/
 ├── 02-platform/       # 平台环境；含 RK3588-OV9281 子模块
 ├── 03-apps/
 │   ├── rk3588/        # RK3588 Linux 用户态应用
-│   └── macos/         # Swift/C++、Metal、交互可视化
+│   ├── macos/         # Swift/C++ 接收与 Metal 实时/离线后端
+│   └── raw-codec/     # 板端/Mac 共享 Bitshuffle + LZ4 无损编解码
 ├── 04-algorithms/     # Python/PyTorch 参考实现及模型转换
 ├── 05-protocol/       # RAW、IMU、ROI、控制消息与版本协议
 ├── 06-tests/          # 跨模块集成测试、性能及硬件验收
@@ -71,17 +72,22 @@ VibraReveal/
 
 ## 5. 当前进度与路线图
 
-截至 **2026-10-31**，已完成能力与验证边界如下：
+截至 **2026-11-01**，已完成能力与验证边界如下；历史性能数据保留各自测试日期：
 
 | 能力 | 当前结果 | 验收记录 |
 | --- | --- | --- |
+| RK3588 触屏主程序 | Qt 5.15.10、1024×600；浅色浮层、可拖动菜单、1:1 平移、点按曝光和 30/60/120 FPS；原板运行 | [操作与构建](03-apps/rk3588/TOUCH_APP.md)、[板端验证](08-docs/validation/rk3588-touch-2026-11-01.md) |
+| 对象、边缘与放大 | 蓝色 NPU 掩膜、红色边缘/ROI；八点微调；整区或选边放大；启动前资源检查；RAW 从所选帧按时长分析或全画面分析 | [板端验证](08-docs/validation/rk3588-touch-2026-11-01.md) |
+| 本机 RAW 无损录制 | Bitshuffle + LZ4 fast8，4 GiB 缓冲上限；当前场景约 30 秒 eMMC 实拍 7.45 GB → 2.52 GB，全片校验通过；支持回放、分析和确认删除 | [压缩验证](08-docs/validation/rk3588-touch-2026-11-01.md#bitshuffle--lz4-raw-无损录制) |
 | 相机与 USB Bulk 传输 | 1280×800 Y10，36,000 帧约 298.5 秒，零序号缺口/发送丢弃；离线最高约 417.4 MB/s | [图像传输](08-docs/validation/usb-bulk-images-2026-10-31.md) |
 | Mac Metal 实时放大 | 同尺寸完成 35,934/36,000 帧，队列替换 66 帧；估算采集至结果 P50/P95 为 17.865/20.005 ms | [处理延迟与丢帧](08-docs/validation/usb-bulk-metal-2026-10-31.md) |
 | 板端 Vulkan 实时 ROI | 128×128@120、256×256@60 短测通过；全帧@120 超预算并明确报错 | [ROI 短测](08-docs/validation/vulkan-roi-motion-2026-10-31.md) |
-| GPU 对焦/边缘与 NPU 选物 | Mali 特征计算与 MobileSAM encoder/decoder 实机通过；分割质量仅验证公开灰度示例 | [五项后端](08-docs/validation/rk3588-backends-2026-10-31.md) |
+| 对焦/边缘与 NPU 选物 | 独立峰值预览路径；MobileSAM 已接入主程序并通过点/框/选边验证；复杂场景分割质量仍待验收 | [五项后端](08-docs/validation/rk3588-backends-2026-10-31.md)、[主程序验证](08-docs/validation/rk3588-touch-2026-11-01.md) |
 | 整段离线全帧放大 | 默认前后向零相位滤波，保留全部帧与时间信息；480 帧夹具 Mali/Metal 最大灰度误差约 2.38×10⁻⁶ | [零相位对照](08-docs/validation/rk3588-offline-filter-2026-10-31.md) |
 
 上述吞吐和延迟依赖记录中的设备、负载与测试时长；数值一致性不等于物理位移精度标定。USB 完整接收与算法处理零丢帧分别验收，短时通过不代表全天运行或多后端并发达标。
+
+无损压缩目前用于本机 `.vri` 录制，Mac 新版读者可解码，旧录像继续兼容。USB/TCP 实时直通仍传原始帧，传输压缩与电脑远程文件管理尚未实现；66.23% 是本次场景的存储节省，不能当作 USB 压缩吞吐或通用压缩率。
 
 - [x] 确定 OV9281 + RK3588 采集路线，完成驱动适配、首次采集帧率修复及板端验证
 - [x] 维护独立系统仓库与子模块，建立固定 digest 的应用交叉编译 SDK
@@ -91,10 +97,13 @@ VibraReveal/
 - [x] 整理 [Python 相位运动放大与频谱参考](04-algorithms/phase-motion/)
 - [x] 实现 [Mac Metal 实时/离线后端](03-apps/macos/)，完成真实 Bulk 输入短期验收
 - [x] 实现 [RK3588 五项后端](03-apps/rk3588/BACKENDS.md)及整段零相位离线处理
+- [x] 完成 Qt 5.15.10 SDK、ARM 构建与板端触屏主程序集成
+- [x] 集成对象/边缘选择、曝光与帧率、区域/区间放大、无损录制及文件删除
 - [x] 归档 ELF 2、OV9281、HDMI 屏与 IMU 模块资料
 - [ ] 完成热点扫描、振动频谱预分析与跨帧 ROI 跟踪
 - [ ] 完成多后端并发调度、端到端零丢帧优化和持续负载验收
-- [ ] 集成图形界面、视频编解码与可选深度估计
+- [ ] 完成 Mac 原生图形界面、双端控制与远程文件管理
+- [ ] 评估传输无损压缩，扩展视频导出与可选深度估计
 - [ ] 补充曝光元数据、IMU 数据协议与时间同步，完成自振检测/视觉辅助补偿
 - [ ] 完成机械与电子集成、真实位移标定、服务冷启动及整机长期稳定性验收
 
@@ -103,6 +112,9 @@ VibraReveal/
 | 内容                            | 位置                                                                     |
 | ------------------------------- | ------------------------------------------------------------------------ |
 | RK3588 采集与传输 | [03-apps/rk3588/README.md](03-apps/rk3588/README.md) |
+| 触屏主程序构建与操作 | [03-apps/rk3588/TOUCH_APP.md](03-apps/rk3588/TOUCH_APP.md) |
+| 触屏、相机、NPU 与无损录制验证 | [08-docs/validation/rk3588-touch-2026-11-01.md](08-docs/validation/rk3588-touch-2026-11-01.md) |
+| 共享 RAW 无损编解码与上游许可 | [03-apps/raw-codec/README.md](03-apps/raw-codec/README.md) |
 | Vulkan / RKNN 后端与模型转换 | [03-apps/rk3588/BACKENDS.md](03-apps/rk3588/BACKENDS.md) |
 | Mac Metal 后端与使用方式 | [03-apps/macos/README.md](03-apps/macos/README.md) |
 | VRI1 图像传输协议 | [05-protocol/README.md](05-protocol/README.md) |
