@@ -1,4 +1,5 @@
 #include "engine.hpp"
+#include "focus_peaking.hpp"
 #include "backend_io.hpp"
 #include "offline_motion.hpp"
 #include "vulkan_motion.hpp"
@@ -365,8 +366,13 @@ void Engine::captureLoop() {
                             work_.push_back(frame);
                     }
                 } else if (state_.tool != "select" && state_.tool != "offline" && state_.tool != "replay") {
-                    work_.clear();
-                    work_.push_back(frame);
+                    // Preview is display-rate work; RAW recording/streaming
+                    // above still receive every sensor frame unchanged.
+                    const uint64_t divisor = uint64_t(std::max(1., std::ceil(format.fps()/60.)));
+                    if (frame->sequence % divisor == 0) {
+                        work_.clear();
+                        work_.push_back(frame);
+                    }
                 }
                 cv_.notify_one();
             }
@@ -385,6 +391,7 @@ void Engine::captureLoop() {
     }
 }
 void Engine::computeLoop() {
+    FocusPeaking focusPeaking;
     std::unique_ptr<VulkanMotion> analyzer, motion;
     uint32_t analyzerW = 0, analyzerH = 0;
     uint64_t activeGeneration = UINT64_MAX, processingSequence = 0;
@@ -650,8 +657,7 @@ void Engine::computeLoop() {
             SpectrumResult result;
             double displacement = 0;
             if (config.tool == "focus" || config.tool == "direct") {
-                auto peaks = analyze(*frame, config.focus, {});
-                overlay = overlayImage(frame->width, frame->height, peaks.peaks, qRgb(113, 255, 160));
+                overlay = focusPeaking.render(*frame, config.focus);
             } else if (config.tool == "magnify") {
                 if (!signal.valid())
                     throw std::runtime_error("测量参考已失效，请重新选边缘");

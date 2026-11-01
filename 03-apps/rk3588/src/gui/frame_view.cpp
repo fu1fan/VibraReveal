@@ -61,17 +61,17 @@ void FrameView::paint(QPainter *p) {
         return;
     if (channel_ == 2) {
         const auto data = controller_->spectrum();
-        p->setPen(QColor("#c2ccda"));
+        p->setPen(QColor("#414e60"));
         QFont font = p->font();
         font.setPixelSize(13);
         p->setFont(font);
         p->drawText(QRectF(0, 0, width(), 20), "位移幅值 / px");
         QRectF plot(36, 25, std::max(1., width() - 45), std::max(1., height() - 49));
-        p->setPen(QColor("#475263"));
+        p->setPen(QColor("#a7b2c0"));
         p->drawLine(plot.bottomLeft(), plot.bottomRight());
         p->drawLine(plot.bottomLeft(), plot.topLeft());
         if (data.empty()) {
-            p->setPen(QColor("#f4f7fc"));
+            p->setPen(QColor("#151a22"));
             p->drawText(plot, Qt::AlignCenter,
                         controller_->state()["tool"].toString() == "offline" &&
                                 !controller_->state()["offlineBusy"].toBool()
@@ -94,9 +94,9 @@ void FrameView::paint(QPainter *p) {
                 path.lineTo(pt);
             first = false;
         }
-        p->setPen(QPen(QColor("#7cb6ff"), 2));
+        p->setPen(QPen(QColor("#075ac5"), 2));
         p->drawPath(path);
-        p->setPen(QColor("#c2ccda"));
+        p->setPen(QColor("#414e60"));
         p->drawText(QRectF(0, plot.y() - 6, 32, 20), Qt::AlignRight, QString::number(max, 'g', 2));
         p->drawText(QRectF(plot.x(), plot.bottom() + 3, 30, 20), "0");
         p->drawText(QRectF(plot.right() - 60, plot.bottom() + 3, 60, 20), Qt::AlignRight,
@@ -105,7 +105,7 @@ void FrameView::paint(QPainter *p) {
     }
     const auto image = controller_->image(channel_);
     if (image.isNull()) {
-        p->setPen(QColor("#c2ccda"));
+        p->setPen(QColor("#f4f7fc"));
         p->drawText(boundingRect(), Qt::AlignCenter, "等待图像");
         return;
     }

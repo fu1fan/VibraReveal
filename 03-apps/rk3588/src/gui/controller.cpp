@@ -15,8 +15,10 @@ Controller::Controller(EngineOptions options, QObject *parent)
     : QObject(parent), engine_(std::move(options)) {
     QDir().mkpath(QString::fromStdString(engine_.options().storage));
     writeClock_.start();
+    previewClock_.start();
     connect(&timer_, &QTimer::timeout, this, &Controller::poll);
-    timer_.start(33);
+    timer_.setTimerType(Qt::PreciseTimer);
+    timer_.start(16);
     engine_.start();
     poll();
 }
@@ -291,11 +293,17 @@ void Controller::poll() {
     if (fresh.displayRevision != displayRevision_) {
         view_ = fresh;
         displayRevision_ = fresh.displayRevision;
+        ++previewFrames_;
         emit frameChanged();
     } else
         view_ = fresh;
     const auto r = engine_.recorder.status();
     const auto stream = engine_.streaming.status();
+    if (previewClock_.elapsed() >= 1000) {
+        previewFps_ = previewFrames_ * 1000. / previewClock_.elapsed();
+        previewFrames_ = 0;
+        previewClock_.restart();
+    }
     if (tool_ == "magnify" && view_.tool != "magnify" && !view_.error.isEmpty())
         tool_ = "preview";
     if (writeClock_.elapsed() >= 500) {
@@ -353,6 +361,7 @@ void Controller::poll() {
               {"height", displayFormat.height},
               {"bits", displayFormat.bits},
               {"fps", displayFormat.fpsNum ? displayFormat.fps() : 0},
+              {"previewFps", previewFps_},
               {"processingFps", view_.processingFps},
               {"alpha", view_.alpha},
               {"low", view_.low},
@@ -377,6 +386,7 @@ void Controller::poll() {
               {"streamState", QString::fromStdString(stream.state)},
               {"streamMessage", QString::fromStdString(stream.message)},
               {"streamBusy", stream.busy},
+              {"streamFile", stream.fileTransfer},
               {"streamBytes", double(stream.bytes)},
               {"streamFrames", double(stream.frames)},
               {"transport", QString::fromStdString(engine_.options().stream.transport)},

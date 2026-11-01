@@ -233,6 +233,12 @@ static void streamingTest(const std::string &dir) {
     stream.cancel();
     stream.wait();
     REQUIRE(!stream.status().busy);
+    REQUIRE(stream.status().state == "cancelled");
+    stream.start(format(), opt);
+    stream.stop(); // Leave direct mode before a receiver connects.
+    stream.wait();
+    REQUIRE(stream.status().state == "cancelled");
+    REQUIRE(!stream.status().fileTransfer);
 }
 int main() {
     std::string dir = "/tmp/vr-touch-core-" + std::to_string(getpid());

@@ -1,5 +1,7 @@
 #include "controller.hpp"
 #include "frame_view.hpp"
+#include "focus_peaking.hpp"
+#include "vulkan_motion.hpp"
 #include "backend_io.hpp"
 #include <QDir>
 #include <QFileInfo>
@@ -16,6 +18,108 @@ using namespace vr::touch;
 class UiTest : public QObject {
     Q_OBJECT
   private slots:
+    void focusPeakingParity() {
+        vr::MotionConfig config;
+        config.width = 128; config.height = 96;
+        config.analysisOnly = true; config.realtime = false;
+        vr::VulkanMotion reference(config, qEnvironmentVariable("VR_TEST_SHADER_PATH", VR_TEST_SHADER).toStdString());
+        FocusPeaking focus;
+        for (unsigned bits : {8u, 10u, 12u, 16u}) {
+            Frame f;
+            f.width = config.width; f.height = config.height; f.bits = bits;
+            f.stride = f.width*(bits == 8 ? 1 : 2)+16;
+            f.data.assign(size_t(f.stride)*f.height, 0xcc);
+            unsigned seed = 431;
+            for (unsigned y=0; y<f.height; ++y)
+                for (unsigned x=0; x<f.width; ++x) {
+                    seed = seed*1664525u+1013904223u;
+                    const unsigned value = seed >> (32-bits);
+                    auto p = f.data.data()+size_t(y)*f.stride+x*(bits == 8 ? 1 : 2);
+                    p[0]=value;
+                    if (bits != 8) p[1]=value>>8;
+                }
+            vr::EdgeConfig edge;
+            edge.threshold = .04f;
+            const auto expected = reference.analyze(f, edge);
+            const auto actual = focus.render(f, edge.threshold);
+            int differences = 0, peaks = 0;
+            for (unsigned y=0; y<f.height; ++y)
+                for (unsigned x=0; x<f.width; ++x) {
+                    const bool lit = qAlpha(actual.pixel(x,y)) != 0;
+                    peaks += lit;
+                    differences += lit != bool(expected.peaks[size_t(y)*f.width+x]);
+                }
+            qInfo() << "FOCUS_PARITY" << bits << "bits mismatches" << differences << "of" << f.width*f.height;
+            QVERIFY(peaks > 100);
+            // Only floating-point tie cases may differ between CPU and GPU.
+            QVERIFY(differences < int(f.width*f.height/1000));
+            std::fill(f.data.begin(), f.data.end(), 0);
+            const auto flat = focus.render(f, edge.threshold);
+            for (unsigned y=0; y<f.height; ++y)
+                for (unsigned x=0; x<f.width; ++x)
+                    QCOMPARE(qAlpha(flat.pixel(x,y)), 0);
+        }
+    }
+    void hardwarePreview() {
+        if (!qEnvironmentVariableIsSet("VR_TEST_CAMERA"))
+            QSKIP("Requires exclusive physical camera access");
+        EngineOptions options;
+        options.storage = qEnvironmentVariable("VR_TEST_STORAGE").toStdString();
+        options.shader = qEnvironmentVariable("VR_TEST_SHADER_PATH", VR_TEST_SHADER).toStdString();
+        options.stream.manageGadget = true;
+        Controller controller(options);
+        QQmlApplicationEngine engine;
+        engine.rootContext()->setContextProperty("backend", &controller);
+        engine.load(QUrl("qrc:/qml/Main.qml"));
+        QVERIFY(!engine.rootObjects().isEmpty());
+        auto window = qobject_cast<QQuickWindow *>(engine.rootObjects().first());
+        QVERIFY(window);
+        window->showFullScreen();
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["ready"].toBool(), 10000);
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.image(0).isNull(), 10000);
+        for (const auto &tool : {QString("preview"), QString("focus")}) {
+            controller.tool(tool);
+            if (tool == "focus")
+                QTRY_VERIFY_WITH_TIMEOUT(!controller.overlay().isNull(), 15000);
+            QTest::qWait(1000);
+            QSignalSpy frames(&controller, &Controller::frameChanged);
+            QSignalSpy swaps(window, &QQuickWindow::frameSwapped);
+            auto start = controller.engine().snapshot();
+            QElapsedTimer timer;
+            timer.start();
+            QTest::qWait(3000);
+            const double seconds = timer.elapsed() / 1000.;
+            auto end = controller.engine().snapshot();
+            qInfo() << "BOARD_PREVIEW_PERFORMANCE" << tool
+                    << "computed_fps" << (end.displayRevision-start.displayRevision)/seconds
+                    << "delivered_fps" << frames.count()/seconds
+                    << "swapped_fps" << swaps.count()/seconds;
+            QVERIFY2(frames.count()/seconds >= 30., "Live preview fell below 30 unique frames/s");
+            const auto captures = qEnvironmentVariable("VR_UI_CAPTURE_DIR");
+            if (!captures.isEmpty()) {
+                QDir().mkpath(captures);
+                auto grab = window->contentItem()->grabToImage();
+                QVERIFY(grab);
+                QSignalSpy ready(grab.data(), &QQuickItemGrabResult::ready);
+                QVERIFY(ready.wait(5000) || !grab->image().isNull());
+                QVERIFY(grab->image().save(captures + "/camera-" + tool + ".png"));
+            }
+        }
+        controller.tool("preview");
+        // No receiver: leaving direct mode must not become a sticky error.
+        controller.mode("direct");
+        QTRY_COMPARE(controller.state()["streamState"].toString(), QString("waiting"));
+        QTest::qWait(500);
+        controller.mode("local");
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["streamBusy"].toBool(), 5000);
+        qInfo() << "BOARD_USB_CANCEL" << controller.state()["streamState"]
+                << controller.state()["streamMessage"];
+        QCOMPARE(controller.state()["streamState"].toString(), QString("cancelled"));
+        QVERIFY(controller.state()["error"].toString().isEmpty());
+        auto banner = window->findChild<QQuickItem *>("transferBanner");
+        QVERIFY(banner);
+        QVERIFY(!banner->isVisible());
+    }
     // Explicit opt-in: requires exclusive ownership of the physical camera.
     void hardwareCapture() {
         if (!qEnvironmentVariableIsSet("VR_TEST_CAMERA"))
@@ -219,6 +323,8 @@ class UiTest : public QObject {
         QCOMPARE(controller.state()["mode"].toString(), QString("direct"));
         controller.mode("local");
         QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["streamBusy"].toBool(), 5000);
+        QCOMPARE(controller.state()["streamState"].toString(), QString("cancelled"));
+        QVERIFY(!controller.state()["streamFile"].toBool());
     }
 };
 int main(int argc, char **argv) {

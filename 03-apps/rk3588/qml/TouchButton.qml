@@ -11,16 +11,16 @@ Button {
     focusPolicy: Qt.StrongFocus
     background: Rectangle {
         radius: 12
-        color: control.danger ? "#b72c35" : (control.primary ? "#7cb6ff" : control.checked ? "#34465c" : "#29313c")
+        color: control.danger ? "#b72c35" : (control.primary ? "#075ac5" : control.checked ? "#dce5f0" : "#e9edf2")
         opacity: control.enabled ? 1 : 0.45
         border.width: control.activeFocus ? 2 : 0
-        border.color: "#b8d9ff"
+        border.color: "#075ac5"
     }
     contentItem: Text {
         id: label
         text: control.text
         font: control.font
-        color: control.primary ? "#081c34" : "#f4f7fc"
+        color: control.primary || control.danger ? "#ffffff" : "#151a22"
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         wrapMode: Text.Wrap

@@ -161,6 +161,7 @@ void Streaming::start(const Format &format, const StreamOptions &options, const 
         stop_ = false;
         cancel_ = false;
         state_ = {};
+        state_.fileTransfer = !archive.empty();
         state_.busy = true;
         state_.state = "waiting";
         state_.message = "等待电脑接收";
@@ -197,11 +198,11 @@ void Streaming::submit(std::shared_ptr<const Frame> f) {
     cv_.notify_one();
 }
 void Streaming::run() {
+    bool started = false;
     try {
         Socket server, client;
         std::unique_ptr<GadgetSession> gadget;
         std::unique_ptr<BulkTransport> bulk;
-        bool started = false;
         if (options_.transport == "bulk") {
             if (options_.manageGadget)
                 gadget = std::make_unique<GadgetSession>(options_.ffs);
@@ -259,6 +260,7 @@ void Streaming::run() {
         write(h.data(), h.size());
         if (bulk)
             bulk->flush();
+        started = true;
         {
             std::lock_guard<std::mutex> l(mutex_);
             state_.state = "streaming";
@@ -334,8 +336,13 @@ void Streaming::run() {
         }
     } catch (const std::exception &e) {
         std::lock_guard<std::mutex> l(mutex_);
-        state_.state = cancel_ ? "cancelled" : "error";
-        state_.message = e.what();
+        // stop() before the receiver handshake is an ordinary navigation
+        // cancellation. After START, transport/ACK failures remain errors.
+        const bool cancelled = cancel_ || (stop_ && !started);
+        state_.state = cancelled ? "cancelled" : "error";
+        state_.message = cancelled
+                             ? (archive_.empty() ? "已退出电脑直通" : "已取消文件传输；本机文件保留")
+                             : e.what();
         state_.busy = state_.accepting = false;
         queue_.clear();
     }

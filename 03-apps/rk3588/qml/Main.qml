@@ -10,6 +10,14 @@ ApplicationWindow {
     minimumWidth: 1024; minimumHeight: 600
     title: "VibraReveal"
     color: "#111820"
+    palette.window: "#f7f8fa"
+    palette.windowText: "#151a22"
+    palette.text: "#151a22"
+    palette.base: "#ffffff"
+    palette.button: "#e9edf2"
+    palette.buttonText: "#151a22"
+    palette.highlight: "#075ac5"
+    palette.highlightedText: "#ffffff"
     property var s: backend.state
     property bool frequencyPanel: false
     property bool showSpectrum: true
@@ -94,8 +102,15 @@ ApplicationWindow {
     }
 
     Rectangle { anchors.top: parent.top; width: parent.width; height: 150; gradient: Gradient { GradientStop { position: 0; color: "#80000000" } GradientStop { position: 1; color: "#00000000" } } }
-    Text { x: 20; y: 18; text: "VibraReveal"; color: "white"; font.pixelSize: 23; font.weight: Font.DemiBold }
-    Text { x: 20; y: 49; text: s.demo ? "合成相机 · 功能验证" : "RK3588 · 触屏测量"; color: "#edf3fb"; font.pixelSize: 13 }
+    Row {
+        objectName: "brandLogo"; x: 20; y: 22; spacing: 4; height: 30
+        Repeater {
+            model: [14, 30, 22, 14]
+            Rectangle { width: 5; height: modelData; radius: 2.5; color: "white"; anchors.verticalCenter: parent.verticalCenter }
+        }
+    }
+    Text { x: 66; y: 18; text: "VibraReveal"; color: "white"; font.pixelSize: 23; font.weight: Font.DemiBold }
+    Text { x: 66; y: 49; text: s.demo ? "合成相机 · 功能验证" : "RK3588 · 触屏测量"; color: "#edf3fb"; font.pixelSize: 13 }
     Row {
         anchors.right: settingsButton.left; anchors.rightMargin: 12; y: 16; spacing: 4
         TouchButton { objectName: "localMode"; text: "独立测量"; checked: s.mode === "local"; onClicked: backend.mode("local") }
@@ -113,7 +128,7 @@ ApplicationWindow {
     Rectangle {
         x: 18; y: 148; width: hint.width+24; height: 38; radius: 9; color: "#101720"; visible: hint.text.length > 0
         Text { id: hint; anchors.centerIn: parent; color: "#f4f7fc"; font.pixelSize: 14
-            text: s.mode === "direct" || s.tool === "focus" ? "峰值对焦 · 1:1 锁定 · 拖动画面" : s.tool === "select" ? "冻结参考帧 · "+(s.step === 1 ? (s.hasSam?"轻触对象或拖动框选":"拖动框选 · 未配置 NPU 模型") : "轻触对象边缘") : s.tool === "magnify" ? "本机实时计算 · 参考位置固定" : s.tool === "replay" || s.tool === "offline" ? "本地 RAW 回放与分析" : s.native ? "点对点显示 · 拖动画面" : ""
+            text: s.mode === "direct" || s.tool === "focus" ? "峰值对焦 · 1:1 · "+Number(s.previewFps).toFixed(0)+" fps · 拖动画面" : s.tool === "select" ? "冻结参考帧 · "+(s.step === 1 ? (s.hasSam?"轻触对象或拖动框选":"拖动框选 · 未配置 NPU 模型") : "轻触对象边缘") : s.tool === "magnify" ? "本机实时计算 · 参考位置固定" : s.tool === "replay" || s.tool === "offline" ? "本地 RAW 回放与分析" : s.native ? "点对点显示 · 拖动画面" : ""
         }
     }
     Loader {
@@ -125,9 +140,9 @@ ApplicationWindow {
         id: focusPanel
         Panel {
             title: "峰值对焦"; onClosed: backend.tool("preview")
-            Text { text: "峰值灵敏度 · "+Math.round(s.focus)+"%"; color: "#f4f7fc"; font.pixelSize: 16 }
+            Text { text: "峰值灵敏度 · "+Math.round(s.focus)+"%"; color: "#151a22"; font.pixelSize: 16 }
             Slider { id: focusSlider; width: parent.width; height: 42; from: 0; to: 100; value: s.focus; onPressedChanged: if(!pressed) setParams(s.alpha,s.low,s.high,s.processingFps,value) }
-            Text { text: "转动镜头对焦环，观察绿色清晰边缘。完成后恢复此前显示比例。"; width: parent.width; wrapMode: Text.Wrap; color: "#c2ccda"; font.pixelSize: 15 }
+            Text { text: "转动镜头对焦环，观察绿色清晰边缘。完成后恢复此前显示比例。"; width: parent.width; wrapMode: Text.Wrap; color: "#414e60"; font.pixelSize: 15 }
             TouchButton { objectName: "finishFocus"; width: parent.width; primary: true; text: "完成对焦"; onClicked: backend.tool("preview") }
         }
     }
@@ -135,10 +150,10 @@ ApplicationWindow {
         id: selectionPanel
         Panel {
             title: s.step === 1 ? "选择对象" : "选择测量边缘"; onClosed: backend.tool("preview")
-            Text { text: s.step === 1 ? "① 对象    →    ② 边缘" : "✓ 对象    →    ② 边缘"; color: "#c2ccda"; font.pixelSize: 16 }
-            Text { width: parent.width; text: s.objectReady ? s.selectionMethod+" · "+s.roi.width+" × "+s.roi.height+" px" : "在图像中拖动框选；重新框选可修改区域。"; wrapMode: Text.Wrap; color: "#f4f7fc"; font.pixelSize: 16 }
+            Text { text: s.step === 1 ? "① 对象    →    ② 边缘" : "✓ 对象    →    ② 边缘"; color: "#414e60"; font.pixelSize: 16 }
+            Text { width: parent.width; text: s.objectReady ? s.selectionMethod+" · "+s.roi.width+" × "+s.roi.height+" px" : "在图像中拖动框选；重新框选可修改区域。"; wrapMode: Text.Wrap; color: "#151a22"; font.pixelSize: 16 }
             TouchButton { objectName: "centerSelection"; visible: s.step === 1; width: parent.width; text: "使用中心 256 × 128 区域"; onClicked: backend.selectObject(s.width/2-128,s.height/2-64,256,128,false) }
-            Text { width: parent.width; text: s.step === 2 ? "轻触蓝色轮廓上的一段清晰边缘，测量该段边缘的法向微小位移。" : "选区保持在原图坐标，不自动追踪移动对象。"; wrapMode: Text.Wrap; color: "#c2ccda"; font.pixelSize: 15 }
+            Text { width: parent.width; text: s.step === 2 ? "轻触蓝色轮廓上的一段清晰边缘，测量该段边缘的法向微小位移。" : "选区保持在原图坐标，不自动追踪移动对象。"; wrapMode: Text.Wrap; color: "#414e60"; font.pixelSize: 15 }
             TouchButton { objectName: "confirmSelection"; primary: true; width: parent.width; text: s.step === 1 ? "确认对象 · 选择边缘" : "完成选择"; enabled: s.step === 1 ? s.objectReady : s.edgeReady; onClicked: s.step === 1 ? backend.confirmObject() : backend.confirmEdge() }
         }
     }
@@ -146,10 +161,10 @@ ApplicationWindow {
         id: magnifyPanel
         Panel {
             title: "实时运动放大"; subtitle: "RK3588 · 本机计算"; onClosed: backend.tool("preview")
-            Text { text: "相位增益 · "+Number(s.alpha).toFixed(0); color: "#f4f7fc"; font.pixelSize: 16 }
+            Text { text: "相位增益 · "+Number(s.alpha).toFixed(0); color: "#151a22"; font.pixelSize: 16 }
             Slider { width: parent.width; height: 36; from: 0; to: 80; value: s.alpha; onPressedChanged: if(!pressed) setParams(value,s.low,s.high,s.processingFps,s.focus) }
-            CheckBox { text: "叠加频谱"; checked: showSpectrum; onToggled: showSpectrum = checked; font.pixelSize: 16; height: 44; palette.windowText: "#f4f7fc" }
-            CheckBox { text: "叠加局部放大"; checked: showInset; onToggled: showInset = checked; font.pixelSize: 16; height: 44; palette.windowText: "#f4f7fc" }
+            CheckBox { text: "叠加频谱"; checked: showSpectrum; onToggled: showSpectrum = checked; font.pixelSize: 16; height: 44; palette.windowText: "#151a22" }
+            CheckBox { text: "叠加局部放大"; checked: showInset; onToggled: showInset = checked; font.pixelSize: 16; height: 44; palette.windowText: "#151a22" }
             TouchButton { width: parent.width; text: "频段与帧率 · "+s.low+"–"+s.high+" Hz"; onClicked: frequencyPanel = true }
         }
     }
@@ -157,9 +172,9 @@ ApplicationWindow {
         id: bandPanel
         Panel {
             title: s.tool === "magnify" ? "频段与处理帧率" : "离线分析频段"; subtitle: s.tool === "magnify" ? "修改后重新积累连续样本" : "离线保持原始采样率"; onClosed: frequencyPanel = false
-            Text { text: "下限 · "+lowSlider.value.toFixed(1)+" Hz"; color: "#f4f7fc"; font.pixelSize: 15 }
+            Text { text: "下限 · "+lowSlider.value.toFixed(1)+" Hz"; color: "#151a22"; font.pixelSize: 15 }
             Slider { id: lowSlider; width: parent.width; height: 36; from: 0.5; to: Math.max(1,highSlider.value-0.5); stepSize: 0.5; value: s.low }
-            Text { text: "上限 · "+highSlider.value.toFixed(1)+" Hz"; color: "#f4f7fc"; font.pixelSize: 15 }
+            Text { text: "上限 · "+highSlider.value.toFixed(1)+" Hz"; color: "#151a22"; font.pixelSize: 15 }
             Slider { id: highSlider; width: parent.width; height: 36; from: 1; to: Math.max(2,s.processingFps/2-0.5); stepSize: 0.5; value: s.high }
             Row { visible: s.tool === "magnify"; spacing: 6; Repeater { model: [30,60,120]; TouchButton { text: modelData+" fps"; width: 84; enabled: s.fps >= modelData && Math.abs(s.fps/modelData-Math.round(s.fps/modelData))<0.001; checked: Math.abs(s.processingFps-modelData)<0.01; onClicked: setParams(s.alpha,Math.min(s.low,modelData/8),Math.min(s.high,modelData*.4),modelData,s.focus) } } }
             TouchButton { width: parent.width; primary: true; text: "应用频段"; onClicked: { setParams(s.alpha,lowSlider.value,highSlider.value,s.processingFps,s.focus); frequencyPanel = false } }
@@ -170,11 +185,11 @@ ApplicationWindow {
         Panel {
             title: s.recordState === "recording" ? "正在录制 RAW" : s.recordState === "draining" ? "正在完成写入" : s.recordState === "saved" ? "录制已保存" : s.recordState === "failed" ? "录制未完成" : "RAW 录制"
             subtitle: "本机 eMMC · DDR 缓冲上限 4 GiB"; onClosed: backend.tool("preview")
-            Text { text: "DDR · "+bytes(s.bufferBytes)+" / "+bytes(s.bufferBudget || 4294967296); color: "#f4f7fc"; font.pixelSize: 16 }
+            Text { text: "DDR · "+bytes(s.bufferBytes)+" / "+bytes(s.bufferBudget || 4294967296); color: "#151a22"; font.pixelSize: 16 }
             ProgressBar { width: parent.width; from: 0; to: Math.max(1,s.bufferBudget); value: s.bufferBytes; height: 8 }
-            Text { text: "时长  "+clock(s.recordSeconds)+"     写入  "+bytes(s.writeRate)+"/s"; color: "#f4f7fc"; font.pixelSize: 15 }
-            Text { text: "已落盘  "+bytes(s.written); color: "#c2ccda"; font.pixelSize: 15 }
-            Text { width: parent.width; wrapMode: Text.Wrap; text: s.recordReason || "按可用内存确定缓冲预算。余量不足时停止采集此录像，排空后才显示已保存。"; color: s.recordState === "failed" ? "#ff9c95" : "#c2ccda"; font.pixelSize: 15 }
+            Text { text: "时长  "+clock(s.recordSeconds)+"     写入  "+bytes(s.writeRate)+"/s"; color: "#151a22"; font.pixelSize: 15 }
+            Text { text: "已落盘  "+bytes(s.written); color: "#414e60"; font.pixelSize: 15 }
+            Text { width: parent.width; wrapMode: Text.Wrap; text: s.recordReason || "按可用内存确定缓冲预算。余量不足时停止采集此录像，排空后才显示已保存。"; color: s.recordState === "failed" ? "#b12924" : "#414e60"; font.pixelSize: 15 }
             TouchButton { objectName: "recordAction"; width: parent.width; danger: s.recordState === "recording"; primary: !recording; text: s.recordState === "recording" ? "■ 停止录制" : s.recordState === "draining" ? "等待剩余帧写入…" : "● 开始新录制"; enabled: s.recordState !== "draining" && s.ready && !s.streamBusy; onClicked: s.recordState === "recording" ? backend.stopRecording() : backend.record() }
             TouchButton { width: parent.width; visible: s.recordState === "saved" || s.recordState === "failed"; text: "查看录制文件"; onClicked: backend.tool("files") }
         }
@@ -183,10 +198,10 @@ ApplicationWindow {
         id: directPanel
         Panel {
             title: "电脑直通"; subtitle: "电脑负责录制与处理"; closable: false
-            Text { width: parent.width; wrapMode: Text.Wrap; text: s.streamMessage; color: s.streamState === "error" ? "#ff9c95" : "#f4f7fc"; font.pixelSize: 17 }
-            Text { text: s.transport.toUpperCase()+" · RAW"+s.bits+" · "+Number(s.fps).toFixed(1)+" fps"; color: "#c2ccda"; font.pixelSize: 15 }
-            Text { text: "已传输  "+bytes(s.streamBytes)+" · "+s.streamFrames+" 帧"; color: "#f4f7fc"; font.pixelSize: 15 }
-            Text { width: parent.width; wrapMode: Text.Wrap; text: "本屏固定为峰值对焦预览。选区与叠加内容不传入电脑，也不写入 RAW。"; color: "#c2ccda"; font.pixelSize: 15 }
+            Text { width: parent.width; wrapMode: Text.Wrap; text: s.streamMessage; color: s.streamState === "error" ? "#b12924" : "#151a22"; font.pixelSize: 17 }
+            Text { text: s.transport.toUpperCase()+" · RAW"+s.bits+" · "+Number(s.fps).toFixed(1)+" fps"; color: "#414e60"; font.pixelSize: 15 }
+            Text { text: "已传输  "+bytes(s.streamBytes)+" · "+s.streamFrames+" 帧"; color: "#151a22"; font.pixelSize: 15 }
+            Text { width: parent.width; wrapMode: Text.Wrap; text: "本屏固定为峰值对焦预览。选区与叠加内容不传入电脑，也不写入 RAW。"; color: "#414e60"; font.pixelSize: 15 }
             TouchButton { visible: !s.streamBusy; width: parent.width; text: "重新等待电脑"; onClicked: backend.retryStream() }
             TouchButton { width: parent.width; text: "返回独立测量"; onClicked: backend.mode("local") }
         }
@@ -195,10 +210,10 @@ ApplicationWindow {
         id: settingsPanel
         Panel {
             title: "相机与设备"; subtitle: "当前协商格式"; onClosed: backend.tool("preview")
-            Text { text: s.width+" × "+s.height+" · RAW"+s.bits; color: "#f4f7fc"; font.pixelSize: 18 }
-            Text { text: "实际采集  "+Number(s.fps).toFixed(3)+" fps"; color: "#f4f7fc"; font.pixelSize: 16 }
-            Text { text: "Qt "+s.qtVersion+" · "+s.transport.toUpperCase(); color: "#c2ccda"; font.pixelSize: 15 }
-            Text { width: parent.width; wrapMode: Text.Wrap; text: "格式与传感器帧率由启动配置确定。RAW10 使用 16 位低对齐容器，预览叠加不会改变原始数据。"; color: "#c2ccda"; font.pixelSize: 15 }
+            Text { text: s.width+" × "+s.height+" · RAW"+s.bits; color: "#151a22"; font.pixelSize: 18 }
+            Text { text: "实际采集  "+Number(s.fps).toFixed(3)+" fps"; color: "#151a22"; font.pixelSize: 16 }
+            Text { text: "Qt "+s.qtVersion+" · "+s.transport.toUpperCase(); color: "#414e60"; font.pixelSize: 15 }
+            Text { width: parent.width; wrapMode: Text.Wrap; text: "格式与传感器帧率由启动配置确定。RAW10 使用 16 位低对齐容器，预览叠加不会改变原始数据。"; color: "#414e60"; font.pixelSize: 15 }
             TouchButton { width: parent.width; text: "完成"; primary: true; onClicked: backend.tool("preview") }
         }
     }
@@ -206,45 +221,45 @@ ApplicationWindow {
         id: offlinePanel
         Panel {
             title: s.tool === "offline" ? (s.offlineBusy?"正在离线分析":"离线分析结果") : "RAW 回放"; subtitle: s.fileName; onClosed: backend.tool("files")
-            Text { width: parent.width; text: s.message; wrapMode: Text.Wrap; color: "#c2ccda"; font.pixelSize: 15 }
+            Text { width: parent.width; text: s.message; wrapMode: Text.Wrap; color: "#414e60"; font.pixelSize: 15 }
             TouchButton { width: parent.width; text: s.tool === "offline" ? "返回 RAW 回放" : "在当前帧选择对象"; enabled: !s.offlineBusy && !s.playing && (s.tool === "offline" || s.replayReady); onClicked: s.tool === "offline" ? backend.seek(s.position) : backend.tool("select") }
             TouchButton { width: parent.width; text: "分析频段 · "+s.low+"–"+s.high+" Hz"; enabled: !s.offlineBusy; onClicked: frequencyPanel = true }
             TouchButton { width: parent.width; primary: true; text: s.offlineBusy?"取消离线分析":"开始离线分析"; enabled: s.edgeReady || s.offlineBusy; onClicked: s.offlineBusy ? backend.cancelAnalysis() : backend.analyze() }
-            Text { width: parent.width; visible: s.offlineOutput.length > 0; text: "结果已保存为 VRV；原始 RAW 保留"; wrapMode: Text.Wrap; color: "#a8e8c4"; font.pixelSize: 14 }
+            Text { width: parent.width; visible: s.offlineOutput.length > 0; text: "结果已保存为 VRV；原始 RAW 保留"; wrapMode: Text.Wrap; color: "#13623a"; font.pixelSize: 14 }
         }
     }
     Rectangle {
         x: 18; anchors.bottom: dock.top; anchors.bottomMargin: 18; width: 326
-        height: measureColumn.height+28; radius: 16; color: "#181d24"
+        height: measureColumn.height+28; radius: 16; color: "#f7f8fa"
         visible: (s.tool === "magnify" || s.tool === "offline") && (showSpectrum || showInset)
         Column { id: measureColumn; x: 14; y: 14; width: parent.width-28; spacing: 6
-            Text { visible: showSpectrum; text: s.spectrumReady ? "主峰  "+Number(s.peak).toFixed(2)+" Hz" : (s.tool === "offline" && !s.offlineBusy ? "样本不足  " : "频谱采集中  ")+s.samples+" / 256"; color: "#f4f7fc"; font.pixelSize: 18 }
+            Text { visible: showSpectrum; text: s.spectrumReady ? "主峰  "+Number(s.peak).toFixed(2)+" Hz" : (s.tool === "offline" && !s.offlineBusy ? "样本不足  " : "频谱采集中  ")+s.samples+" / 256"; color: "#151a22"; font.pixelSize: 18 }
             FrameView { visible: showSpectrum; width: parent.width; height: 110; channel: 2; controller: backend }
-            Text { visible: showInset; text: "局部放大 · 相位增益 "+s.alpha; color: "#c2ccda"; font.pixelSize: 14 }
+            Text { visible: showInset; text: "局部放大 · 相位增益 "+s.alpha; color: "#414e60"; font.pixelSize: 14 }
             FrameView { visible: showInset; width: parent.width; height: 86; channel: 1; controller: backend }
         }
     }
     Rectangle {
-        id: filesPanel; x: 18; y: 86; width: parent.width-36; height: 398; radius: 18; color: "#181d24"; visible: s.tool === "files"
-        Text { x: 20; y: 18; text: "录制文件"; color: "#f4f7fc"; font.pixelSize: 22 }
+        id: filesPanel; x: 18; y: 86; width: parent.width-36; height: 398; radius: 18; color: "#f7f8fa"; visible: s.tool === "files"
+        Text { x: 20; y: 18; text: "录制文件"; color: "#151a22"; font.pixelSize: 22 }
         TouchButton { anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 10; text: "返回预览"; onClicked: backend.tool("preview") }
         ListView { id: fileList; objectName: "fileList"; x: 20; y: 78; width: parent.width-40; height: parent.height-96; clip: true; model: backend.files; spacing: 8
-            delegate: Rectangle { width: fileList.width; height: 86; radius: 12; color: "#242c37"
+            delegate: Rectangle { width: fileList.width; height: 86; radius: 12; color: "#e9edf2"
                 Column { x: 14; anchors.verticalCenter: parent.verticalCenter; spacing: 7; width: parent.width-365
-                    Text { text: modelData.name; color: "#f4f7fc"; font.pixelSize: 16; width: parent.width; elide: Text.ElideMiddle }
-                    Text { text: clock(modelData.duration)+" · "+bytes(modelData.bytes)+(modelData.synthetic?" · 合成源":" · 原始帧"); color: "#c2ccda"; font.pixelSize: 14 }
+                    Text { text: modelData.name; color: "#151a22"; font.pixelSize: 16; width: parent.width; elide: Text.ElideMiddle }
+                    Text { text: clock(modelData.duration)+" · "+bytes(modelData.bytes)+(modelData.synthetic?" · 合成源":" · 原始帧"); color: "#414e60"; font.pixelSize: 14 }
                 }
                 Row { anchors.right: parent.right; anchors.rightMargin: 12; anchors.verticalCenter: parent.verticalCenter; spacing: 10
                     TouchButton { text: "回放 / 分析"; onClicked: backend.openFile(index) }
                     TouchButton { text: "传入电脑"; enabled: !s.streamBusy; onClicked: backend.transferFile(index) }
                 }
             }
-            Text { anchors.centerIn: parent; visible: fileList.count === 0; text: "尚无已完成的 RAW 录像"; color: "#c2ccda"; font.pixelSize: 18 }
+            Text { anchors.centerIn: parent; visible: fileList.count === 0; text: "尚无已完成的 RAW 录像"; color: "#414e60"; font.pixelSize: 18 }
         }
     }
     Rectangle {
         id: dock; anchors.bottom: parent.bottom; anchors.bottomMargin: 18; anchors.horizontalCenter: parent.horizontalCenter
-        height: 82; width: 596; radius: 20; color: "#181d24"
+        height: 82; width: 596; radius: 20; color: "#f7f8fa"
         visible: s.mode === "local" && s.tool !== "replay" && s.tool !== "offline"
         Row { anchors.centerIn: parent; spacing: 6
             Repeater { model: [{name:"对焦辅助",tool:"focus"},{name:"对象选择",tool:"select"},{name:"实时放大",tool:"magnify"},{name:"RAW 录制",tool:"record"},{name:"录制文件",tool:"files"}]
@@ -253,22 +268,22 @@ ApplicationWindow {
         }
     }
     Rectangle {
-        anchors.bottom: parent.bottom; anchors.bottomMargin: 18; x: 18; width: parent.width-36; height: 66; radius: 15; color: "#181d24"; visible: s.tool === "replay" || s.tool === "offline"
+        anchors.bottom: parent.bottom; anchors.bottomMargin: 18; x: 18; width: parent.width-36; height: 66; radius: 15; color: "#f7f8fa"; visible: s.tool === "replay" || s.tool === "offline"
         RowLayout { anchors.fill: parent; anchors.margins: 8; spacing: 12
             TouchButton { text: s.playing?"暂停":"播放"; enabled: !s.offlineBusy; onClicked: backend.playPause() }
-            Text { text: clock(s.position); color: "#f4f7fc"; font.pixelSize: 16 }
+            Text { text: clock(s.position); color: "#151a22"; font.pixelSize: 16 }
             Slider { Layout.fillWidth: true; from: 0; to: s.fileDuration; value: s.position; enabled: !s.offlineBusy; onPressedChanged: if(!pressed) backend.seek(value) }
-            Text { text: clock(s.fileDuration); color: "#c2ccda"; font.pixelSize: 16 }
+            Text { text: clock(s.fileDuration); color: "#414e60"; font.pixelSize: 16 }
             TouchButton { text: "返回文件"; enabled: !s.offlineBusy; onClicked: backend.tool("files") }
         }
     }
     Rectangle {
-        x: 18; y: 440; height: 46; width: recordingLabel.width+28; radius: 10; color: "#172840"; visible: recording && s.mode === "local"
-        Text { id: recordingLabel; anchors.centerIn: parent; text: (s.recordState === "recording"?"● RAW 录制中  ":"采集已停止 · 写入中  ")+clock(s.recordSeconds); color: "#f4f7fc"; font.pixelSize: 15 }
+        x: 18; y: 440; height: 46; width: recordingLabel.width+28; radius: 10; color: "#e9edf2"; visible: recording && s.mode === "local"
+        Text { id: recordingLabel; anchors.centerIn: parent; text: (s.recordState === "recording"?"● RAW 录制中  ":"采集已停止 · 写入中  ")+clock(s.recordSeconds); color: "#151a22"; font.pixelSize: 15 }
     }
     Rectangle {
-        id: transferBanner; x: 18; y: 192; width: 480; height: 64; radius: 12; color: "#172840"; visible: s.mode === "local" && (s.streamBusy || s.streamState === "complete" || s.streamState === "error")
-        Text { x: 12; y: 10; width: parent.width-100; text: s.streamMessage; wrapMode: Text.Wrap; color: "#f4f7fc"; font.pixelSize: 15 }
+        id: transferBanner; objectName: "transferBanner"; x: 18; y: 192; width: 480; height: 64; radius: 12; color: "#e9edf2"; visible: s.mode === "local" && s.streamFile && (s.streamBusy || s.streamState === "complete" || s.streamState === "error")
+        Text { x: 12; y: 10; width: parent.width-100; text: s.streamMessage; wrapMode: Text.Wrap; color: "#151a22"; font.pixelSize: 15 }
         TouchButton { anchors.right: parent.right; anchors.rightMargin: 8; anchors.verticalCenter: parent.verticalCenter; visible: s.streamBusy; text: "停止"; onClicked: backend.stopStream() }
     }
     Rectangle {

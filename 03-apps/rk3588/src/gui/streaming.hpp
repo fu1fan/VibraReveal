@@ -12,7 +12,7 @@ struct StreamOptions {
 struct StreamStatus {
     std::string state = "idle", message;
     uint64_t frames = 0, bytes = 0;
-    bool busy = false, accepting = false;
+    bool busy = false, accepting = false, fileTransfer = false;
 };
 class Streaming {
   public:

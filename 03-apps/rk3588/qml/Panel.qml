@@ -16,11 +16,11 @@ Pane {
     contentItem: Column { spacing: 12 }
     background: Rectangle {
         radius: 18
-        color: "#181d24"
+        color: "#f7f8fa"
         Column {
             x: 18; y: 14; width: parent.width - 76; spacing: 3
-            Text { text: panel.subtitle; color: "#c2ccda"; font.pixelSize: 13; width: parent.width; elide: Text.ElideRight }
-            Text { text: panel.title; color: "#f4f7fc"; font.pixelSize: 21; font.weight: Font.DemiBold }
+            Text { text: panel.subtitle; color: "#414e60"; font.pixelSize: 13; width: parent.width; elide: Text.ElideRight }
+            Text { text: panel.title; color: "#151a22"; font.pixelSize: 21; font.weight: Font.DemiBold }
         }
         TouchButton { anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 8; width: 50; text: "×"; visible: panel.closable; Accessible.name: "关闭面板"; onClicked: panel.closed() }
     }

@@ -55,7 +55,9 @@ class Controller : public QObject {
     QString lastSaved_;
     QString currentFile_;
     double fileFps_ = 0, fileDuration_ = 0, position_ = 0, playOrigin_ = 0;
-    QElapsedTimer playback_, writeClock_;
+    QElapsedTimer playback_, writeClock_, previewClock_;
+    int previewFrames_ = 0;
+    double previewFps_ = 0;
     double writeRate_ = 0;
     void poll();
     void handle(const std::function<void()> &);

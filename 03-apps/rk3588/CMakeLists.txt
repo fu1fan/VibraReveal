@@ -141,7 +141,7 @@ if(VR_BUILD_TOUCH_UI)
     endforeach()
     set(CMAKE_AUTOMOC ON)
     set(CMAKE_AUTORCC ON)
-    add_library(vr-touch-ui src/gui/engine.cpp src/gui/controller.cpp src/gui/frame_view.cpp src/camera.cpp)
+    add_library(vr-touch-ui src/gui/engine.cpp src/gui/controller.cpp src/gui/frame_view.cpp src/gui/focus_peaking.cpp src/camera.cpp)
     target_include_directories(vr-touch-ui PUBLIC src/gui)
     target_link_libraries(vr-touch-ui PUBLIC vr-touch-core vr-vulkan-motion
         Qt5::Core Qt5::Gui Qt5::Qml Qt5::Quick Qt5::QuickControls2)
