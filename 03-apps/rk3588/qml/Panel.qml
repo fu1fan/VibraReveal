@@ -22,6 +22,6 @@ Pane {
             Text { text: panel.subtitle; color: "#414e60"; font.pixelSize: 13; width: parent.width; elide: Text.ElideRight }
             Text { text: panel.title; color: "#151a22"; font.pixelSize: 21; font.weight: Font.DemiBold }
         }
-        TouchButton { anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 8; width: 50; text: "×"; visible: panel.closable; Accessible.name: "关闭面板"; onClicked: panel.closed() }
+        TouchButton { anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 8; width: 50; glyph: "x"; iconOnly: true; text: "关闭面板"; visible: panel.closable; Accessible.name: "关闭面板"; onClicked: panel.closed() }
     }
 }
