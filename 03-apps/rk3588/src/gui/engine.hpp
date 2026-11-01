@@ -14,12 +14,15 @@ struct EngineOptions {
     uint32_t width = 1280, height = 800, bits = 10;
     double demoFps = 120;
     std::string device = "/dev/video11", sensor = "/dev/v4l-subdev2", shader, encoder, decoder, storage;
+    std::string rknnRuntime = "librknnrt.so";
     StreamOptions stream;
 };
 struct ViewState {
     QString tool = "preview", message, error, selectionMethod;
     Format format, replayFormat;
     bool ready = false, objectReady = false, edgeReady = false, offlineBusy = false, replayReady = false;
+    bool useNpu = false, selectionBusy = false;
+    double selectionMs = 0;
     QRect roi;
     double focus = .04, alpha = 20, low = 8, high = 25, processingFps = 60, displacement = 0, peak = 0;
     int selectionStep = 1, samples = 0;
@@ -38,6 +41,8 @@ class Engine {
     ViewState snapshot() const;
     void setTool(const QString &);
     void selectObject(const QRectF &, bool point = false);
+    void setSelectionNpu(bool);
+    bool hasNpuModels() const;
     void chooseEdge(const QPointF &);
     void confirmObject();
     void finishSelection();

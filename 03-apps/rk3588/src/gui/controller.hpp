@@ -20,6 +20,7 @@ class Controller : public QObject {
     Q_INVOKABLE void view(bool native);
     Q_INVOKABLE void mode(const QString &);
     Q_INVOKABLE void selectObject(qreal x, qreal y, qreal w, qreal h, bool point);
+    Q_INVOKABLE void selectionNpu(bool enabled);
     Q_INVOKABLE void selectEdge(qreal x, qreal y);
     Q_INVOKABLE void confirmObject();
     Q_INVOKABLE void confirmEdge();

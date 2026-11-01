@@ -3,7 +3,7 @@
 `vr-touch` 将现有采集、Vulkan、MobileSAM、离线处理和 VRI1 传输接入一个 Qt/QML 应用。
 目标屏幕为 1024×600；主图为相机预览，工具以不透明高对比浮层呈现，主要触控目标至少 48 px。
 正式依赖为 **Qt 5.15.10**。CMake 同时检查 Qt 库和可运行的宿主 moc/rcc，启动时再次检查运行库版本。
-2026-11-01 已完成 CNB ARM 构建、板端 Qt/Wayland/Vulkan 与真实相机/USB 冒烟，详见 [板端记录](../../08-docs/validation/rk3588-touch-2026-11-01.md)。人工触摸、NPU 模型和长时间压力验收仍独立列项。
+2026-11-01 已完成 CNB ARM 构建、板端 Qt/Wayland/Vulkan、真实相机/USB 冒烟及主程序 NPU 对象选择验证，详见 [板端记录](../../08-docs/validation/rk3588-touch-2026-11-01.md)。人工触摸和长时间压力验收仍独立列项。
 
 ## 构建
 
@@ -22,6 +22,7 @@ sh 10-env/build-touch-app.sh /tmp/vr-touch-build \
 
 构建产物包括 `vr-touch`、`motion.comp.spv`、启动脚本和 `touch-build-info.json`。
 构建脚本检查 ARM64 产物并记录 SDK digest、源码版本/脏状态和二进制哈希，不部署系统镜像。
+`build-touch-app.sh` 默认启用 RKNN 后端；不需要 NPU 的构建可显式传入 `-DVR_BUILD_RKNN_SELECTION=OFF`。
 
 ## 运行
 
@@ -40,6 +41,16 @@ sh 10-env/build-touch-app.sh /tmp/vr-touch-build \
 可显式设置 `QT_QPA_PLATFORM` 覆盖。实际开发板已运行 Weston 并提供 Wayland 插件，
 其他配置仍需确认对应插件安装。保留开发板原有 Qt/Mali 插件配置，不能混入宿主插件。
 相机采集始终使用一个 owner；进入直通模式不会另起 `vr-stream` 争抢 V4L2。
+
+### NPU 物品识别
+
+采用 MobileSAM 的点/框提示分割：轻触物品或框住物品，识别该对象的区域，再确认并选择其测量边缘；不输出类别名称，也不做持续目标跟踪。模型在工作线程延迟初始化，重复修改同一参考帧的提示会复用编码结果。
+
+生产程序自动发现 `/usr/local/share/vibrareveal-touch/models/mobilesam/` 下的 `mobilesam_encoder.rknn` 与 `mobilesam_decoder.rknn`。可用 `--models-dir` 指定其他目录，或显式提供 `--encoder` 和 `--decoder`。`--demo` 默认不自动启用硬件模型。
+
+应用优先从 `/usr/local/lib/vibrareveal-touch/librknnrt.so` 加载配套运行库，也可通过 `--rknn-runtime` 指定；未安装应用专用运行库时按系统库搜索规则加载。不会修改全局 `LD_LIBRARY_PATH` 或覆盖系统 `librknnrt.so`。安装模型和运行库前须对照 `models/validated-manifest.json` 校验 SHA-256；本次已安装的模型为 Toolkit 2.5.0、RK3588 FP16、448 px encoder、8 个提示槽。
+
+进入“对象选择”后，已配置模型时默认选中“NPU 识别”；识别中显示文字反馈，完成后叠加半透明对象区域与清晰边缘。可显式切换“手动框选”，模型缺失或推理失败不会冒充识别成功。关闭面板或切换方式会丢弃未完成请求的过期结果；设置页显示模型是否已配置，实际可运行性以首次识别结果为准。
 
 `--manage-usb` 在进入电脑直通/发送文件时管理本应用的 `ffs.vri`：获取既有 USB 会话锁、
 建立 FunctionFS、提交描述符、绑定 gadget；结束后移除自有功能并恢复原绑定。
@@ -118,6 +129,6 @@ QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
 
 合成源必须显式使用 `--demo`，界面持续标明合成相机，录像也设置合成时间标志。不会在真实相机失败时偷偷回退演示。
 
-已通过板端 Qt 5.15.10/Controls2 ABI、Wayland 显示与 Vulkan 并发、真实相机 RAW 录制回放及 USB 直通。仍待人工触摸、长时 120 fps、4 GiB 实机压力/磁盘满、反复 USB 断连、NPU 模型、温升和真实位移标定验收。
+已通过板端 Qt 5.15.10/Controls2 ABI、Wayland 显示与 Vulkan 并发、真实相机 RAW 录制回放、USB 直通及 MobileSAM 主程序点选/框选/选边。仍待人工触摸、长时 120 fps、4 GiB 实机压力/磁盘满、反复 USB 断连、复杂场景识别质量、温升和真实位移标定验收。
 
 原板 `/userdata` 仅约 1 GiB，示例使用根分区的 `/root/vibrareveal/recordings`；请按实际剩余容量选择 `--storage`。应用启动前停止旧采集服务，退出后可执行 `/etc/init.d/S91vrstream start` 恢复。

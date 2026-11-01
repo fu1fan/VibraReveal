@@ -1,0 +1,1 @@
+PASS: cached box/point prompts, metadata, bounds/capacity, invalid-image cache reset; encoder_ms=125.532, decoder_ms=41.9869, slots=8

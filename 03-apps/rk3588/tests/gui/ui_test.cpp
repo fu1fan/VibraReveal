@@ -4,6 +4,7 @@
 #include "vulkan_motion.hpp"
 #include "backend_io.hpp"
 #include <QDir>
+#include <QFile>
 #include <QFileInfo>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
@@ -18,6 +19,142 @@ using namespace vr::touch;
 class UiTest : public QObject {
     Q_OBJECT
   private slots:
+    void hardwareNpu() {
+        if (!qEnvironmentVariableIsSet("VR_TEST_NPU") || !qEnvironmentVariableIsSet("VR_TEST_CAMERA"))
+            QSKIP("Requires exclusive camera access and deployed RKNN models");
+        EngineOptions options;
+        options.storage = qEnvironmentVariable("VR_TEST_STORAGE").toStdString();
+        options.encoder = qEnvironmentVariable("VR_TEST_ENCODER").toStdString();
+        options.decoder = qEnvironmentVariable("VR_TEST_DECODER").toStdString();
+        options.rknnRuntime = qEnvironmentVariable("VR_TEST_RKNN_RUNTIME").toStdString();
+        options.shader = qEnvironmentVariable("VR_TEST_SHADER_PATH", VR_TEST_SHADER).toStdString();
+        Controller controller(options);
+        QQmlApplicationEngine engine;
+        engine.rootContext()->setContextProperty("backend", &controller);
+        engine.load(QUrl("qrc:/qml/Main.qml"));
+        QVERIFY(!engine.rootObjects().isEmpty());
+        auto window=qobject_cast<QQuickWindow *>(engine.rootObjects().first());
+        QVERIFY(window);
+        window->showFullScreen();
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.image(0).isNull(), 10000);
+        controller.tool("select");
+        controller.selectObject(320,200,640,400,false);
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["selectionBusy"].toBool(), 15000);
+        QVERIFY2(controller.state()["objectReady"].toBool(), qPrintable(controller.state()["error"].toString()));
+        QCOMPARE(controller.state()["selectionMethod"].toString(), QString("NPU 物品识别"));
+        qInfo() << "BOARD_CAMERA_NPU" << controller.state()["selectionMs"] << "ms"
+                << controller.state()["roi"] << controller.engine().snapshot().referenceSequence;
+        const auto captures=qEnvironmentVariable("VR_UI_CAPTURE_DIR");
+        if (!captures.isEmpty()) {
+            QDir().mkpath(captures);
+            auto grab=window->contentItem()->grabToImage();
+            QVERIFY(grab);
+            QSignalSpy ready(grab.data(), &QQuickItemGrabResult::ready);
+            QVERIFY(ready.wait(5000) || !grab->image().isNull());
+            QVERIFY(grab->image().save(captures+"/npu-camera.png"));
+        }
+    }
+    void npuFailureRecovery() {
+#ifndef VR_TOUCH_RKNN
+        QSKIP("RKNN backend disabled");
+#else
+        QTemporaryDir dir;
+        EngineOptions options;
+        options.demo = true; options.width = 320; options.height = 200; options.bits = 8;
+        options.demoFps = 30; options.storage = dir.path().toStdString();
+        options.shader = qEnvironmentVariable("VR_TEST_SHADER_PATH", VR_TEST_SHADER).toStdString();
+        options.encoder = "/missing/encoder.rknn"; options.decoder = "/missing/decoder.rknn";
+        options.rknnRuntime = "/missing/runtime.so";
+        Controller controller(options);
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.image(0).isNull(), 5000);
+        controller.tool("select");
+        controller.selectObject(160, 100, 0, 0, true);
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["selectionBusy"].toBool(), 5000);
+        QVERIFY(controller.state()["error"].toString().contains("NPU"));
+        QVERIFY(!controller.state()["objectReady"].toBool());
+        QVERIFY(controller.state()["useNpu"].toBool()); // no silent fallback
+        controller.selectionNpu(false);
+        controller.selectObject(100, 85, 130, 30, false);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["objectReady"].toBool(), 10000);
+        QCOMPARE(controller.state()["selectionMethod"].toString(), QString("矩形区域"));
+        QVERIFY(controller.state()["error"].toString().isEmpty());
+        controller.selectionNpu(true);
+        controller.selectObject(160, 100, 0, 0, true);
+        controller.tool("preview");
+        QTest::qWait(200);
+        QVERIFY(!controller.state()["selectionBusy"].toBool());
+        QVERIFY(!controller.state()["objectReady"].toBool());
+        QVERIFY(controller.overlay().isNull());
+#endif
+    }
+    void npuWorkflow() {
+        if (!qEnvironmentVariableIsSet("VR_TEST_NPU"))
+            QSKIP("Requires RK3588 NPU and deployed model pair");
+        QTemporaryDir dir;
+        QVERIFY(QFile::copy(qEnvironmentVariable("VR_TEST_NPU_FIXTURE"), dir.path()+"/object.vri"));
+        EngineOptions options;
+        options.demo = true; options.width = 320; options.height = 200; options.bits = 8;
+        options.demoFps = 30; options.storage = dir.path().toStdString();
+        options.encoder = qEnvironmentVariable("VR_TEST_ENCODER").toStdString();
+        options.decoder = qEnvironmentVariable("VR_TEST_DECODER").toStdString();
+        options.rknnRuntime = qEnvironmentVariable("VR_TEST_RKNN_RUNTIME").toStdString();
+        options.shader = qEnvironmentVariable("VR_TEST_SHADER_PATH", VR_TEST_SHADER).toStdString();
+        Controller controller(options);
+        QQmlApplicationEngine engine;
+        engine.rootContext()->setContextProperty("backend", &controller);
+        engine.load(QUrl("qrc:/qml/Main.qml"));
+        QVERIFY(!engine.rootObjects().isEmpty());
+        auto window = qobject_cast<QQuickWindow *>(engine.rootObjects().first());
+        QVERIFY(window);
+        window->showFullScreen();
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.image(0).isNull(), 5000);
+        QVERIFY(controller.state()["hasSam"].toBool());
+        controller.refreshFiles();
+        controller.openFile(0);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["replayReady"].toBool(), 5000);
+        controller.tool("select");
+        auto camera = window->findChild<FrameView *>("cameraView");
+        QVERIFY(camera);
+        const auto tap = camera->mapToScene(camera->toView(370, 210)).toPoint();
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tap);
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["selectionBusy"].toBool(), 15000);
+        QVERIFY2(controller.state()["objectReady"].toBool(), qPrintable(controller.state()["error"].toString()));
+        QCOMPARE(controller.state()["selectionMethod"].toString(), QString("NPU 物品识别"));
+        auto overlay = controller.overlay();
+        int filled = 0;
+        QPoint edge(-1,-1);
+        for (int y=1; y<overlay.height()-1; ++y)
+            for (int x=1; x<overlay.width()-1; ++x) {
+                const auto pixel = overlay.pixel(x,y);
+                if (qAlpha(pixel)==45) ++filled;
+                if (pixel==qRgb(128,205,255) && edge.x()<0) edge=QPoint(x,y);
+            }
+        QVERIFY(filled>100);
+        QVERIFY(edge.x()>=0);
+        qInfo() << "BOARD_NPU_POINT" << controller.state()["selectionMs"] << "ms" << filled << "mask pixels";
+        const auto captures=qEnvironmentVariable("VR_UI_CAPTURE_DIR");
+        if (!captures.isEmpty()) {
+            QDir().mkpath(captures);
+            auto grab=window->contentItem()->grabToImage();
+            QVERIFY(grab);
+            QSignalSpy ready(grab.data(), &QQuickItemGrabResult::ready);
+            QVERIFY(ready.wait(5000) || !grab->image().isNull());
+            QVERIFY(grab->image().save(captures+"/npu-object.png"));
+        }
+        controller.selectObject(190,70,270,210,false);
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["selectionBusy"].toBool(), 10000);
+        QVERIFY2(controller.state()["objectReady"].toBool(), qPrintable(controller.state()["error"].toString()));
+        qInfo() << "BOARD_NPU_CACHED_BOX" << controller.state()["selectionMs"] << "ms";
+        controller.confirmObject();
+        controller.selectEdge(370,210);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["edgeReady"].toBool(), 5000);
+        controller.confirmEdge();
+        QCOMPARE(controller.state()["tool"].toString(), QString("replay"));
+        controller.tool("select");
+        controller.selectionNpu(false);
+        QVERIFY(!controller.state()["useNpu"].toBool());
+        QVERIFY(!controller.state()["objectReady"].toBool());
+    }
     void focusPeakingParity() {
         vr::MotionConfig config;
         config.width = 128; config.height = 96;

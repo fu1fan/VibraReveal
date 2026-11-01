@@ -24,8 +24,8 @@ struct Runtime {
         p=reinterpret_cast<T>(dlsym(handle,name));
         if(!p) throw MotionError("RKNN_UNAVAILABLE",std::string("Missing symbol ")+name);
     }
-    Runtime() {
-        handle=dlopen("librknnrt.so",RTLD_NOW|RTLD_LOCAL);
+    explicit Runtime(const std::string& path) {
+        handle=dlopen(path.c_str(),RTLD_NOW|RTLD_LOCAL);
         if(!handle) throw MotionError("RKNN_UNAVAILABLE","Cannot load librknnrt.so");
         try {
             symbol(init,"rknn_init"); symbol(destroy,"rknn_destroy"); symbol(query,"rknn_query");
@@ -89,7 +89,7 @@ struct MobileSam::Impl {
     uint32_t resizedW=0,resizedH=0,slots=0;
     bool ready=false;
     std::vector<float> embedding;
-    Impl(const std::string& e,const std::string& d):encoder(rt,e),decoder(rt,d) {
+    Impl(const std::string& e,const std::string& d,const std::string& runtime):rt(runtime),encoder(rt,e),decoder(rt,d) {
         if(encoder.inputs.size()!=1 || encoder.outputs.size()!=1 || decoder.inputs.size()!=5 || decoder.outputs.size()!=2)
             throw MotionError("MODEL_ERROR","Require Rockchip MobileSAM encoder and five-input decoder");
         auto& ei=encoder.inputs[0]; auto& eo=encoder.outputs[0]; auto& di=decoder.inputs[0]; auto& masks=decoder.outputs[1];
@@ -105,7 +105,7 @@ struct MobileSam::Impl {
             throw MotionError("MODEL_ERROR","Unsupported tensor layout; use documented 448/112 MobileSAM export");
     }
 };
-MobileSam::MobileSam(const std::string& e,const std::string& d):impl(new Impl(e,d)) {}
+MobileSam::MobileSam(const std::string& e,const std::string& d,const std::string& runtime):impl(new Impl(e,d,runtime)) {}
 MobileSam::~MobileSam()=default;
 uint32_t MobileSam::promptCapacity() const { return impl->slots; }
 void MobileSam::setImage(const Frame& f) {

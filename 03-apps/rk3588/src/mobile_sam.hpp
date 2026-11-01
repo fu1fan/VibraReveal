@@ -13,7 +13,8 @@ struct SelectionResult {
 // Coordinates and returned masks use the original frame resolution.
 class MobileSam {
 public:
-    MobileSam(const std::string& encoder,const std::string& decoder);
+    MobileSam(const std::string& encoder,const std::string& decoder,
+              const std::string& runtime = "librknnrt.so");
     ~MobileSam();
     MobileSam(const MobileSam&)=delete;
     MobileSam& operator=(const MobileSam&)=delete;

@@ -106,7 +106,16 @@ QVariantList spectrumVariant(const SpectrumResult &r) {
     return list;
 }
 } // namespace
-Engine::Engine(EngineOptions options) : options_(std::move(options)) {}
+Engine::Engine(EngineOptions options) : options_(std::move(options)) {
+    state_.useNpu = hasNpuModels();
+}
+bool Engine::hasNpuModels() const {
+#ifdef VR_TOUCH_RKNN
+    return !options_.encoder.empty() && !options_.decoder.empty();
+#else
+    return false;
+#endif
+}
 Engine::~Engine() { shutdown(); }
 void Engine::start() {
     if (capture_.joinable())
@@ -170,6 +179,7 @@ void Engine::setTool(const QString &tool) {
         state_.roi = {};
     }
     state_.tool = tool;
+    state_.selectionBusy = false;
     state_.error.clear();
     state_.inset = {};
     state_.spectrum.clear();
@@ -183,16 +193,38 @@ void Engine::setTool(const QString &tool) {
 }
 void Engine::selectObject(const QRectF &r, bool point) {
     std::lock_guard<std::mutex> l(mutex_);
-    if (state_.tool != "select" || state_.selectionStep != 1 || !reference_)
+    if (state_.tool != "select" || state_.selectionStep != 1 || !reference_ || state_.selectionBusy)
         return;
     command_ = {};
     command_.kind = Command::Object;
     command_.rect = r;
     command_.point = point;
     ++generation_;
-    state_.message = "正在提取对象边缘…";
+    state_.message = state_.useNpu ? "NPU 正在识别物品…" : "正在提取对象边缘…";
+    state_.selectionBusy = true;
+    state_.selectionMs = 0;
+    state_.error.clear();
+    state_.overlay = {};
+    ++state_.displayRevision;
     state_.objectReady = state_.edgeReady = false;
     cv_.notify_all();
+}
+void Engine::setSelectionNpu(bool enabled) {
+    std::lock_guard<std::mutex> l(mutex_);
+    if (state_.tool != "select" || state_.selectionStep != 1)
+        return;
+    if (enabled && !hasNpuModels())
+        throw std::runtime_error("未配置 NPU 模型，请使用手动框选");
+    state_.useNpu = enabled;
+    state_.selectionBusy = false;
+    state_.objectReady = state_.edgeReady = false;
+    state_.overlay = {};
+    state_.roi = {};
+    state_.error.clear();
+    state_.message = enabled ? "轻触物品或拖动框选，自动提取对象轮廓" : "拖动框选测量区域";
+    command_ = {};
+    ++generation_;
+    ++state_.displayRevision;
 }
 void Engine::chooseEdge(const QPointF &point) {
     std::lock_guard<std::mutex> l(mutex_);
@@ -448,15 +480,16 @@ void Engine::computeLoop() {
             if (command.kind == Command::Object) {
                 if (!reference)
                     continue;
+                const auto selectionStart = Clock::now();
                 selectedFrame = reference;
                 objectMask.assign(size_t(reference->width) * reference->height, 0);
                 QString method = "矩形区域";
                 QRect rect = command.rect.normalized().toAlignedRect().intersected(
                     QRect(0, 0, reference->width, reference->height));
 #ifdef VR_TOUCH_RKNN
-                if (!options_.encoder.empty() && !options_.decoder.empty()) {
+                if (config.useNpu) {
                     if (!sam)
-                        sam = std::make_unique<MobileSam>(options_.encoder, options_.decoder);
+                        sam = std::make_unique<MobileSam>(options_.encoder, options_.decoder, options_.rknnRuntime);
                     if (embeddedFrame != reference) {
                         sam->setImage(*reference);
                         embeddedFrame = reference;
@@ -468,7 +501,7 @@ void Engine::computeLoop() {
                         prompts = {{float(rect.left()), float(rect.top()), 2},
                                    {float(rect.right()), float(rect.bottom()), 3}};
                     objectMask = sam->select(prompts).mask;
-                    method = "NPU 对象掩膜";
+                    method = "NPU 物品识别";
                 } else
 #endif
                 {
@@ -503,11 +536,23 @@ void Engine::computeLoop() {
                     throw std::runtime_error("选区内没有足够的清晰边缘，请重新选择");
                 QImage overlay =
                     overlayImage(reference->width, reference->height, edges, qRgb(128, 205, 255));
+                if (config.useNpu) {
+                    // A translucent fill makes the actual segmented object
+                    // visible; this is not just the rectangular bounding box.
+                    for (uint32_t y = 0; y < reference->height; ++y) {
+                        auto pixels = reinterpret_cast<QRgb *>(overlay.scanLine(y));
+                        for (uint32_t x = 0; x < reference->width; ++x)
+                            if (objectMask[size_t(y)*reference->width+x] && !pixels[x])
+                                pixels[x] = qPremultiply(qRgba(80, 170, 255, 45));
+                    }
+                }
                 std::lock_guard<std::mutex> l(mutex_);
                 if (generation != generation_)
                     continue;
                 state_.roi = QRect(left, top, right - left + 1, bottom - top + 1);
                 state_.objectReady = true;
+                state_.selectionBusy = false;
+                state_.selectionMs = std::chrono::duration<double, std::milli>(Clock::now()-selectionStart).count();
                 state_.edgeReady = false;
                 state_.selectionMethod = method;
                 state_.overlay = overlay;
@@ -724,10 +769,20 @@ void Engine::computeLoop() {
         } catch (const std::exception &e) {
             analyzer.reset();
             motion.reset();
+#ifdef VR_TOUCH_RKNN
+            if (command.kind == Command::Object && config.useNpu) {
+                sam.reset();
+                embeddedFrame.reset();
+            }
+#endif
             std::lock_guard<std::mutex> l(mutex_);
             if (generation != generation_)
                 continue;
             state_.error = QString::fromUtf8(e.what());
+            if (command.kind == Command::Object && config.useNpu) {
+                state_.error = "NPU 识别失败，可重试或切换手动框选：" + state_.error;
+            }
+            state_.selectionBusy = false;
             state_.offlineBusy = false;
             if (state_.tool == "magnify") {
                 state_.tool = "preview";

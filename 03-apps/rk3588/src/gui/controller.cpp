@@ -121,6 +121,9 @@ void Controller::mode(const QString &mode) {
 void Controller::selectObject(qreal x, qreal y, qreal w, qreal h, bool point) {
     handle([&] { engine_.selectObject(QRectF(x, y, w, h), point); });
 }
+void Controller::selectionNpu(bool enabled) {
+    handle([&] { engine_.setSelectionNpu(enabled); });
+}
 void Controller::selectEdge(qreal x, qreal y) {
     handle([&] { engine_.chooseEdge(QPointF(x, y)); });
 }
@@ -372,6 +375,9 @@ void Controller::poll() {
               {"edgeReady", view_.edgeReady},
               {"step", view_.selectionStep},
               {"selectionMethod", view_.selectionMethod},
+              {"useNpu", view_.useNpu},
+              {"selectionBusy", view_.selectionBusy},
+              {"selectionMs", view_.selectionMs},
               {"samples", view_.samples},
               {"spectrumReady", view_.spectrumReady},
               {"peak", view_.peak},
@@ -397,11 +403,7 @@ void Controller::poll() {
               {"fileDuration", fileDuration_},
               {"position", position_},
               {"playing", playing_},
-#ifdef VR_TOUCH_RKNN
-              {"hasSam", !engine_.options().encoder.empty() && !engine_.options().decoder.empty()},
-#else
-              {"hasSam", false},
-#endif
+              {"hasSam", engine_.hasNpuModels()},
               {"qtVersion", qVersion()}};
     emit changed();
 }
