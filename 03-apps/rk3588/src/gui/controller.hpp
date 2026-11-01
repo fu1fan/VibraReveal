@@ -24,6 +24,9 @@ class Controller : public QObject {
     Q_INVOKABLE void selectEdge(qreal x, qreal y);
     Q_INVOKABLE void confirmObject();
     Q_INVOKABLE void confirmEdge();
+    Q_INVOKABLE void magnifyRegion();
+    Q_INVOKABLE void analysisRange(double seconds, bool fromCurrent = false);
+    Q_INVOKABLE void analyzeGlobal();
     Q_INVOKABLE void parameters(double alpha, double low, double high, double fps, double sensitivity);
     Q_INVOKABLE void meterExposure(qreal x,qreal y);
     Q_INVOKABLE void exposureCompensation(double ev);
@@ -60,6 +63,8 @@ class Controller : public QObject {
     QString lastSaved_;
     QString fileMessage_;
     QString currentFile_;
+    uint64_t analysisStart_ = 0;
+    double analysisSeconds_ = 0;
     double fileFps_ = 0, fileDuration_ = 0, position_ = 0, playOrigin_ = 0;
     QElapsedTimer playback_, writeClock_, previewClock_;
     int previewFrames_ = 0;

@@ -22,6 +22,8 @@ struct ViewState {
     Format format, replayFormat;
     bool ready = false, objectReady = false, edgeReady = false, offlineBusy = false, replayReady = false;
     bool useNpu = false, selectionBusy = false;
+    bool regionReady = false, areaMode = false, canChooseEdge = false;
+    uint64_t replayIndex = 0;
     double selectionMs = 0;
     bool exposureSupported = false, cameraBusy = false, cameraChangingFps = false, exposureAuto = false;
     double exposureMs = 0, exposureMinMs = 0, exposureMaxMs = 0, exposureEV = 0;
@@ -48,13 +50,14 @@ class Engine {
     bool hasNpuModels() const;
     void chooseEdge(const QPointF &);
     void confirmObject();
+    void confirmRegion();
     void finishSelection();
     void setParameters(double alpha, double low, double high, double fps, double focus);
     void meterExposure(const QPointF &);
     void exposureCompensation(double ev);
     void captureFps(double fps);
     void ensureCameraStable() const;
-    void startOffline(const std::string &archive);
+    void startOffline(const std::string &archive, uint64_t start = 0, double seconds = 0, bool global = false);
     void cancelOffline();
     void replay(const std::string &archive, uint64_t frameIndex);
     Recording recorder;
@@ -67,7 +70,7 @@ class Engine {
         QRectF rect;
         bool point = false;
         std::string path;
-        uint64_t index = 0;
+        uint64_t index = 0, count = 0;
     };
     struct CameraCommand {
         enum Kind { None, Meter, Compensation, Fps } kind = None;
@@ -89,8 +92,8 @@ class Engine {
     std::deque<std::shared_ptr<const Frame>> work_;
     std::thread capture_, compute_;
     std::atomic<bool> stopping_{false}, offlineCancel_{false};
-    void admitMotion(bool offline, double fps, double low, double high, double alpha,
-                     const std::string &archive = {});
+    uint64_t admitMotion(bool offline, double fps, double low, double high, double alpha,
+                     const std::string &archive = {}, uint64_t start = 0, double seconds = 0);
     void captureLoop();
     void computeLoop();
 };

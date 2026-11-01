@@ -22,6 +22,125 @@ using namespace vr::touch;
 class UiTest : public QObject {
     Q_OBJECT
   private slots:
+    void regionAndClip() {
+        QTemporaryDir dir;
+        EngineOptions options; options.demo=true; options.width=320; options.height=200;
+        options.bits=8; options.demoFps=60; options.storage=dir.path().toStdString();
+        options.shader=qEnvironmentVariable("VR_TEST_SHADER_PATH",VR_TEST_SHADER).toStdString();
+        Controller controller(options);
+        QQmlApplicationEngine engine; engine.rootContext()->setContextProperty("backend",&controller);
+        engine.load(QUrl("qrc:/qml/Main.qml")); QVERIFY(!engine.rootObjects().isEmpty());
+        auto window=qobject_cast<QQuickWindow *>(engine.rootObjects().first()); QVERIFY(window); window->showFullScreen();
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["ready"].toBool(),5000);
+        controller.tool("select"); controller.selectObject(32,70,100,64,false);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["objectReady"].toBool(),5000);
+        auto camera=window->findChild<FrameView *>("cameraView"); QVERIFY(camera);
+        auto region=window->findChild<QQuickItem *>("editableRegion"); QVERIFY(region);
+        auto drag=[&](const QPoint &from,const QPoint &to) {
+            QTest::mousePress(window,Qt::LeftButton,Qt::NoModifier,from);
+            QTest::mouseMove(window,(from+to)/2,60);
+            QTest::mouseMove(window,to,60);
+            QVERIFY(region->property("adjusting").toBool());
+            QTest::mouseRelease(window,Qt::LeftButton,Qt::NoModifier,to);
+        };
+        drag(camera->toView(82,102).toPoint(),camera->toView(92,107).toPoint());
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["objectReady"].toBool(),5000);
+        auto moved=controller.state()["roi"].toRect();
+        QVERIFY(std::abs(moved.x()-42)<=1); QVERIFY(std::abs(moved.y()-75)<=1);
+        drag(camera->toView(moved.x()+moved.width(),moved.y()+moved.height()).toPoint(),camera->toView(moved.x()+moved.width()+10,moved.y()+moved.height()+5).toPoint());
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["objectReady"].toBool(),5000);
+        auto resized=controller.state()["roi"].toRect(); QVERIFY(resized.width()>moved.width()); QVERIFY(resized.height()>moved.height());
+        QVERIFY(controller.state()["canChooseEdge"].toBool()); QVERIFY(!controller.engine().snapshot().overlay.isNull());
+        auto capture=[&](const QString &name) {
+            auto output=qEnvironmentVariable("VR_UI_CAPTURE_DIR"); if(output.isEmpty()) return;
+            QDir().mkpath(output); QTest::qWait(150); auto grab=window->contentItem()->grabToImage(); QVERIFY(grab);
+            QSignalSpy ready(grab.data(),&QQuickItemGrabResult::ready); QVERIFY(ready.wait(5000)||!grab->image().isNull()); QVERIFY(grab->image().save(output+"/"+name+".png"));
+        };
+        capture("region-edit");
+        controller.magnifyRegion();
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.image(1).isNull(),10000);
+        QCOMPARE(controller.image(1).size(),resized.size()); QVERIFY(controller.state()["areaMode"].toBool()); QVERIFY(!controller.state()["spectrumReady"].toBool());
+        controller.tool("preview"); controller.tool("select"); controller.selectObject(280,50,24,24,false);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["objectReady"].toBool(),5000);
+        QVERIFY(!controller.state()["canChooseEdge"].toBool());
+        controller.magnifyRegion(); QTRY_VERIFY_WITH_TIMEOUT(!controller.image(1).isNull(),5000);
+        QCOMPARE(controller.image(1).size(),QSize(24,24));
+        controller.tool("preview"); controller.record();
+        QTRY_VERIFY_WITH_TIMEOUT(controller.engine().recorder.status().frames>=48,5000);
+        controller.stopRecording(); QTRY_COMPARE_WITH_TIMEOUT(controller.state()["recordState"].toString(),QString("saved"),5000);
+        controller.tool("files"); controller.openFile(0);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["replayReady"].toBool(),5000);
+        const auto path=controller.files()[0].toMap()["path"].toString();
+        std::vector<Frame> source; vr::ArchiveReader archive(path.toStdString()); Frame f;
+        while(archive.read(f)) source.push_back(f);
+        controller.seek(10./60); QTRY_COMPARE(controller.engine().snapshot().replayIndex,uint64_t(10));
+        controller.tool("select"); controller.selectObject(32,70,100,64,false);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["objectReady"].toBool(),5000);
+        controller.magnifyRegion(); QCOMPARE(controller.state()["analysisStart"].toDouble(),10./60);
+        controller.analysisRange(.2); controller.analyze();
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["offlineBusy"].toBool(),30000);
+        auto verifyOutput=[&](unsigned first,unsigned count,unsigned width,unsigned height) {
+            const auto output=controller.state()["offlineOutput"].toString();
+            QVERIFY2(!output.isEmpty(),qPrintable(controller.state()["error"].toString()));
+            QFile file(output); QVERIFY(file.open(QIODevice::ReadOnly));
+            QCOMPARE(file.size(),qint64(count)*(40+width*height*4));
+            for(unsigned i=0;i<count;++i) {
+                const auto h=file.read(40); QCOMPARE(h.left(4),QByteArray("VRV1"));
+                const auto p=reinterpret_cast<const uint8_t *>(h.constData());
+                QCOMPARE(vr::getLE(p+4,4),uint64_t(width)); QCOMPARE(vr::getLE(p+8,4),uint64_t(height));
+                QCOMPARE(vr::getLE(p+16,8),source[first+i].sequence); QCOMPARE(vr::getLE(p+24,8),source[first+i].timestamp);
+                QVERIFY(file.seek(file.pos()+width*height*4));
+            }
+        };
+        verifyOutput(10,12,100,64); capture("region-clip-result");
+        controller.seek(20./60); QTRY_COMPARE(controller.engine().snapshot().replayIndex,uint64_t(20));
+        controller.analysisRange(.15); controller.analyzeGlobal();
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["offlineBusy"].toBool(),30000);
+        verifyOutput(20,9,320,200); QVERIFY(!controller.state()["spectrumReady"].toBool());
+        controller.seek((source.size()-4)/60.); QTRY_COMPARE(controller.engine().snapshot().replayIndex,uint64_t(source.size()-4));
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["replayReady"].toBool(),5000);
+        controller.analyzeGlobal(); QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["offlineBusy"].toBool(),30000);
+        QVERIFY2(controller.state()["error"].toString().isEmpty(),qPrintable(controller.state()["error"].toString()));
+        verifyOutput(source.size()-4,4,320,200);
+        controller.seek((source.size()-1)/60.); QTRY_COMPARE(controller.engine().snapshot().replayIndex,uint64_t(source.size()-1));
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["replayReady"].toBool(),5000);
+        controller.analyzeGlobal(); QVERIFY(!controller.state()["offlineBusy"].toBool());
+        QVERIFY(controller.state()["error"].toString().contains("两帧"));
+        controller.seek(20./60); QTRY_VERIFY_WITH_TIMEOUT(controller.state()["replayReady"].toBool(),5000);
+        QVERIFY(window->setProperty("rangePanel",true)); capture("analysis-range");
+        auto inspector=window->findChild<QQuickItem *>("inspector"); QVERIFY(inspector); QVERIFY(inspector->height()<=584);
+        QVERIFY(window->setProperty("rangePanel",false)); capture("raw-analysis-options");
+        // Corruption outside the selected interval must still prevent publication.
+        QFile corrupt(path); QVERIFY(corrupt.open(QIODevice::ReadWrite)); QVERIFY(corrupt.seek(corrupt.size()-81));
+        char value; QCOMPARE(corrupt.read(&value,1),qint64(1)); value^=1;
+        QVERIFY(corrupt.seek(corrupt.size()-81)); QCOMPARE(corrupt.write(&value,1),qint64(1)); corrupt.close();
+        controller.analyzeGlobal(); QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["offlineBusy"].toBool(),30000);
+        QVERIFY(controller.state()["offlineOutput"].toString().isEmpty()); QVERIFY(controller.state()["error"].toString().contains("CRC"));
+    }
+    void hardwareRegionClip() {
+        if(!qEnvironmentVariableIsSet("VR_TEST_CAMERA")) QSKIP("Requires exclusive camera access");
+        QTemporaryDir dir;
+        EngineOptions options; options.storage=dir.path().toStdString();
+        options.shader=qEnvironmentVariable("VR_TEST_SHADER_PATH",VR_TEST_SHADER).toStdString();
+        Controller controller(options);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["ready"].toBool(),10000);
+        controller.record(); QTRY_VERIFY_WITH_TIMEOUT(controller.engine().recorder.status().frames>=12,5000);
+        controller.stopRecording(); QTRY_COMPARE_WITH_TIMEOUT(controller.state()["recordState"].toString(),QString("saved"),10000);
+        controller.tool("files"); controller.openFile(0);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["replayReady"].toBool(),5000);
+        const double fps=controller.state()["fps"].toDouble();
+        controller.seek(2/fps); QTRY_COMPARE(controller.engine().snapshot().replayIndex,uint64_t(2));
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["replayReady"].toBool(),5000);
+        const auto identity=controller.engine().snapshot().referenceSequence;
+        controller.analysisRange(6/fps); controller.analyzeGlobal();
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["offlineBusy"].toBool(),60000);
+        const auto output=controller.state()["offlineOutput"].toString();
+        QVERIFY2(!output.isEmpty(),qPrintable(controller.state()["error"].toString()));
+        QFile file(output); QVERIFY(file.open(QIODevice::ReadOnly));
+        QCOMPARE(file.size(),qint64(6)*(40+1280*800*4));
+        const auto h=file.read(40); QCOMPARE(vr::getLE(reinterpret_cast<const uint8_t *>(h.constData())+16,8),identity);
+        qInfo()<<"BOARD_GLOBAL_CLIP"<<"start_index"<<2<<"frames"<<6<<"dimensions"<<controller.state()["roi"]<<"fps"<<fps;
+    }
     void recordingDeletion() {
         QTemporaryDir dir, outside;
         EngineOptions options; options.demo=true; options.width=320; options.height=200;

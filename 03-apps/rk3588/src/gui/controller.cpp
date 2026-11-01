@@ -52,8 +52,9 @@ void Controller::tool(const QString &requested) {
         if (requested == "select") {
             selectionReturn_ = currentFile_.isEmpty() ? "preview" : "replay";
             playing_ = false;
+            if (!currentFile_.isEmpty()) analysisStart_=engine_.snapshot().replayIndex;
         }
-        if (requested == "magnify" && !view_.edgeReady) {
+        if (requested == "magnify" && !view_.edgeReady && !view_.regionReady) {
             selectionReturn_ = "magnify";
             currentFile_.clear();
             engine_.setTool("select");
@@ -139,11 +140,37 @@ void Controller::confirmEdge() {
         } else if (selectionReturn_ == "replay") {
             engine_.finishSelection();
             tool_ = "replay";
-            engine_.replay(currentFile_.toStdString(), uint64_t(position_ * fileFps_));
+            engine_.replay(currentFile_.toStdString(), uint64_t(std::floor(position_ * fileFps_+1e-7)));
         } else {
             engine_.finishSelection();
             tool_ = "preview";
         }
+    });
+}
+void Controller::magnifyRegion() {
+    handle([&] {
+        engine_.confirmRegion();
+        if (currentFile_.isEmpty()) { engine_.setTool("magnify"); tool_="magnify"; }
+        else { engine_.finishSelection(); tool_="replay"; }
+    });
+}
+void Controller::analysisRange(double seconds, bool fromCurrent) {
+    handle([&] {
+        if (currentFile_.isEmpty() || view_.offlineBusy || !std::isfinite(seconds) || seconds<0 || seconds>fileDuration_)
+            throw std::runtime_error("分析时长无效或分析正在运行");
+        if (fromCurrent) {
+            if (!view_.replayReady || playing_) throw std::runtime_error("请先暂停并等待回放帧加载");
+            analysisStart_=engine_.snapshot().replayIndex;
+        }
+        analysisSeconds_=seconds;
+    });
+}
+void Controller::analyzeGlobal() {
+    handle([&] {
+        if (currentFile_.isEmpty() || playing_ || !view_.replayReady) throw std::runtime_error("请先打开并暂停 RAW 回放");
+        analysisStart_=engine_.snapshot().replayIndex;
+        engine_.startOffline(currentFile_.toStdString(),analysisStart_,analysisSeconds_,true);
+        tool_="offline";
     });
 }
 void Controller::parameters(double a, double l, double h, double fps, double sensitivity) {
@@ -215,6 +242,7 @@ void Controller::openFile(int index) {
         currentFile_ = f["path"].toString();
         fileFps_ = f["fps"].toDouble();
         fileDuration_ = f["duration"].toDouble();
+        analysisStart_=0; analysisSeconds_=0;
         position_ = 0;
         playing_ = false;
         tool_ = "replay";
@@ -256,9 +284,13 @@ void Controller::seek(double seconds) {
     handle([&] {
         if (currentFile_.isEmpty() || fileFps_ <= 0)
             return;
+        if (!std::isfinite(seconds)) throw std::runtime_error("回放位置无效");
         playing_ = false;
         position_ = std::clamp(seconds, 0., std::max(0., fileDuration_ - 1 / fileFps_));
-        engine_.replay(currentFile_.toStdString(), uint64_t(position_ * fileFps_));
+        // Compensate floating-point roundoff at exact frame boundaries.
+        const auto index=uint64_t(std::floor(position_*fileFps_+1e-7));
+        position_=index/fileFps_;
+        engine_.replay(currentFile_.toStdString(), index);
         tool_ = "replay";
     });
 }
@@ -275,7 +307,7 @@ void Controller::analyze() {
         if (currentFile_.isEmpty())
             throw std::runtime_error("请先打开已保存的 RAW 录像");
         playing_ = false;
-        engine_.startOffline(currentFile_.toStdString());
+        engine_.startOffline(currentFile_.toStdString(),analysisStart_,analysisSeconds_);
         tool_ = "offline";
     });
 }
@@ -385,7 +417,7 @@ void Controller::poll() {
             playing_ = false;
             position_ = std::max(0., fileDuration_ - 1 / fileFps_);
         }
-        engine_.replay(currentFile_.toStdString(), uint64_t(position_ * fileFps_));
+        engine_.replay(currentFile_.toStdString(), uint64_t(std::floor(position_ * fileFps_+1e-7)));
     }
     const char *names[] = {"idle", "recording", "draining", "saved", "failed"};
     const bool archiveView =
@@ -411,6 +443,12 @@ void Controller::poll() {
               {"roi", view_.roi},
               {"objectReady", view_.objectReady},
               {"edgeReady", view_.edgeReady},
+              {"regionReady", view_.regionReady},
+              {"areaMode", view_.areaMode},
+              {"canChooseEdge", view_.canChooseEdge},
+              {"analysisStart", fileFps_>0 ? analysisStart_/fileFps_ : 0},
+              {"analysisSeconds", analysisSeconds_},
+              {"analysisRemaining", fileFps_>0 ? std::max(0.,fileDuration_-analysisStart_/fileFps_) : 0},
               {"step", view_.selectionStep},
               {"selectionMethod", view_.selectionMethod},
               {"useNpu", view_.useNpu},

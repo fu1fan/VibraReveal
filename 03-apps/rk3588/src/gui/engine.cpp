@@ -145,8 +145,8 @@ ViewState Engine::snapshot() const {
     std::lock_guard<std::mutex> l(mutex_);
     return state_;
 }
-void Engine::admitMotion(bool offline, double fps, double low, double high, double alpha,
-                         const std::string &archive) {
+uint64_t Engine::admitMotion(bool offline, double fps, double low, double high, double alpha,
+                         const std::string &archive, uint64_t start, double seconds) {
     MotionConfig c;
     c.x=state_.roi.x(); c.y=state_.roi.y();
     c.width=state_.roi.width(); c.height=state_.roi.height();
@@ -169,6 +169,11 @@ void Engine::admitMotion(bool offline, double fps, double low, double high, doub
             getLE(end.data()+6,2)!=3 || getLE(end.data()+32,8)!=frames ||
             getLE(end.data()+40,8)!=loadMultiply(frames,rawBytes))
             throw std::runtime_error("无法预估：录像尚未完整保存");
+        if (start>=frames || !std::isfinite(seconds) || seconds<0)
+            throw std::runtime_error("分析起点或时长无效");
+        frames-=start;
+        if (seconds>0) frames=std::min(frames,uint64_t(std::ceil(std::min(seconds,double(frames)/c.fps)*c.fps-1e-9)));
+        if (frames<2) throw std::runtime_error("分析区间至少需要两帧");
         availableDisk=std::min(std::filesystem::space(options_.storage).available,
                               std::filesystem::space(std::filesystem::path(archive).parent_path()).available);
     }
@@ -198,7 +203,7 @@ void Engine::admitMotion(bool offline, double fps, double low, double high, doub
     case MotionLimit::Memory: reason="可用内存不足（需保留 512 MiB 系统余量），请缩小选区或结束其他任务"; break;
     case MotionLimit::Scratch: reason="离线临时数据超过 64 GiB 上限，请缩短录像或缩小选区"; break;
     case MotionLimit::Disk: reason="临时文件与输出所需空间超过可用存储，请清理空间或缩短录像"; break;
-    case MotionLimit::None: state_.motionEstimate=summary; return;
+    case MotionLimit::None: state_.motionEstimate=summary; return frames;
     }
     const QString prefix=state_.tool == "magnify" ? "未应用新参数（保持原参数运行）：" : "未启动运动放大：";
     if (state_.tool != "magnify") state_.motionEstimate=summary;
@@ -217,6 +222,7 @@ void Engine::requireCameraEdit() const {
         throw std::runtime_error("当前状态锁定相机参数，请返回预览并结束录制或传输");
 }
 void Engine::invalidateMeasurement() {
+    state_.regionReady=state_.areaMode=state_.canChooseEdge=false;
     state_.edgeReady=state_.objectReady=false; state_.roi={}; state_.overlay={};
     state_.motionEstimate.clear(); reference_.reset(); work_.clear();
     ++generation_; ++state_.displayRevision;
@@ -255,13 +261,14 @@ void Engine::setTool(const QString &tool) {
         throw std::runtime_error("请先取消或完成离线分析");
     if ((tool=="select" || tool=="magnify" || tool=="direct") && (state_.cameraBusy || state_.exposureAuto))
         throw std::runtime_error("正在调整相机，请等待曝光或帧率稳定");
-    if (tool == "magnify" && (!state_.edgeReady || !referenceArchive_.empty()))
-        throw std::runtime_error("请先在实时画面选择对象及测量边缘");
+    if (tool == "magnify" && (!(state_.edgeReady || state_.regionReady) || !referenceArchive_.empty()))
+        throw std::runtime_error("请先在实时画面选择放大区域或测量边缘");
     if (tool == "magnify")
         admitMotion(false,state_.processingFps,state_.low,state_.high,state_.alpha);
     if ((tool == "preview" || tool == "focus" || tool == "direct") && !referenceArchive_.empty()) {
         referenceArchive_.clear();
         reference_.reset();
+        state_.regionReady = state_.areaMode = state_.canChooseEdge = false;
         state_.edgeReady = state_.objectReady = false;
         state_.roi = {};
         if (state_.ready) {
@@ -287,6 +294,7 @@ void Engine::setTool(const QString &tool) {
         state_.overlay = {};
         ++state_.displayRevision;
         state_.selectionStep = 1;
+        state_.regionReady = state_.areaMode = state_.canChooseEdge = false;
         state_.objectReady = state_.edgeReady = false;
         state_.roi = {};
     }
@@ -318,6 +326,7 @@ void Engine::selectObject(const QRectF &r, bool point) {
     state_.error.clear();
     state_.overlay = {};
     ++state_.displayRevision;
+    state_.regionReady = state_.areaMode = state_.canChooseEdge = false;
     state_.objectReady = state_.edgeReady = false;
     cv_.notify_all();
 }
@@ -329,6 +338,7 @@ void Engine::setSelectionNpu(bool enabled) {
         throw std::runtime_error("未配置 NPU 模型，请使用手动框选");
     state_.useNpu = enabled;
     state_.selectionBusy = false;
+    state_.regionReady = state_.areaMode = state_.canChooseEdge = false;
     state_.objectReady = state_.edgeReady = false;
     state_.overlay = {};
     state_.roi = {};
@@ -355,14 +365,22 @@ void Engine::chooseEdge(const QPointF &point) {
 }
 void Engine::confirmObject() {
     std::lock_guard<std::mutex> l(mutex_);
-    if (!state_.objectReady)
+    if (!state_.objectReady || state_.selectionBusy || !state_.canChooseEdge)
         throw std::runtime_error("请先选定对象");
+    state_.regionReady=false; state_.areaMode=false;
     state_.selectionStep = 2;
     state_.message = "轻触清晰边缘，测量其法向微小位移";
 }
+void Engine::confirmRegion() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!state_.objectReady || state_.selectionBusy || state_.roi.width()<8 || state_.roi.height()<8)
+        throw std::runtime_error("请先框选有效放大区域");
+    state_.regionReady=true; state_.areaMode=true; state_.edgeReady=false;
+    state_.spectrum.clear(); state_.spectrumReady=false; state_.samples=0;
+}
 void Engine::finishSelection() {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (!state_.edgeReady)
+    if (!state_.edgeReady && !state_.regionReady)
         throw std::runtime_error("请先选定测量边缘");
     state_.tool = referenceArchive_.empty() ? "preview" : "replay";
     state_.overlay = {};
@@ -390,13 +408,26 @@ void Engine::setParameters(double alpha, double low, double high, double fps, do
     work_.clear();
     cv_.notify_all();
 }
-void Engine::startOffline(const std::string &path) {
+void Engine::startOffline(const std::string &path, uint64_t start, double seconds, bool global) {
     std::lock_guard<std::mutex> l(mutex_);
     if (state_.offlineBusy)
         throw std::runtime_error("离线分析正在运行");
-    if (!state_.edgeReady || !reference_ || referenceArchive_ != path)
-        throw std::runtime_error("请先在该录像回放上选择对象和边缘");
-    admitMotion(true,referenceFps_,state_.low,state_.high,state_.alpha,path);
+    const auto previous=state_;
+    if (global) {
+        if (!reference_ || referenceArchive_!=path || !state_.replayReady)
+            throw std::runtime_error("请等待当前 RAW 帧加载完成");
+        state_.roi=QRect(0,0,reference_->width,reference_->height);
+        state_.regionReady=true; state_.areaMode=true; state_.edgeReady=false;
+    }
+    if ((!state_.edgeReady && !state_.regionReady) || !reference_ || referenceArchive_ != path)
+        throw std::runtime_error("请先选择放大区域或测量边缘，或使用全画面分析");
+    uint64_t count=0;
+    try { count=admitMotion(true,referenceFps_,state_.low,state_.high,state_.alpha,path,start,seconds); }
+    catch (...) {
+        state_.roi=previous.roi; state_.areaMode=previous.areaMode;
+        state_.regionReady=previous.regionReady; state_.edgeReady=previous.edgeReady;
+        throw;
+    }
     state_.tool = "offline";
     state_.offlineBusy = true;
     state_.offlineOutput.clear();
@@ -405,6 +436,10 @@ void Engine::startOffline(const std::string &path) {
     command_ = {};
     command_.kind = Command::Offline;
     command_.path = path;
+    command_.index = start;
+    command_.count=count;
+    state_.message="校验录像并分析所选区间…";
+    state_.spectrum.clear(); state_.samples=0; state_.spectrumReady=false;
     ++generation_;
     work_.clear();
     cv_.notify_all();
@@ -415,6 +450,7 @@ void Engine::replay(const std::string &path, uint64_t index) {
     if (state_.offlineBusy)
         return;
     if (referenceArchive_ != path) {
+        state_.regionReady = state_.areaMode = state_.canChooseEdge = false;
         state_.edgeReady = state_.objectReady = false;
         state_.roi = {};
     }
@@ -775,9 +811,8 @@ void Engine::computeLoop() {
                             top = std::min(top, int(y));
                             bottom = std::max(bottom, int(y));
                         }
-                if (right < left ||
-                    std::count_if(edges.begin(), edges.end(), [](uint8_t v) { return v != 0; }) < 4)
-                    throw std::runtime_error("选区内没有足够的清晰边缘，请重新选择");
+                if (right < left) throw std::runtime_error("未识别到有效区域，请重新选择");
+                const bool hasEdges=std::count_if(edges.begin(), edges.end(), [](uint8_t v) { return v != 0; })>=4;
                 QImage overlay =
                     overlayImage(reference->width, reference->height, edges, qRgb(255, 69, 58));
                 if (config.useNpu) {
@@ -793,7 +828,9 @@ void Engine::computeLoop() {
                 std::lock_guard<std::mutex> l(mutex_);
                 if (generation != generation_)
                     continue;
-                state_.roi = QRect(left, top, right - left + 1, bottom - top + 1);
+                state_.roi = command.point ? QRect(left, top, right - left + 1, bottom - top + 1) : rect;
+                if (state_.roi.width()<8 || state_.roi.height()<8) throw std::runtime_error("选区至少为 8 × 8 像素");
+                state_.canChooseEdge=hasEdges;
                 state_.objectReady = true;
                 state_.selectionBusy = false;
                 state_.selectionMs = std::chrono::duration<double, std::milli>(Clock::now()-selectionStart).count();
@@ -801,7 +838,7 @@ void Engine::computeLoop() {
                 state_.selectionMethod = method;
                 state_.overlay = overlay;
                 state_.image = frameImage(*reference);
-                state_.message = "对象已选定，可调整选区或继续选择边缘";
+                state_.message = hasEdges ? "拖动选框或圆点微调；选择整区放大或边缘测量" : "此区域无清晰边缘，仍可进行整区放大";
                 state_.error.clear();
                 ++state_.displayRevision;
                 continue;
@@ -834,6 +871,7 @@ void Engine::computeLoop() {
                 std::lock_guard<std::mutex> l(mutex_);
                 if (generation != generation_)
                     continue;
+                state_.regionReady=false; state_.areaMode=false;
                 state_.edgeReady = true;
                 state_.selectionBusy = false;
                 state_.roi = region;
@@ -876,6 +914,7 @@ void Engine::computeLoop() {
                 state_.replayFormat = {reader.width,  reader.height, reader.stride,         reader.bits,
                                        reader.fpsNum, reader.fpsDen, bool(reader.flags & 2)};
                 state_.replayReady = true;
+                state_.replayIndex=command.index;
                 reference_ = playback;
                 referenceArchive_ = command.path;
                 referenceFps_ = reader.fps();
@@ -888,8 +927,8 @@ void Engine::computeLoop() {
             }
             if (command.kind == Command::Offline) {
                 ArchiveReader reader(command.path);
-                if (!selectedFrame || reader.width != selectedFrame->width ||
-                    reader.height != selectedFrame->height || reader.bits != selectedFrame->bits)
+                if (!reference || reader.width != reference->width ||
+                    reader.height != reference->height || reader.bits != reference->bits)
                     throw std::runtime_error("录像格式与测量参考不匹配，请从该录像重新选区");
                 MotionConfig c;
                 c.x = config.roi.x();
@@ -908,17 +947,23 @@ void Engine::computeLoop() {
                 OfflineOptions offline;
                 offline.scratchDirectory = options_.storage;
                 Spectrum offlineSpectrum(reader.fps());
-                uint64_t count = 0;
+                uint64_t count = 0, sourceIndex = 0;
                 processOffline(
                     c, options_.shader, offline,
                     [&](Frame &f) {
                         if (stopping_ || offlineCancel_)
                             throw std::runtime_error("离线分析已取消；原始录像保留");
-                        if (!reader.read(f))
-                            return false;
-                        offlineSpectrum.append(signal.measure(f), f.timestamp);
-                        ++count;
-                        return true;
+                        // Validate skipped prefix and suffix too, including CRC and END, before emit.
+                        while (reader.read(f)) {
+                            if (stopping_ || offlineCancel_) throw std::runtime_error("离线分析已取消；原始录像保留");
+                            const auto index=sourceIndex++;
+                            if (index<command.index || index-command.index>=command.count) continue;
+                            if (!config.areaMode) offlineSpectrum.append(signal.measure(f), f.timestamp);
+                            ++count;
+                            return true;
+                        }
+                        if (count!=command.count) throw std::runtime_error("录像分析区间不完整");
+                        return false;
                     },
                     [&](const Frame &f, const std::vector<float> &pixels) {
                         if (stopping_ || offlineCancel_)
@@ -953,7 +998,7 @@ void Engine::computeLoop() {
                 state_.spectrumReady = result.ready;
                 state_.offlineBusy = false;
                 state_.offlineOutput = QString::fromStdString(output);
-                state_.message = "离线分析完成 · 频谱为末尾窗口，放大结果已保存";
+                state_.message = config.areaMode ? "区域运动放大完成 · 未选择测量边缘" : "离线分析完成 · 频谱为末尾窗口，放大结果已保存";
                 ++state_.displayRevision;
                 continue;
             }
@@ -965,7 +1010,7 @@ void Engine::computeLoop() {
             if (config.tool == "focus" || config.tool == "direct") {
                 overlay = focusPeaking.render(*frame, config.focus);
             } else if (config.tool == "magnify") {
-                if (!signal.valid())
+                if (!config.areaMode && !signal.valid())
                     throw std::runtime_error("测量参考已失效，请重新选边缘");
                 if (!motion) {
                     MotionConfig c;
@@ -997,14 +1042,16 @@ void Engine::computeLoop() {
                 input.sequence = processingSequence++;
                 auto pixels = motion->process(input);
                 inset = amplifiedImage(config.roi.width(), config.roi.height(), pixels);
-                displacement = signal.measure(*frame);
-                spectrum.append(displacement, frame->timestamp);
-                result = spectrum.result(config.low, config.high);
+                if (!config.areaMode) {
+                    displacement = signal.measure(*frame);
+                    spectrum.append(displacement, frame->timestamp);
+                    result = spectrum.result(config.low, config.high);
+                }
                 overlay = QImage(frame->width, frame->height, QImage::Format_ARGB32_Premultiplied);
                 overlay.fill(Qt::transparent);
                 QPainter painter(&overlay);
                 painter.setPen(QPen(QColor("#ff453a"), 3));
-                for (const auto &point : signal.points())
+                if (!config.areaMode) for (const auto &point : signal.points())
                     painter.drawPoint(point.x, point.y);
             }
             {
@@ -1023,7 +1070,7 @@ void Engine::computeLoop() {
                     state_.peak = result.peak;
                     state_.spectrumReady = result.ready;
                     state_.message =
-                        result.ready ? "本机实时测量 · 像素位移，未作物理标定" : "正在积累连续测量样本";
+                        config.areaMode ? "本机区域运动放大 · 未选择测量边缘" : result.ready ? "本机实时测量 · 像素位移，未作物理标定" : "正在积累连续测量样本";
                 }
                 ++state_.displayRevision;
             }

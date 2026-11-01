@@ -139,7 +139,7 @@ void FrameView::paint(QPainter *p) {
             p->drawImage(r, overlay);
         const auto state = controller_->state();
         const auto tool = state["tool"].toString();
-        if (state["mode"].toString() == "local" && state["edgeReady"].toBool() &&
+        if (state["mode"].toString() == "local" && (state["edgeReady"].toBool() || state["regionReady"].toBool()) &&
             (tool == "select" || tool == "preview" || tool == "magnify" ||
              tool == "replay" || tool == "offline")) {
             const QRect roi = state["roi"].toRect();
