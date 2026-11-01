@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QPainter>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -19,6 +20,129 @@ using namespace vr::touch;
 class UiTest : public QObject {
     Q_OBJECT
   private slots:
+    void draggablePanelsAndPan() {
+        QTemporaryDir dir;
+        EngineOptions options;
+        options.demo = true; options.width = 1280; options.height = 800; options.bits = 8;
+        options.demoFps = 30; options.storage = dir.path().toStdString();
+        options.shader = qEnvironmentVariable("VR_TEST_SHADER_PATH", VR_TEST_SHADER).toStdString();
+        options.stream.transport = "tcp"; options.stream.port = 29879;
+        Controller controller(options);
+        QQmlApplicationEngine engine;
+        engine.rootContext()->setContextProperty("backend", &controller);
+        engine.load(QUrl("qrc:/qml/Main.qml"));
+        QVERIFY(!engine.rootObjects().isEmpty());
+        auto window = qobject_cast<QQuickWindow *>(engine.rootObjects().first());
+        QVERIFY(window);
+        window->showFullScreen();
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.image(0).isNull(), 10000);
+        auto camera = window->findChild<FrameView *>("cameraView");
+        auto inspector = window->findChild<QQuickItem *>("inspector");
+        QVERIFY(camera); QVERIFY(inspector);
+        std::function<QQuickItem *(QQuickItem *, const QString &)> find =
+            [&](QQuickItem *parent, const QString &name) -> QQuickItem * {
+                if (parent->objectName() == name) return parent;
+                for (auto child : parent->childItems())
+                    if (auto found = find(child,name)) return found;
+                return nullptr;
+            };
+        auto touch = QTest::createTouchDevice();
+        auto drag = [&](QPoint from, QPoint to) {
+            QTest::touchEvent(window,touch).press(0,from,window);
+            QTest::qWait(30);
+            for (int i=1; i<=5; ++i) {
+                QTest::touchEvent(window,touch).move(0,from+(to-from)*i/5,window);
+                QTest::qWait(30);
+            }
+            QTest::touchEvent(window,touch).release(0,to,window);
+            QTest::qWait(100);
+        };
+        auto movePanel = [&] {
+            QTest::qWait(100);
+            auto handle = find(inspector,"panelDragHandle");
+            QVERIFY(handle);
+            const QPointF before(inspector->x(),inspector->y());
+            const auto sourceBefore = camera->toSource(512,300);
+            const QPoint from = handle->mapToScene(QPointF(100,40)).toPoint();
+            drag(from,from+QPoint(-350,40));
+            QVERIFY(inspector->x() < before.x()-200);
+            QCOMPARE(camera->toSource(512,300), sourceBefore);
+            const auto retained = QPointF(inspector->x(),inspector->y());
+            QTest::qWait(200);
+            QCOMPARE(QPointF(inspector->x(),inspector->y()),retained);
+            QVERIFY(inspector->x()>=8 && inspector->y()>=8);
+            QVERIFY(inspector->x()+inspector->width() <= window->width()-8);
+            QVERIFY(inspector->y()+inspector->height() <= window->height()-8);
+        };
+        controller.view(true);
+        QTRY_VERIFY(camera->nativeSize());
+        const auto initial = camera->toSource(512,300);
+        drag(QPoint(500,300),QPoint(580,340));
+        QVERIFY(camera->toSource(512,300).x() < initial.x()-50);
+        const auto panned = camera->toSource(512,300);
+        QTest::qWait(250); // Multiple state refreshes must not reset the offset.
+        QCOMPARE(camera->toSource(512,300),panned);
+        camera->setNativeSize(true); // Same-value setter must also preserve it.
+        QCOMPARE(camera->toSource(512,300),panned);
+        controller.view(false);
+        QTRY_VERIFY(!camera->nativeSize());
+        const auto fitted = camera->toSource(512,300);
+        drag(QPoint(500,300),QPoint(580,340));
+        QCOMPARE(camera->toSource(512,300),fitted);
+        controller.tool("focus");
+        movePanel();
+        const auto focusPosition = QPointF(inspector->x(),inspector->y());
+        // A slider gesture must not move its panel.
+        auto slider = find(inspector,"focusSlider");
+        QVERIFY(slider);
+        const auto start = slider->mapToScene(QPointF(30,slider->height()/2)).toPoint();
+        drag(start,start+QPoint(120,0));
+        QCOMPARE(QPointF(inspector->x(),inspector->y()),focusPosition);
+        controller.tool("preview"); controller.tool("focus");
+        QTest::qWait(100);
+        QCOMPARE(QPointF(inspector->x(),inspector->y()),focusPosition);
+        controller.tool("preview"); controller.view(true); controller.tool("select");
+        movePanel();
+        controller.selectObject(400,360,480,80,false);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["objectReady"].toBool(),10000);
+        const auto roi = controller.state()["roi"].toRect();
+        auto panButton = find(window->contentItem(),"selectionPan");
+        QVERIFY(panButton);
+        QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,
+                          panButton->mapToScene(QPointF(panButton->width()/2,panButton->height()/2)).toPoint());
+        QVERIFY(window->property("selectionPan").toBool());
+        const auto selectionBefore = camera->toSource(512,300);
+        drag(QPoint(850,300),QPoint(910,340));
+        QVERIFY(camera->toSource(512,300).x() < selectionBefore.x()-30);
+        QCOMPARE(controller.state()["roi"].toRect(),roi);
+        QVERIFY(controller.state()["objectReady"].toBool());
+        controller.confirmObject(); controller.selectEdge(640,383);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.state()["edgeReady"].toBool(),10000);
+        controller.confirmEdge(); controller.tool("magnify");
+        movePanel();
+        controller.tool("record"); movePanel();
+        controller.tool("preview"); controller.mode("direct"); movePanel();
+        const auto directBefore = camera->toSource(512,300);
+        drag(QPoint(850,300),QPoint(790,260));
+        QVERIFY(camera->toSource(512,300).x() > directBefore.x()+30);
+        QImage directImage(1024,600,QImage::Format_RGB32);
+        directImage.fill(Qt::black);
+        { QPainter painter(&directImage); camera->paint(&painter); }
+        for (int y=0; y<directImage.height(); ++y)
+            for (int x=0; x<directImage.width(); ++x)
+                QVERIFY(directImage.pixel(x,y) != qRgb(165,29,24)); // no old ROI label
+        const auto captures=qEnvironmentVariable("VR_UI_CAPTURE_DIR");
+        if (!captures.isEmpty()) {
+            QDir().mkpath(captures);
+            auto grab=window->contentItem()->grabToImage();
+            QVERIFY(grab);
+            QSignalSpy ready(grab.data(), &QQuickItemGrabResult::ready);
+            QVERIFY(ready.wait(5000) || !grab->image().isNull());
+            QVERIFY(grab->image().save(captures+"/draggable-direct.png"));
+        }
+        controller.mode("local");
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.state()["streamBusy"].toBool(),5000);
+    }
     void hardwareNpu() {
         if (!qEnvironmentVariableIsSet("VR_TEST_NPU") || !qEnvironmentVariableIsSet("VR_TEST_CAMERA"))
             QSKIP("Requires exclusive camera access and deployed RKNN models");

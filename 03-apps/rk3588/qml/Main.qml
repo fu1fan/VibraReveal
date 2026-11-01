@@ -19,6 +19,8 @@ ApplicationWindow {
     palette.highlight: "#075ac5"
     palette.highlightedText: "#ffffff"
     property var s: backend.state
+    property bool selectionPan: false
+    property var panelPositions: ({})
     property bool frequencyPanel: false
     property bool showSpectrum: true
     property bool showInset: true
@@ -31,6 +33,7 @@ ApplicationWindow {
     Connections {
         target: backend
         function onChanged() {
+            if (s.tool !== "select" || !s.native) selectionPan = false
             if(closingAfterSave && !recording && !s.offlineBusy && !s.streamBusy) {
                 closingAfterSave = false
                 Qt.callLater(function() { window.close() })
@@ -39,23 +42,23 @@ ApplicationWindow {
     }
     FrameView { id: camera; objectName: "cameraView"; anchors.fill: parent; controller: backend; nativeSize: s.native }
     MouseArea {
-        id: imageTouch; anchors.fill: parent; enabled: !s.selectionBusy
+        id: imageTouch; objectName: "imageTouch"; preventStealing: true; anchors.fill: parent; enabled: !s.selectionBusy
         property point startPoint
         property point previousPoint
         property point sourceStart
-        onPressed: { startPoint = Qt.point(mouse.x,mouse.y); previousPoint = startPoint; sourceStart = camera.toSource(mouse.x,mouse.y); selectionBox.visible = s.tool === "select" && s.step === 1 }
+        onPressed: { startPoint = Qt.point(mouse.x,mouse.y); previousPoint = startPoint; sourceStart = camera.toSource(mouse.x,mouse.y); selectionBox.visible = s.tool === "select" && s.step === 1 && !selectionPan; selectionBox.x = mouse.x; selectionBox.y = mouse.y; selectionBox.width = 0; selectionBox.height = 0 }
         onPositionChanged: {
             if (!pressed) return
-            if (s.tool === "select" && s.step === 1) {
+            if (s.tool === "select" && s.step === 1 && !selectionPan) {
                 selectionBox.x = Math.min(startPoint.x,mouse.x); selectionBox.y = Math.min(startPoint.y,mouse.y)
                 selectionBox.width = Math.abs(startPoint.x-mouse.x); selectionBox.height = Math.abs(startPoint.y-mouse.y)
-            } else if (s.native && s.tool !== "select") camera.panBy(mouse.x-previousPoint.x,mouse.y-previousPoint.y)
+            } else if (s.native && (s.tool !== "select" || selectionPan)) camera.panBy(mouse.x-previousPoint.x,mouse.y-previousPoint.y)
             previousPoint = Qt.point(mouse.x,mouse.y)
         }
         onReleased: {
             selectionBox.visible = false
             var end = camera.toSource(mouse.x,mouse.y)
-            if (s.tool === "select") {
+            if (s.tool === "select" && !selectionPan) {
                 if (s.step === 2) backend.selectEdge(end.x,end.y)
                 else backend.selectObject(sourceStart.x,sourceStart.y,end.x-sourceStart.x,end.y-sourceStart.y,Math.abs(mouse.x-startPoint.x)+Math.abs(mouse.y-startPoint.y)<12)
             }
@@ -65,9 +68,9 @@ ApplicationWindow {
     Rectangle { id: selectionBox; visible: false; color: "#167cb6ff"; border.color: "#91c5ff"; border.width: 2 }
     Item {
         id: selectedRegion
-        visible: s.tool === "select" && s.step === 1 && s.objectReady; enabled: !s.selectionBusy
-        property point begin: camera.toView(s.roi.x,s.roi.y)
-        property point end: camera.toView(s.roi.x+s.roi.width,s.roi.y+s.roi.height)
+        visible: s.tool === "select" && s.step === 1 && s.objectReady; enabled: !s.selectionBusy && !selectionPan
+        property point begin: { camera.viewRevision; return camera.toView(s.roi.x,s.roi.y) }
+        property point end: { camera.viewRevision; return camera.toView(s.roi.x+s.roi.width,s.roi.y+s.roi.height) }
         x: begin.x; y: begin.y; width: end.x-begin.x; height: end.y-begin.y
         Rectangle { anchors.fill: parent; color: "transparent"; border.width: 1; border.color: "#91c5ff" }
         MouseArea {
@@ -125,24 +128,53 @@ ApplicationWindow {
         }
         TouchButton { objectName: "fitView"; text: "适应"; checked: !s.native; enabled: s.tool !== "focus" && s.mode !== "direct"; onClicked: backend.view(false) }
         TouchButton { objectName: "nativeView"; text: "1:1"; checked: s.native; onClicked: backend.view(true) }
+        TouchButton { objectName: "selectionPan"; visible: s.tool === "select" && s.native; text: selectionPan ? "返回选择" : "移动画面"; checked: selectionPan; onClicked: selectionPan = !selectionPan }
     }
     Rectangle {
         x: 18; y: 148; width: hint.width+24; height: 38; radius: 9; color: "#101720"; visible: hint.text.length > 0
         Text { id: hint; anchors.centerIn: parent; color: "#f4f7fc"; font.pixelSize: 14
-            text: s.mode === "direct" || s.tool === "focus" ? "峰值对焦 · 1:1 · "+Number(s.previewFps).toFixed(0)+" fps · 拖动画面" : s.tool === "select" ? "冻结参考帧 · "+(s.step === 1 ? (s.selectionBusy?s.message:s.useNpu?"轻触物品 · NPU 自动识别":"拖动框选 · 手动模式") : "轻触对象边缘") : s.tool === "magnify" ? "本机实时计算 · 参考位置固定" : s.tool === "replay" || s.tool === "offline" ? "本地 RAW 回放与分析" : s.native ? "点对点显示 · 拖动画面" : ""
+            text: s.mode === "direct" || s.tool === "focus" ? "峰值对焦 · 1:1 · "+Number(s.previewFps).toFixed(0)+" fps · 拖动画面" : s.tool === "select" && selectionPan ? "拖动画面 · 点击返回选择继续选区" : s.tool === "select" ? "冻结参考帧 · "+(s.step === 1 ? (s.selectionBusy?s.message:s.useNpu?"轻触物品 · NPU 自动识别":"拖动框选 · 手动模式") : "轻触对象边缘") : s.tool === "magnify" ? "本机实时计算 · 参考位置固定" : s.tool === "replay" || s.tool === "offline" ? "本地 RAW 回放与分析" : s.native ? "点对点显示 · 拖动画面" : ""
         }
     }
     Loader {
-        id: inspector; objectName: "inspector"; anchors.right: parent.right; anchors.rightMargin: 18
+        id: inspector; objectName: "inspector"; z: 20
+        property string positionKey: s.mode === "direct" ? "direct" : s.tool
+        x: window.width-width-18
         y: s.tool === "record" || s.tool === "settings" ? 86 : 145
+        function constrain() {
+            x = Math.max(8,Math.min(x,window.width-width-8))
+            y = Math.max(8,Math.min(y,window.height-height-8))
+        }
+        function restorePosition() {
+            if (!item) return
+            var saved = panelPositions[positionKey]
+            x = saved ? saved.x : window.width-width-18
+            y = saved ? saved.y : (s.tool === "record" || s.tool === "settings" ? 86 : 145)
+            constrain()
+        }
+        function moveBy(dx,dy) {
+            x += dx; y += dy; constrain()
+            panelPositions[positionKey] = Qt.point(x,y)
+        }
+        onLoaded: restorePosition()
+        onPositionKeyChanged: Qt.callLater(restorePosition)
+        onHeightChanged: if (item) constrain()
+        onWidthChanged: if (item) constrain()
         sourceComponent: s.mode === "direct" ? directPanel : s.tool === "focus" ? focusPanel : s.tool === "select" ? selectionPanel : s.tool === "magnify" ? (frequencyPanel?bandPanel:magnifyPanel) : s.tool === "record" ? recordingPanel : s.tool === "settings" ? settingsPanel : (s.tool === "replay" || s.tool === "offline") ? (frequencyPanel?bandPanel:offlinePanel) : null
     }
+    Connections {
+        target: inspector.item
+        ignoreUnknownSignals: true
+        function onDragged(dx,dy) { inspector.moveBy(dx,dy) }
+    }
+    onWidthChanged: inspector.constrain()
+    onHeightChanged: inspector.constrain()
     Component {
         id: focusPanel
         Panel {
             title: "峰值对焦"; onClosed: backend.tool("preview")
             Text { text: "峰值灵敏度 · "+Math.round(s.focus)+"%"; color: "#151a22"; font.pixelSize: 16 }
-            Slider { id: focusSlider; width: parent.width; height: 42; from: 0; to: 100; value: s.focus; onPressedChanged: if(!pressed) setParams(s.alpha,s.low,s.high,s.processingFps,value) }
+            Slider { id: focusSlider; objectName: "focusSlider"; width: parent.width; height: 42; from: 0; to: 100; value: s.focus; onPressedChanged: if(!pressed) setParams(s.alpha,s.low,s.high,s.processingFps,value) }
             Text { text: "转动镜头对焦环，观察绿色清晰边缘。完成后恢复此前显示比例。"; width: parent.width; wrapMode: Text.Wrap; color: "#414e60"; font.pixelSize: 15 }
             TouchButton { objectName: "finishFocus"; width: parent.width; primary: true; text: "完成对焦"; onClicked: backend.tool("preview") }
         }

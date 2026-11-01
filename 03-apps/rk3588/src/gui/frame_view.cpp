@@ -12,7 +12,15 @@ void FrameView::setController(Controller *c) {
         disconnect(controller_, nullptr, this, nullptr);
     controller_ = c;
     if (c)
-        connect(c, &Controller::frameChanged, this, [this] { update(); });
+        connect(c, &Controller::frameChanged, this, [this] {
+            const auto size = controller_->image(channel_).size();
+            if (sourceSize_ != size) {
+                sourceSize_ = size;
+                ++viewRevision_;
+                emit viewTransformChanged();
+            }
+            update();
+        });
     emit controllerChanged();
     update();
 }
@@ -48,13 +56,26 @@ QPointF FrameView::toView(qreal x, qreal y) const {
 void FrameView::panBy(qreal dx, qreal dy) {
     if (!native_)
         return;
+    const auto previous = pan_;
     pan_ += QPointF(dx, dy);
     const auto image = controller_ ? controller_->image(channel_) : QImage();
     const qreal mx = std::max(0., (image.width() - width()) / 2),
                 my = std::max(0., (image.height() - height()) / 2);
     pan_.setX(std::clamp(pan_.x(), -mx, mx));
     pan_.setY(std::clamp(pan_.y(), -my, my));
-    update();
+    if (pan_ != previous) {
+        ++viewRevision_;
+        emit viewTransformChanged();
+        update();
+    }
+}
+void FrameView::geometryChanged(const QRectF &geometry, const QRectF &previous) {
+    QQuickPaintedItem::geometryChanged(geometry, previous);
+    if (geometry.size() != previous.size()) {
+        ++viewRevision_;
+        emit viewTransformChanged();
+        update();
+    }
 }
 void FrameView::paint(QPainter *p) {
     if (!controller_)
@@ -118,7 +139,7 @@ void FrameView::paint(QPainter *p) {
             p->drawImage(r, overlay);
         const auto state = controller_->state();
         const auto tool = state["tool"].toString();
-        if (state["edgeReady"].toBool() &&
+        if (state["mode"].toString() == "local" && state["edgeReady"].toBool() &&
             (tool == "select" || tool == "preview" || tool == "magnify" ||
              tool == "replay" || tool == "offline")) {
             const QRect roi = state["roi"].toRect();
